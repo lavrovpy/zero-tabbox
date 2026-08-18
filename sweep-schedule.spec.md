@@ -56,7 +56,7 @@ If the browser was running but the device was asleep or the timer was delayed at
 - **THEN** a sweep runs shortly after the device wakes at 08:30
 
 ### Requirement: Each cutoff sweeps at most once
-The extension SHALL record the identity of the last cutoff swept (date + cutoff time) and SHALL NOT run a second automatic sweep for the same cutoff, even if the timer fires again, the service worker restarts, or the browser restarts multiple times. The startup follow-up pass counts as part of the same catch-up sweep, not a second sweep.
+The extension SHALL record the identity of the last cutoff swept (date + cutoff time) and SHALL NOT run a second automatic sweep for the same cutoff, even if the timer fires again, the extension's background process restarts, or the browser restarts multiple times. The startup follow-up pass counts as part of the same catch-up sweep, not a second sweep.
 
 #### Scenario: Timer fires twice
 - **WHEN** the 18:00 sweep has completed and the timer event is delivered again at 18:00:45

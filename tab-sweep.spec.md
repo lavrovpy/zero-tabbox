@@ -5,7 +5,7 @@ Defines what a single sweep does to the browser: which tabs and windows are clos
 ## ADDED Requirements
 
 ### Requirement: Sweep closes every tab in every normal window
-A sweep SHALL close all tabs in all windows of type `normal` belonging to the current browser profile, regardless of window focus, tab activity, audio state, tab group membership, or whether the tab is discarded/suspended.
+A sweep SHALL close all tabs in all normal browser windows (ordinary browsing windows, as opposed to popup, installed-app, or developer-tools windows) belonging to the current browser profile, regardless of window focus, tab activity, audio state, tab group membership, or whether the tab is discarded/suspended.
 
 #### Scenario: Multiple windows and tab groups
 - **WHEN** a sweep runs while the profile has 3 normal windows containing 40 tabs, some in tab groups and some playing audio
@@ -16,7 +16,7 @@ A sweep SHALL close all tabs in all windows of type `normal` belonging to the cu
 - **THEN** those tabs are closed exactly like active tabs
 
 ### Requirement: Sweep leaves exactly one clean window
-After closing tabs, a sweep SHALL leave the profile with exactly one normal window, so the browser stays running and the user sees an empty state rather than an exited application. That window SHALL contain exactly one new-tab page — or, when the pinned-tab exemption applies, the kept pinned tabs (with a new-tab page added only if there are none).
+After closing tabs, a sweep SHALL leave the profile with exactly one normal (non-private) window, so the browser stays running and the user sees an empty state rather than an exited application. That window SHALL contain exactly one new-tab page — or, when the pinned-tab exemption applies, the kept pinned tabs (with a new-tab page added only if there are none).
 
 #### Scenario: Browser had one window
 - **WHEN** a sweep runs on a single window with 25 tabs
@@ -27,15 +27,26 @@ After closing tabs, a sweep SHALL leave the profile with exactly one normal wind
 - **THEN** exactly one normal window remains, containing a single new-tab page
 
 ### Requirement: Non-normal windows are out of scope
-A sweep SHALL NOT close tabs in windows of type `popup`, `app`, `devtools`, or `panel`, and SHALL NOT touch incognito windows unless the user has explicitly allowed the extension in incognito.
+A sweep SHALL NOT close tabs in popup windows, installed web app (PWA) windows, developer-tools windows, or other special-purpose windows, and SHALL NOT touch private/incognito windows unless the user has allowed the extension to run in private browsing (a browser-level setting, off by default).
 
 #### Scenario: Popup and app windows survive
-- **WHEN** a sweep runs while a `popup` window and an installed PWA window are open
+- **WHEN** a sweep runs while a popup window and an installed PWA window are open
 - **THEN** those windows and their tabs are left untouched
 
-#### Scenario: Incognito not allowed
-- **WHEN** a sweep runs, the extension is not allowed in incognito, and an incognito window is open
-- **THEN** the incognito window is left untouched
+#### Scenario: Private window, access not granted
+- **WHEN** a sweep runs while a private/incognito window is open and the user has not allowed the extension in private browsing
+- **THEN** the private window is left untouched
+
+### Requirement: Private windows follow the same rules when allowed
+If the user has allowed the extension to run in private browsing, a sweep SHALL treat private windows exactly like normal windows: every tab in them is closed under the same rules and the same single pinned-tab exemption. Kept pinned tabs from private windows SHALL remain in a surviving private window and SHALL NOT be moved into a regular window (private tabs never mix with regular ones). A sweep SHALL NOT create a new-tab page in a private window: when nothing in a private window is kept, the window simply closes, and the clean-window guarantee is met by the regular window.
+
+#### Scenario: Access granted
+- **WHEN** the extension is allowed in private browsing and a sweep runs with 1 regular window (10 tabs) and 1 private window (5 tabs)
+- **THEN** all 15 tabs are closed, the private window closes, and one clean regular window remains
+
+#### Scenario: Pinned tabs in a private window
+- **WHEN** the extension is allowed in private browsing, "keep pinned tabs" is enabled, and a sweep runs while a private window has 2 pinned tabs
+- **THEN** the 2 pinned tabs survive, still pinned, in a private window — not moved into the surviving regular window
 
 ### Requirement: Pinned tabs are closed unless explicitly exempted
 By default a sweep SHALL close pinned tabs. If and only if the user has enabled the "keep pinned tabs" setting, a sweep SHALL keep every pinned tab from every normal window open: pinned tabs from non-surviving windows are moved into the surviving window and remain pinned, and the surviving window gains a new-tab page only if it would otherwise be empty.
@@ -64,18 +75,22 @@ A sweep SHALL NOT support whitelists, per-domain rules, per-tab "protect" flags,
 - **THEN** that tab is closed like any other
 
 ### Requirement: Sweep does not create a recoverable archive
-The extension SHALL NOT persist the URL, title, favicon, group, or any per-tab data of closed tabs to any storage (extension storage, bookmarks, history, files, or remote), and SHALL NOT expose any UI that reopens swept tabs.
+The extension SHALL NOT persist the URL, title, favicon, group, or any per-tab data of closed tabs to any storage (extension storage, bookmarks, history, files, or remote), and SHALL NOT expose any UI that reopens swept tabs. Where the browser allows extensions to clear its own recently-closed list (Firefox), the sweep SHALL also remove swept tabs from that list.
 
 #### Scenario: Storage after a sweep
 - **WHEN** a sweep has closed 40 tabs
 - **THEN** extension storage contains only aggregate data (e.g. count of tabs closed, timestamp of the sweep) and no per-tab records
+
+#### Scenario: Recently-closed list on Firefox
+- **WHEN** a sweep closes tabs on Firefox
+- **THEN** the swept tabs cannot be reopened via "Reopen closed tab" or the recently-closed-tabs menu
 
 #### Scenario: No restore surface
 - **WHEN** the user opens the extension popup or options page after a sweep
 - **THEN** no list of swept tabs and no "restore"/"undo" control is presented
 
 ### Requirement: Sweep is atomic from the user's perspective
-A sweep SHALL close all in-scope tabs as one batch operation; if a tab cannot be closed (e.g. a `beforeunload` prompt is shown), the sweep SHALL still close every other tab and SHALL record the sweep as completed.
+A sweep SHALL close all in-scope tabs as one batch operation; if a tab cannot be closed (e.g. the page asks for confirmation before closing), the sweep SHALL still close every other tab and SHALL record the sweep as completed.
 
 #### Scenario: A page blocks unload
 - **WHEN** a sweep runs and one tab shows a "Leave site?" dialog

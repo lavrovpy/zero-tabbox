@@ -4,11 +4,12 @@ Open tabs silently accumulate into a 100–200 tab backlog that is neither read 
 
 ## What Changes
 
-- New browser extension (Chrome MV3 first; Firefox as a follow-up because it has strictly better APIs for this) that closes **all** tabs in **all** normal windows at one or more configured daily cutoff times.
+- New browser extension for Chrome and Firefox (WebExtension, Manifest V3, one shared codebase) that closes **all** tabs in **all** normal windows at one or more configured daily cutoff times. On Firefox the sweep also clears swept tabs from the browser's recently-closed list, closing the "Reopen closed tab" backdoor; on Chrome that backdoor is a documented limitation.
 - A "catch-up" rule so the cutoff cannot be dodged: if the browser was closed at cutoff and reopened later (including with "Continue where you left off" restoring the previous session), the missed sweep runs on startup before the user can touch anything.
 - A manual "End day now" action (toolbar button + keyboard shortcut) that runs the same sweep on demand, without confirmation.
 - A short, non-dismissable pre-cutoff notice (badge countdown + optional system notification) so the user has a window to bookmark what matters. **No snooze, no postpone, no undo.**
 - Minimal settings page: cutoff times, pre-notice lead time, and a single opt-in "keep pinned tabs" exemption (off by default). No whitelists, no per-domain rules, no archive.
+- Private/incognito windows are untouched by default. If the user explicitly allows the extension in private browsing (the browser's own per-extension setting), sweeps treat private windows exactly like regular ones — same rules, same pinned exemption, nothing archived.
 - Explicitly **not** included: any archive/session snapshot, "recently swept" list, restore button, or persistence of tab URLs/titles by the extension. Only aggregate counters (tabs closed per sweep, last sweep time) are stored.
 
 ## Capabilities
@@ -23,7 +24,7 @@ Open tabs silently accumulate into a 100–200 tab backlog that is neither read 
 
 ## Impact
 
-- New codebase: WebExtension (Manifest V3), TypeScript, service-worker background, options page, minimal action popup. No backend, no network access, no analytics.
-- Browser permissions: `tabs`, `alarms`, `storage`, `notifications`; `sessions` only for the Firefox build (to forget closed tabs). No host permissions.
+- New codebase: WebExtension (Manifest V3), TypeScript, non-persistent background (service worker on Chrome, event page on Firefox), options page, minimal action popup. One codebase, per-browser manifest. No backend, no network access, no analytics.
+- Browser permissions: `tabs`, `alarms`, `storage`, `notifications`; `sessions` only in the Firefox manifest (to forget closed tabs). No host permissions.
 - User-visible risk: it deletes work-in-progress tabs by design. Onboarding must make the contract explicit once and never again.
-- Distribution: unpacked/self-hosted first (personal use), Chrome Web Store later; MV2 is irrelevant (Web Store removes MV2 items on 2026-08-31).
+- Distribution: personal use first — unpacked on Chrome, AMO-signed self-distribution on Firefox; Chrome Web Store / addons.mozilla.org listings later. MV2 is irrelevant (Web Store removes MV2 items on 2026-08-31).

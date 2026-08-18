@@ -1,8 +1,8 @@
 ## 1. Project setup
 
 - [ ] 1.1 Initialise repo: TypeScript, esbuild bundling to `dist/`, `@types/chrome`, vitest; npm scripts `build`, `watch`, `test`
-- [ ] 1.2 Write `manifest.json` (MV3): `background.service_worker`, `action` with popup, `options_ui`, `commands` (`end-day-now`, default `Alt+Shift+E`), permissions `tabs`, `alarms`, `storage`, `notifications`; no host permissions
-- [ ] 1.3 Add `platform.ts` shim: `forgetClosed()` no-op on Chrome, wired to `browser.sessions.forgetClosedTab/Window` on Firefox; export a `getRecentlyClosedIfSupported()` guard
+- [ ] 1.2 Write per-browser MV3 manifests (shared base + build-time overlay, per design.md D1). Common: `action` with popup, `options_ui`, `commands` (`end-day-now`, default `Alt+Shift+E`), `incognito: "spanning"`, permissions `tabs`, `alarms`, `storage`, `notifications`; no host permissions. Chrome overlay: `background.service_worker`. Firefox overlay: event-page `background.scripts`, `browser_specific_settings.gecko.id`, and the `sessions` permission
+- [ ] 1.3 Add `platform.ts` shim: `forgetClosed()` no-op on Chrome, wired to `browser.sessions.forgetClosedTab/Window` on Firefox
 
 ## 2. Storage and settings
 
@@ -21,8 +21,8 @@
 ## 4. Sweep
 
 - [ ] 4.1 Implement `sweep(reason)`: enumerate normal windows; pick keep-window (most pinned tabs when `keepPinned`, else focused-or-first); when `keepPinned`, move pinned tabs from other windows into the keep-window and re-pin them (`tabs.move` drops pinned state); create a new tab only if the keep-window would otherwise be empty; batch `tabs.remove` (windows close themselves when their last tab is removed); record counters, call `platform.forgetClosed()`, set badge to closed count and clear after 60 s
-- [ ] 4.2 Ensure incognito/popup/app/devtools windows are excluded and the extension does not request incognito access
-- [ ] 4.3 Manual test matrix on Chrome: 1 window / 3 windows / tab groups / pinned on-off / pinned tabs spread across windows with `keepPinned` on / audible tab / discarded tabs / options page open / `beforeunload` page
+- [ ] 4.2 Exclude popup/app/devtools windows. Private windows per spec: untouched without private-browsing access; with access, same rules applied per context — pinned consolidation never crosses the private/regular boundary, no new-tab page created in private windows, the surviving clean window is always regular
+- [ ] 4.3 Manual test matrix on Chrome and Firefox: 1 window / 3 windows / tab groups / pinned on-off / pinned tabs spread across windows with `keepPinned` on / audible tab / discarded tabs / options page open / `beforeunload` page / private window with and without private-browsing access (with access: private tabs closed, pinned private tabs stay private); on Firefox additionally verify swept tabs are absent from the recently-closed list
 
 ## 5. Notice and badge
 
@@ -39,5 +39,5 @@
 
 - [ ] 7.1 End-to-end manual scenarios from specs: cutoff fires; catch-up on restart with "Continue where you left off" on (verify the 60 s settle pass catches late-restored tabs); sleep across cutoff; two cutoffs same day; manual sweep then scheduled sweep; cutoff edited to an already-past time (no immediate sweep)
 - [ ] 7.2 Verify storage contents after a sweep contain no per-tab data (spec `tab-sweep` / no archive)
-- [ ] 7.3 Write README: contract, known backdoors (Cmd+Shift+T on Chrome, browser history, per-profile install), install-unpacked instructions
-- [ ] 7.4 Produce zip for self-hosted install; note Web Store submission as optional follow-up
+- [ ] 7.3 Write README: contract, known backdoors (Cmd+Shift+T on Chrome — closed on Firefox, browser history, per-profile install), install instructions for both browsers
+- [ ] 7.4 Produce per-browser artifacts: Chrome zip for unpacked/self-hosted install; Firefox xpi signed via AMO self-distribution; note store listings as optional follow-up
