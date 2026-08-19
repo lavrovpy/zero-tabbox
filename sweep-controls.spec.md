@@ -48,6 +48,47 @@ The options page SHALL expose exactly: cutoff times (1–4), pre-notice minutes,
 - **WHEN** four cutoffs are configured and the user tries to add another
 - **THEN** the UI refuses and explains the limit is 4
 
+### Requirement: Visual design and theming
+The popup and options page SHALL share one stylesheet built on CSS custom properties (design tokens) covering surface, text, border, focus-ring, primary and destructive roles, plus a single radius scale. All rules SHALL reference tokens rather than literal color values. The UI SHALL support a light and a dark theme, selected automatically from the browser/OS preference via `prefers-color-scheme`, and SHALL declare `color-scheme: light dark` so browser-painted chrome (popup backdrop, form controls, scrollbars) matches the active theme. No in-extension theme setting SHALL be offered.
+
+#### Scenario: Dark browser theme
+- **WHEN** the browser or OS is set to a dark color scheme and the user opens the popup or options page
+- **THEN** both render in the dark theme, with no light-themed flash before first paint and no white backdrop around the popup body
+
+#### Scenario: Light browser theme
+- **WHEN** the browser or OS is set to a light color scheme
+- **THEN** both surfaces render in the light theme
+
+#### Scenario: Theme changes while open
+- **WHEN** the OS color scheme changes while the options page is open
+- **THEN** the page switches theme without a reload
+
+#### Scenario: No theme control
+- **WHEN** the user opens the options page
+- **THEN** no light/dark/system theme selector is present
+
+#### Scenario: Tokens are the only source of color
+- **WHEN** the stylesheet is inspected
+- **THEN** color values appear only in the token definition blocks, and the dark theme is expressed solely as token overrides
+
+### Requirement: Destructive action is visually distinct
+The "End day now" button SHALL be styled with the destructive token role, visually distinct from any neutral or secondary control, in both themes. It SHALL NOT be the only affordance carrying meaning by color alone — its label SHALL state the action in words.
+
+#### Scenario: Popup button styling
+- **WHEN** the user opens the popup in either theme
+- **THEN** "End day now" is rendered in the destructive style and labelled with text, not an icon alone
+
+### Requirement: Accessible interaction states
+Interactive controls SHALL have a visible keyboard focus indicator using the focus-ring token, SHALL be reachable and operable by keyboard alone, and text SHALL meet WCAG AA contrast (4.5:1 for body text, 3:1 for large text and UI boundaries) in both themes.
+
+#### Scenario: Keyboard-only use of the popup
+- **WHEN** the user opens the popup and presses Tab
+- **THEN** focus moves to "End day now" with a visible ring, and Enter runs the sweep
+
+#### Scenario: Contrast in both themes
+- **WHEN** the popup and options page are measured in light and in dark theme
+- **THEN** all text and control boundaries meet the stated contrast ratios
+
 ### Requirement: No softening controls
 The extension SHALL NOT provide any of the following: pause/disable toggle, "skip today", snooze, undo/restore, archive view, whitelist, per-tab protection, or export of swept tabs. Turning the extension off requires the browser's own extension management page.
 

@@ -93,6 +93,43 @@ stateDiagram-v2
     Rearm --> Idle: alarms sweep:* and notice:* set to next occurrence (+ settle after startup catch-up)
 ```
 
+### D10. Visual style: shadcn's token system, hand-written CSS
+Chosen: adopt the *design language* of shadcn/ui — its token names, OKLCH palette, radius scale and control proportions — implemented as ~150 lines of hand-written CSS in one shared `ui/theme.css`, with no Tailwind, no Radix, no React. shadcn/ui is not a dependency you install (it is copy-in React components on top of Tailwind + Radix); adopting the actual stack would pull a UI framework and a CSS build step into a project whose entire UI is one button, six inputs and three stat lines — the same trade already rejected in D1.
+
+Tokens are CSS custom properties on `:root`, redefined once under `@media (prefers-color-scheme: dark)`. Values are taken verbatim from shadcn's current default (`neutral`) theme, which is OKLCH-based — verified against the upstream theming docs, Aug 2026. The subset we need:
+
+```css
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);          --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);                --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --primary: oklch(0.205 0 0);         --primary-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);          --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.145 0 0);    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);          --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --primary: oklch(0.922 0 0);       --primary-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);      --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+  }
+}
+```
+
+One deliberate divergence from upstream: shadcn gates its dark values behind a `.dark` class (its own toggle drives it); we gate them on `prefers-color-scheme` instead, since there is no toggle to drive. `oklch()` is supported in the browsers we target (Chrome 111+, Firefox 113+) and MV3 already floors us above that. Note that the current default theme has no `--destructive-foreground`: destructive buttons use white text.
+
+Every rule references tokens only, never literal colors, so the dark theme is a single block of variable overrides and "does it work in dark mode" is checkable by reading one file. `--destructive` is reserved for the "End day now" button: the one control in the product that destroys work should look like it.
+
+Theming follows the OS/browser automatically via `prefers-color-scheme`; `color-scheme: light dark` is declared so the browser paints the popup backdrop, form controls and scrollbars to match, avoiding a white flash before paint in a dark-themed browser. **No theme setting is added** — a light/dark toggle would be the fifth control on an options page whose spec fixes the control list at four, and the OS preference is already the right answer. This keeps the `Settings surface` requirement unchanged.
+
+Alternatives rejected: real shadcn/ui (React + Tailwind + Radix + a Tailwind build — contradicts D1); a CSS framework such as Pico or Water.css (smaller, but generic-looking and still a dependency that themes everything by element selector); unstyled browser defaults (fails the "stylish" bar and looks broken next to the browser's own UI in dark mode).
+
 ## Risks / Trade-offs
 
 - [Chrome "Reopen closed tab" restores swept tabs for the rest of the session] → Documented limitation; on Firefox `forgetClosedTab` is called. Recommend the user restart the browser after the sweep if they care; the next-day catch-up sweep is unaffected because history-restored tabs are just tabs.
