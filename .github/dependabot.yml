@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # Action versions are a supply-chain surface; keep them current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: ci
+
+  # Starts working once task 1.1 adds package.json; harmless until then.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: deps
+    groups:
+      dev-dependencies:
+        dependency-type: development
