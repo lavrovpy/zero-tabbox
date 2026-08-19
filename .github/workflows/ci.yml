@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: nothing here needs to write to the repo.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build, typecheck, test, lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      # The repo is docs-only until task 1.1 (project setup) lands. Until then
+      # there is nothing to install or run, and this job reports success with a
+      # notice rather than failing on a missing package.json. The guard becomes
+      # a no-op the moment 1.1 adds package.json — no cleanup needed.
+      - name: Detect project scaffolding
+        id: probe
+        run: |
+          if [ -f package.json ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Nothing to build yet::No package.json found. Build, typecheck, tests and extension lint start running once task 1.1 (project setup) lands."
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.probe.outputs.ready == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        if: steps.probe.outputs.ready == 'true'
+        run: npm ci
+
+      - name: Typecheck
+        if: steps.probe.outputs.ready == 'true'
+        run: npm run typecheck
+
+      - name: Unit tests
+        if: steps.probe.outputs.ready == 'true'
+        run: npm test
+
+      - name: Build both browser targets
+        if: steps.probe.outputs.ready == 'true'
+        run: npm run build
+
+      # addons-linter (what web-ext lint wraps) validates against Firefox rules:
+      # it rejects background.service_worker with MANIFEST_FIELD_UNSUPPORTED, so
+      # it can only ever run against the Firefox build, never the Chrome one.
+      # This is the gate that has to pass before AMO will sign anything (7.4).
+      # --self-hosted matches our distribution route and drops listing-only
+      # messages; warnings are fatal because a correct manifest lints to zero
+      # findings, so any warning here is a real regression.
+      - name: Lint the Firefox build (addons-linter)
+        if: steps.probe.outputs.ready == 'true'
+        run: npx --yes web-ext lint --source-dir dist/firefox --self-hosted --warnings-as-errors
+
+      # Chrome has no official manifest linter, so assert the invariants that
+      # matter for our build instead: valid JSON, MV3, and the Chrome-only
+      # background key that addons-linter would have rejected above.
+      - name: Sanity-check the Chrome manifest
+        if: steps.probe.outputs.ready == 'true'
+        run: |
+          node -e '
+            const fs = require("fs");
+            const m = JSON.parse(fs.readFileSync("dist/chrome/manifest.json", "utf8"));
+            const fail = (msg) => { console.error("::error::" + msg); process.exitCode = 1; };
+            if (m.manifest_version !== 3) fail("Chrome manifest is not MV3");
+            if (!m.background?.service_worker) fail("Chrome manifest has no background.service_worker");
+            if (m.background?.scripts) fail("Chrome manifest must not carry the Firefox background.scripts key");
+            if (m.permissions?.includes("sessions")) fail("sessions is Firefox-only and must not appear in the Chrome manifest");
+            if (m.host_permissions?.length) fail("Chrome manifest declares host_permissions; this extension must declare none");
+          '
+
+      - name: Upload built extensions
+        if: steps.probe.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
