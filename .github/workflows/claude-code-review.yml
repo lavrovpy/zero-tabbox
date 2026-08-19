@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "::notice title=Claude review skipped::Set the ANTHROPIC_API_KEY repository secret (or switch this workflow to claude_code_oauth_token) to enable automated review."
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: env.HAS_ANTHROPIC_KEY == 'true'
         with:
           fetch-depth: 1
