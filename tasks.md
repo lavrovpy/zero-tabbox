@@ -43,5 +43,6 @@
 - [ ] 7.1 End-to-end manual scenarios from specs: cutoff fires; catch-up on restart with "Continue where you left off" on (verify the 60 s settle pass catches late-restored tabs); sleep across cutoff; two cutoffs same day; manual sweep then scheduled sweep; cutoff edited to an already-past time (no immediate sweep)
 - [ ] 7.2 Verify storage contents after a sweep contain no per-tab data (spec `tab-sweep` / no archive)
 - [ ] 7.2a Verify `ui/theme.css` is the only place color literals appear and the dark theme is expressed purely as token overrides (spec `sweep-controls` / visual design)
+- [ ] 7.2b Verify the no-data-collection declaration end to end: Firefox build lints with zero findings, the install prompt reports no data collection, and no network request is made during a sweep (spec `tab-sweep` / declares that it collects no data). Mirror the same answers on the Chrome Web Store privacy-practices form if the extension is ever listed
 - [ ] 7.3 Write README: contract, known backdoors (Cmd+Shift+T on Chrome — closed on Firefox, browser history, per-profile install), install instructions for both browsers
 - [ ] 7.4 Produce per-browser artifacts: Chrome zip for unpacked/self-hosted install; Firefox xpi signed via AMO self-distribution; note store listings as optional follow-up

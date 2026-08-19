@@ -7,6 +7,7 @@ Greenfield WebExtension. See proposal.md for motivation. Platform constraints th
 - There is no extension API to read or change the browser's "On startup / Continue where you left off" setting. Session restore therefore has to be defeated at runtime (catch-up sweep on startup), not prevented.
 - `chrome.sessions` on Chrome exposes only `getRecentlyClosed`, `restore`, `getDevices`. Firefox additionally has `sessions.forgetClosedTab/Window`. So on Chrome, "Reopen closed tab" (Cmd+Shift+T) remains a backdoor for the current browser session; on Firefox it can be closed.
 - Chrome Web Store removes MV2 extensions on 2026-08-31; MV3 is the only target.
+- Firefox requires `browser_specific_settings.gecko.data_collection_permissions` on all new extensions; `addons-linter` warns `MISSING_DATA_COLLECTION_PERMISSIONS` without it and AMO enforces it at signing. Verified against addons-linter, Aug 2026: declaring `{"required": ["none"]}` takes our manifest to zero lint findings. Chrome has no manifest equivalent — the Web Store asks the same question on its privacy-practices form instead.
 - Prior art (Tab Wrangler, Tabsence, Auto Close Inactive Tabs, Chrome Memory Saver, Chrome Android's inactive-tabs bucket) is inactivity-based and always pairs closing with an archive/whitelist. None implements a time-of-day cutoff with no recovery; that gap is the product.
 
 ## Goals / Non-Goals
@@ -73,6 +74,8 @@ A second alarm `notice:HH:MM` at `cutoff − N minutes` fires the notification (
 
 ### D6. Storage layout
 `chrome.storage.local` only (no `sync`: schedule sync across devices is a non-goal and `sync` has quota/latency quirks). Keys: `settings` `{cutoffs: string[], noticeMinutes, notify, keepPinned}`, `lastAutoCutoffId: string`, `lastSweep` `{reason, at, closed}`, `stats` `{lifetimeClosed}`, `onboarded: true`. Nothing else, ever — this is what makes the "no archive" spec checkable by reading storage.
+
+The manifest's `data_collection_permissions: {required: ["none"]}` (D1's Firefox overlay) is the outward-facing half of this decision: D6 makes "no archive" checkable by reading storage after the fact, the declaration makes it checkable in the install prompt beforehand. The two have to be kept in step — anything added to this key list that is not an aggregate counter invalidates the declaration, not just the spec.
 
 ### D7. Onboarding = options page, once
 `onInstalled` with `reason === 'install'` opens the options page and sets `onboarded`. Updates never open anything.
