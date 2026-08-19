@@ -25,6 +25,6 @@ Open tabs silently accumulate into a 100–200 tab backlog that is neither read 
 ## Impact
 
 - New codebase: WebExtension (Manifest V3), TypeScript, non-persistent background (service worker on Chrome, event page on Firefox), options page, minimal action popup. UI is hand-written CSS on a shadcn-style design-token set with light and dark themes taken from the OS preference — no UI framework, no Tailwind, no theme setting. One codebase, per-browser manifest. No backend, no network access, no analytics.
-- Browser permissions: `tabs`, `alarms`, `storage`, `notifications`; `sessions` only in the Firefox manifest (to forget closed tabs). No host permissions.
+- Browser permissions: `tabs`, `alarms`, `storage`, `notifications`; `sessions` only in the Firefox manifest (to forget closed tabs). No host permissions. The Firefox manifest declares `data_collection_permissions: {required: ["none"]}` — required by Mozilla for new extensions, and accurate here: the extension stores only aggregate counters and makes no network requests. Firefox shows this in the install prompt, so "nothing is saved" is verifiable before install rather than only on inspection.
 - User-visible risk: it deletes work-in-progress tabs by design. Onboarding must make the contract explicit once and never again.
 - Distribution: personal use first — unpacked on Chrome, AMO-signed self-distribution on Firefox; Chrome Web Store / addons.mozilla.org listings later. MV2 is irrelevant (Web Store removes MV2 items on 2026-08-31).

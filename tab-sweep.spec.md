@@ -89,6 +89,25 @@ The extension SHALL NOT persist the URL, title, favicon, group, or any per-tab d
 - **WHEN** the user opens the extension popup or options page after a sweep
 - **THEN** no list of swept tabs and no "restore"/"undo" control is presented
 
+### Requirement: The extension declares that it collects no data
+The Firefox manifest SHALL declare `browser_specific_settings.gecko.data_collection_permissions` with `required: ["none"]`, stating that the extension collects no user data. This declaration SHALL remain accurate: if any future change causes the extension to transmit, sync, or persist anything beyond the aggregate counters of `Sweep records only aggregate counters`, the declaration SHALL be updated before that change ships. The extension SHALL declare no host permissions and SHALL make no network requests.
+
+Mozilla requires this key for all new Firefox extensions; `addons-linter` reports `MISSING_DATA_COLLECTION_PERMISSIONS` without it and AMO enforces it at signing. Firefox surfaces the declared value in the install prompt, which makes it the user-visible counterpart of the no-archive guarantee: the contract is checkable before install, not only by reading storage afterwards.
+
+Chrome has no equivalent manifest key. The Chrome Web Store collects the same disclosure through its privacy-practices form at listing time, so the answers there SHALL match this declaration.
+
+#### Scenario: Firefox install prompt
+- **WHEN** a user installs the extension on Firefox
+- **THEN** the browser reports that the extension collects no data
+
+#### Scenario: Linting the Firefox build
+- **WHEN** `web-ext lint` runs against the Firefox build
+- **THEN** it reports no `MISSING_DATA_COLLECTION_PERMISSIONS` warning and the build lints with zero findings
+
+#### Scenario: Declaration matches behaviour
+- **WHEN** the extension's storage and network activity are inspected after a sweep
+- **THEN** storage holds only the aggregate counters, and no request has been made to any remote host
+
 ### Requirement: Sweep is atomic from the user's perspective
 A sweep SHALL close all in-scope tabs as one batch operation; if a tab cannot be closed (e.g. the page asks for confirmation before closing), the sweep SHALL still close every other tab and SHALL record the sweep as completed.
 
