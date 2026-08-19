@@ -1,0 +1,31 @@
+{
+  "name": "zero-tabbox",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Closes every tab at your daily cutoff. No archive, no undo.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node build.mjs --browser=chrome --browser=firefox",
+    "build:chrome": "node build.mjs --browser=chrome",
+    "build:firefox": "node build.mjs --browser=firefox",
+    "watch": "node build.mjs --browser=chrome --browser=firefox --watch",
+    "icons": "node scripts/make-icons.mjs",
+    "package": "node scripts/package.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint:firefox": "addons-linter --warnings-as-errors dist/firefox",
+    "verify": "npm run typecheck && npm run test && npm run build && npm run lint:firefox"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.2.6",
+    "addons-linter": "^10.10.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11",
+    "web-ext": "^10.6.0"
+  }
+}

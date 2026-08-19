@@ -46,6 +46,8 @@ Rejected: a single `lastSweep.cutoffId` holding either a date id or `'manual:' +
 
 Settings edits never sweep retroactively: when `reconcile()` is triggered by a settings change, it first fast-forwards `lastAutoCutoffId` to the latest elapsed cutoff under the **new** schedule, then re-arms. Otherwise moving a cutoff to a time already past today (18:00 → 16:00 at 17:00) would instantly close all tabs, including the options page being edited, with no pre-notice.
 
+A fresh install takes the same fast-forward branch, for the same reason. The marker is unset (`''`) on a new profile, and `latestElapsedCutoff()` always names *some* elapsed cutoff — yesterday's when none of today's has passed — so an unseeded first `reconcile()` would sweep the moment the extension is installed, closing every tab the user had open (and racing the onboarding page D7 has just opened) with no pre-notice. So: an unset marker means "nothing to catch up on", is seeded with the latest elapsed cutoff, and the first sweep happens at the next cutoff (sweep-schedule.spec "Fresh install"). Seeding also makes `''` unreachable after the first run, so the lexical-comparison invariant is untouched.
+
 ### D4. Sweep algorithm
 ```
 windows = chrome.windows.getAll({populate:true, windowTypes:['normal']})
@@ -64,6 +66,8 @@ chrome.tabs.remove(tabsToClose)             // single batch call; a window whose
 record counters
 platform.forgetClosed()                     // Firefox only
 ```
+`forgetClosed()` is passed the instant captured just before `tabs.remove`, and skips recently-closed entries older than it: tab-sweep.spec asks that *swept* tabs leave that list, not that the list be emptied, and tabs or windows the user closed by hand earlier in the day are not ours to destroy. Entries carrying no usable timestamp are treated as ours — leaving a swept tab restorable would break the contract, forgetting one extra entry would not.
+
 No explicit `windows.remove` is needed: removing a window's last tab closes the window. With `keepPinned` on, non-keep windows are emptied by the pinned-tab moves plus `tabs.remove`, so they close themselves too.
 `beforeunload` prompts: `tabs.remove` may leave a tab that shows "Leave site?". We do not retry or force; the sweep is recorded as completed (spec: atomic from the user's perspective, one straggler is acceptable). Alternative considered: `chrome.windows.remove` per window — fails the "leave one clean window" requirement and behaves differently on macOS where the app keeps running with zero windows.
 
@@ -82,6 +86,10 @@ The manifest's `data_collection_permissions: {required: ["none"]}` (D1's Firefox
 
 ### D8. Startup settle pass
 Session restore populates windows asynchronously; `runtime.onStartup` can fire before restored tabs exist, so a catch-up sweep at startup may enumerate a partial tab set and miss tabs that materialise moments later — a hole in "the sweep is unavoidable", not a cosmetic flash. When a catch-up sweep runs from `onStartup`, a one-shot `settle` alarm is set for 60 s later; its handler repeats the sweep for the same cutoff (bypassing the idempotency check by design — it neither reads nor advances `lastAutoCutoffId`, and its closed-tab count is folded into the same sweep's stats). Trade-off: tabs the user opens in that first minute are closed too; acceptable, since the contract is starting the day at zero. Alternatives rejected: delaying the first sweep (leaves the restored session usable in the gap — worse); distinguishing restored tabs from user-opened ones (not reliably possible via the tabs API).
+
+**Browser start is not the same event as background cold start.** MV3 re-evaluates the background script on every wake, including the wake caused by the `sweep:HH:MM` alarm, so the top-level bootstrap `reconcile()` runs at every cutoff — and, being queued synchronously at module evaluation, it always reaches the serialisation queue before the `onAlarm` dispatch that woke it. It therefore carries its own trigger (`'wake'`), which never arms `settle`; only `runtime.onStartup` does. Otherwise every ordinary daily cutoff would be followed by a second sweep 60 s later, which is precisely the trade-off this decision accepts *once at startup* and rejects the rest of the time. The consequence is that at a real browser start the bootstrap is normally the call that performs the catch-up sweep while `onStartup` is the only evidence that the browser just started, so `reconcile()` reports whether it swept and the `onStartup` listener arms the settle pass on the bootstrap's behalf.
+
+The settle pass folds its count into the sweep that armed it, and only into that one: if an "End day now" lands in the 60 s gap, `lastSweep` holds a `manual` record that the settle pass must not rewrite, so it records itself as its own `auto` sweep instead (`reason === 'auto'` plus a recency window is the check).
 
 ### D9. Sweep and control flow
 

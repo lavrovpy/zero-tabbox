@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>zero-tabbox</title>
+    <link rel="stylesheet" href="theme.css" />
+  </head>
+  <body class="popup">
+    <!--
+      tasks.md 6.1. The popup shows exactly three things: the next cutoff (with
+      minutes remaining), "End day now", and a link to settings. Nothing else
+      may be added — not even read-only stats, which live on the options page
+      (sweep-controls.spec "No softening controls" / "Settings surface").
+    -->
+    <main class="stack">
+      <header class="stack-tight" aria-live="polite">
+        <p class="eyebrow">Next cutoff</p>
+        <p class="headline" id="next-cutoff-time">--:--</p>
+        <p class="muted" id="next-cutoff-eta">Checking the schedule…</p>
+      </header>
+
+      <button id="end-day-now" class="btn btn-destructive btn-block" type="button">
+        End day now
+      </button>
+
+      <hr class="divider" />
+
+      <footer class="row-end">
+        <a id="open-options" href="#">Settings</a>
+      </footer>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
