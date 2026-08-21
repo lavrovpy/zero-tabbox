@@ -4,15 +4,16 @@
  *   bun ./build.mjs --browser=chrome --browser=firefox [--watch]
  *
  * For each requested browser it:
- *   1. bundles the three TypeScript entry points with Bun.build into dist/<browser>/,
- *   2. copies the static assets (ui/*.html, ui/*.css, icons/*),
+ *   1. bundles the four TypeScript entry points with Bun.build into dist/<browser>/,
+ *   2. copies the static assets (ui/*.html, ui/*.css, ui/fonts/*, icons/*),
  *   3. writes dist/<browser>/manifest.json from src/manifest.base.json plus the
  *      per-browser overlay below (design.md D1).
  *
  * Output layout (identical for both browsers apart from the manifest):
  *   dist/<browser>/background.js
- *   dist/<browser>/ui/{popup,options}.{html,js}
+ *   dist/<browser>/ui/{popup,options,onboarding}.{html,js}
  *   dist/<browser>/ui/theme.css
+ *   dist/<browser>/ui/fonts/*.woff2
  *   dist/<browser>/icons/icon{16,32,48,128}.png
  *   dist/<browser>/manifest.json
  */
@@ -95,13 +96,19 @@ const ENTRY_POINTS = [
   join(SRC, 'background.ts'),
   join(SRC, 'ui', 'popup.ts'),
   join(SRC, 'ui', 'options.ts'),
+  join(SRC, 'ui', 'onboarding.ts'),
 ];
 
 /** Static files copied verbatim, as [source, destination-relative-to-dist]. */
 const STATIC_ASSETS = [
   [join(SRC, 'ui', 'popup.html'), 'ui/popup.html'],
   [join(SRC, 'ui', 'options.html'), 'ui/options.html'],
+  [join(SRC, 'ui', 'onboarding.html'), 'ui/onboarding.html'],
   [join(SRC, 'ui', 'theme.css'), 'ui/theme.css'],
+  // The design system's faces (Geist, JetBrains Mono) ship with the extension:
+  // extension pages may not fetch remote assets, and the no-network guarantee
+  // (tab-sweep.spec) would forbid it anyway.
+  [join(SRC, 'ui', 'fonts'), 'ui/fonts'],
   [join(ROOT, 'icons'), 'icons'],
 ];
 

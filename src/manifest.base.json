@@ -23,7 +23,7 @@
     "page": "ui/options.html",
     "open_in_tab": true
   },
-  "permissions": ["tabs", "alarms", "storage", "notifications"],
+  "permissions": ["tabs", "alarms", "storage", "notifications", "bookmarks"],
   "incognito": "spanning",
   "commands": {
     "end-day-now": {

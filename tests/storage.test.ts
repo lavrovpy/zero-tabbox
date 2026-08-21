@@ -67,8 +67,8 @@ const {
   getLastSweep,
   getSettings,
   getStats,
-  isOnboarded,
-  markOnboarded,
+  isAccepted,
+  markAccepted,
   setLastAutoCutoffId,
   setLastSweep,
   setSettings,
@@ -159,6 +159,7 @@ describe('getSettings', () => {
       cutoffs: ['18:00'],
       noticeMinutes: 10,
       notify: true,
+      autoBookmark: false,
       keepPinned: false,
     });
   });
@@ -169,6 +170,7 @@ describe('getSettings', () => {
       cutoffs: ['18:00'],
       noticeMinutes: 30,
       notify: true,
+      autoBookmark: false,
       keepPinned: false,
     });
   });
@@ -184,6 +186,7 @@ describe('getSettings', () => {
       cutoffs: ['18:00'],
       noticeMinutes: 10,
       notify: true,
+      autoBookmark: false,
       keepPinned: true, // the one valid field survives
     });
   });
@@ -216,6 +219,7 @@ describe('setSettings', () => {
       cutoffs: ['13:00', '18:00'],
       noticeMinutes: 0,
       notify: false,
+      autoBookmark: false,
       keepPinned: false,
     });
     expect(store.version).toBe(STORAGE_VERSION);
@@ -280,6 +284,17 @@ describe('lastSweep and stats', () => {
       reason: 'manual',
       at: 1_755_000_000_000,
       closed: 37,
+      bookmarked: false,
+    });
+  });
+
+  it('round-trips the bookmarked-first flag', async () => {
+    await setLastSweep({ reason: 'auto', at: 1_755_000_000_000, closed: 12, bookmarked: true });
+    await expect(getLastSweep()).resolves.toEqual({
+      reason: 'auto',
+      at: 1_755_000_000_000,
+      closed: 12,
+      bookmarked: true,
     });
   });
 
@@ -306,13 +321,13 @@ describe('lastSweep and stats', () => {
   });
 });
 
-describe('onboarding', () => {
+describe('acceptance', () => {
   it('is false until marked, then true and idempotent', async () => {
-    await expect(isOnboarded()).resolves.toBe(false);
-    await markOnboarded();
-    await expect(isOnboarded()).resolves.toBe(true);
-    await markOnboarded();
-    await expect(isOnboarded()).resolves.toBe(true);
+    await expect(isAccepted()).resolves.toBe(false);
+    await markAccepted();
+    await expect(isAccepted()).resolves.toBe(true);
+    await markAccepted();
+    await expect(isAccepted()).resolves.toBe(true);
   });
 });
 
@@ -325,7 +340,7 @@ describe('the no-archive guarantee', () => {
     await setLastAutoCutoffId('2026-08-19T18:00');
     await setLastSweep({ reason: 'auto', at: Date.now(), closed: 12 });
     await bumpStats(12);
-    await markOnboarded();
+    await markAccepted();
 
     expect(new Set(Object.keys(store))).toEqual(new Set(STORAGE_KEYS));
     // ...and nothing per-tab hides inside the values.

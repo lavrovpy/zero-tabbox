@@ -19,8 +19,8 @@ The extension SHALL let the user configure between 1 and 4 cutoff times per day 
 On first install the schedule SHALL default to a single cutoff at `18:00` local time and the pre-cutoff notice to 10 minutes.
 
 #### Scenario: Fresh install
-- **WHEN** the extension is installed and the user has not opened settings
-- **THEN** a sweep runs at the next local 18:00
+- **WHEN** the extension is installed and the user accepts the contract without opening settings
+- **THEN** a sweep runs at the next local 18:00 after acceptance (sweep-controls.spec "No sweep before the contract is accepted")
 
 ### Requirement: Cutoffs follow local wall-clock time
 Cutoff times SHALL be interpreted in the device's current local timezone at the moment they are evaluated, so a `18:00` cutoff fires at 18:00 wall-clock after a timezone change or DST transition rather than at a fixed UTC instant.

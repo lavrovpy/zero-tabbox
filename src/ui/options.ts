@@ -1,7 +1,5 @@
 /**
- * Options page (tasks.md 6.2), which doubles as the one-time onboarding surface
- * (design.md D7): the contract statement is always rendered and merely
- * highlighted on first open.
+ * Options page (tasks.md 6.2).
  *
  * Contract: this page persists changes through `storage.ts` only. Writing
  * `settings` is what makes the background reschedule via `storage.onChanged`
@@ -12,6 +10,9 @@
  * refusal is explained in `#cutoff-error` instead of being silently swallowed,
  * because a settings page that quietly drops an edit is worse than one that
  * says no.
+ *
+ * First-install onboarding is its own page (ui/onboarding.html, design.md D7);
+ * this page only carries the standing contract sentence in its header.
  */
 import { api } from '../platform';
 import {
@@ -19,12 +20,13 @@ import {
   getLastSweep,
   getSettings,
   getStats,
-  isOnboarded,
-  markOnboarded,
+  isAccepted,
+  markAccepted,
   setSettings,
 } from '../storage';
 import { DEFAULT_SETTINGS, LIMITS } from '../types';
 import type { Settings } from '../types';
+import { el } from './dom';
 
 /**
  * Times offered when the user adds a cutoff, first unused one wins. There are
@@ -32,35 +34,33 @@ import type { Settings } from '../types';
  */
 const SUGGESTED_CUTOFFS = ['18:00', '13:00', '09:00', '22:00', '16:00'] as const;
 
-/** How long the "Saved" acknowledgement stays on screen, in milliseconds. */
-const SAVED_NOTICE_MS = 1800;
+/**
+ * The notice-window choices, per the redesign: fixed stops instead of a free
+ * number field. Validation still accepts any 0–60 (storage.ts owns the rule),
+ * so a previously stored in-between value keeps working until a stop is picked.
+ */
+const NOTICE_CHOICES = [0, 5, 10, 20, 30, 60] as const;
 
-function el<T extends HTMLElement>(id: string): T {
-  const node = document.getElementById(id);
-  if (node === null) throw new Error(`options.html is missing #${id}`);
-  return node as T;
-}
-
-const contract = el<HTMLElement>('contract');
-const contractNote = el<HTMLElement>('contract-note');
 const cutoffList = el<HTMLDivElement>('cutoff-list');
 const addCutoffButton = el<HTMLButtonElement>('add-cutoff');
 const cutoffError = el<HTMLParagraphElement>('cutoff-error');
-const noticeMinutesInput = el<HTMLInputElement>('notice-minutes');
+const noticeOptions = el<HTMLDivElement>('notice-options');
+const noticeSummary = el<HTMLSpanElement>('notice-summary');
 const notifyInput = el<HTMLInputElement>('notify');
+const autoBookmarkInput = el<HTMLInputElement>('auto-bookmark');
 const keepPinnedInput = el<HTMLInputElement>('keep-pinned');
 const statLast = el<HTMLElement>('stat-last');
-const statLastClosed = el<HTMLElement>('stat-last-closed');
 const statLifetime = el<HTMLElement>('stat-lifetime');
-const saveStatus = el<HTMLParagraphElement>('save-status');
+const acceptBanner = el<HTMLElement>('accept-banner');
+const acceptButton = el<HTMLButtonElement>('accept');
+const acceptLabel = el<HTMLSpanElement>('accept-label');
 
 /**
- * The last successfully persisted settings, kept only so the cutoff rows can be
- * re-rendered in the normalised (sorted) order storage hands back.
+ * The last successfully persisted settings, kept so the cutoff chips can be
+ * re-rendered in the normalised (sorted) order storage hands back, and so the
+ * notice picker knows the current value (it has no input element of its own).
  */
 let saved: Settings = { ...DEFAULT_SETTINGS, cutoffs: [...DEFAULT_SETTINGS.cutoffs] };
-
-let savedNoticeTimer: ReturnType<typeof setTimeout> | undefined;
 
 // --------------------------------------------------------------- messaging
 
@@ -70,14 +70,6 @@ function showError(message: string): void {
 
 function clearError(): void {
   cutoffError.textContent = '';
-}
-
-function announceSaved(): void {
-  saveStatus.textContent = 'Saved';
-  if (savedNoticeTimer !== undefined) clearTimeout(savedNoticeTimer);
-  savedNoticeTimer = setTimeout(() => {
-    saveStatus.textContent = '';
-  }, SAVED_NOTICE_MS);
 }
 
 /** Maps a validation failure from storage.ts onto copy the user can act on. */
@@ -107,35 +99,26 @@ function cutoffValues(): string[] {
 /**
  * Assembles a complete {@link Settings} from the form.
  *
- * Only the two failures the browser cannot express in the markup are checked
- * here — an empty time input and a number input the user has typed out of range
- * — everything else is left to `validateCutoffs` in storage.ts so there is one
- * definition of a valid schedule.
+ * Only the failure the browser cannot express in the markup is checked here —
+ * an empty time input — everything else is left to `validateCutoffs` in
+ * storage.ts so there is one definition of a valid schedule. `noticeMinutes`
+ * comes from {@link saved} plus the picker, which only offers valid stops.
  *
  * @param cutoffs the cutoff list to use, so callers can add/remove entries
+ * @param noticeMinutes the notice value to persist
  * @returns the settings to persist, or `null` when the form is not saveable
  *   (the reason has already been shown)
  */
-function readForm(cutoffs: string[]): Settings | null {
+function readForm(cutoffs: string[], noticeMinutes: number): Settings | null {
   if (cutoffs.some((value) => value === '')) {
     showError('Every cutoff needs a time.');
     return null;
   }
-  const minutes = noticeMinutesInput.valueAsNumber;
-  if (
-    !Number.isInteger(minutes) ||
-    minutes < LIMITS.minNoticeMinutes ||
-    minutes > LIMITS.maxNoticeMinutes
-  ) {
-    showError(
-      `Notice must be a whole number of minutes from ${LIMITS.minNoticeMinutes} to ${LIMITS.maxNoticeMinutes}.`,
-    );
-    return null;
-  }
   return {
     cutoffs,
-    noticeMinutes: minutes,
+    noticeMinutes,
     notify: notifyInput.checked,
+    autoBookmark: autoBookmarkInput.checked,
     keepPinned: keepPinnedInput.checked,
   };
 }
@@ -169,64 +152,91 @@ async function persist(next: Settings): Promise<boolean> {
     saved = next;
   }
   clearError();
-  announceSaved();
+  renderNotice();
+  renderAcceptLabel();
   return true;
 }
 
-/** Autosave path for edits that do not change the number of rows. */
+/** Autosave path for edits that do not change the number of chips. */
 async function saveFromForm(): Promise<void> {
-  const next = readForm(cutoffValues());
+  const next = readForm(cutoffValues(), saved.noticeMinutes);
   if (next === null) return;
   await persist(next);
 }
 
-// -------------------------------------------------------------- cutoff rows
+// -------------------------------------------------------------- cutoff chips
+
+/** Namespace SVG elements must be created in; `createElement` yields a dead node. */
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /**
- * Rebuilds the cutoff rows.
+ * The chip's × glyph, built node by node.
+ *
+ * Every other icon in this extension is authored in the markup; this one has to
+ * be created per chip, and it is still built with the DOM rather than parsed
+ * from a string, so no user-influenced value can ever reach an HTML parser.
+ */
+function closeIcon(): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', '13');
+  svg.setAttribute('height', '13');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', 'M18 6 6 18M6 6l12 12');
+  svg.append(path);
+  return svg;
+}
+
+/**
+ * Rebuilds the cutoff chips (time input + remove button each), keeping the
+ * dashed "Add cutoff" button last in the row.
  *
  * Called on load and after add/remove only — never after a plain edit, because
- * storage returns the list sorted and re-ordering rows under a caret is the
+ * storage returns the list sorted and re-ordering chips under a caret is the
  * kind of "helpful" behaviour that makes a settings page hostile.
  *
  * @param cutoffs the times to render, in the order they should appear
- * @param focusIndex row whose time input should receive focus, or -1 for none
+ * @param focusIndex chip whose time input should receive focus, or -1 for none
  */
 function renderCutoffs(cutoffs: readonly string[], focusIndex = -1): void {
-  cutoffList.replaceChildren();
+  for (const chip of cutoffList.querySelectorAll('.chip')) chip.remove();
 
   cutoffs.forEach((value, index) => {
-    const row = document.createElement('div');
-    row.className = 'cutoff-row';
-
-    const inputId = `cutoff-${index}`;
-    const label = document.createElement('label');
-    label.className = 'label cutoff-label';
-    label.htmlFor = inputId;
-    label.textContent = `Cutoff ${index + 1}`;
+    const chip = document.createElement('div');
+    chip.className = 'chip';
 
     const input = document.createElement('input');
-    input.id = inputId;
-    input.className = 'input input-time';
+    input.className = 'chip-time';
     input.type = 'time';
     input.required = true;
     input.value = value;
+    input.setAttribute('aria-label', `Cutoff ${index + 1}`);
     input.addEventListener('change', () => {
       void saveFromForm();
     });
 
     const remove = document.createElement('button');
     remove.type = 'button';
-    remove.className = 'btn btn-sm cutoff-remove';
-    remove.textContent = 'Remove';
-    // The visible label is just "Remove"; assistive tech gets the whole story.
-    remove.setAttribute('aria-label', `Remove cutoff ${index + 1}, ${value || 'not set'}`);
+    remove.className = 'chip-remove';
+    // The visible affordance is just an ×, so the whole story goes to assistive
+    // tech and to the hover tooltip alike, and the glyph itself is hidden from
+    // the accessibility tree (design.md D10, icon-only controls).
+    const removeLabel = `Remove cutoff ${value || 'not set'}`;
+    remove.setAttribute('aria-label', removeLabel);
+    remove.title = removeLabel;
+    remove.append(closeIcon());
     remove.addEventListener('click', () => {
       void removeCutoff(index);
     });
 
-    row.append(label, input, remove);
-    cutoffList.append(row);
+    chip.append(input, remove);
+    cutoffList.insertBefore(chip, addCutoffButton);
   });
 
   if (focusIndex >= 0) {
@@ -248,7 +258,7 @@ async function addCutoff(): Promise<void> {
     return;
   }
   const added = suggestCutoff(values);
-  const next = readForm([...values, added]);
+  const next = readForm([...values, added], saved.noticeMinutes);
   if (next === null) return;
   if (await persist(next)) {
     renderCutoffs(saved.cutoffs, saved.cutoffs.indexOf(added));
@@ -261,7 +271,7 @@ async function removeCutoff(index: number): Promise<void> {
     showError(`Keep at least ${LIMITS.minCutoffs} cutoff time. The schedule cannot be empty.`);
     return;
   }
-  const next = readForm(values.filter((_, i) => i !== index));
+  const next = readForm(values.filter((_, i) => i !== index), saved.noticeMinutes);
   if (next === null) return;
   if (await persist(next)) {
     renderCutoffs(saved.cutoffs);
@@ -269,36 +279,81 @@ async function removeCutoff(index: number): Promise<void> {
   }
 }
 
-// --------------------------------------------------------------------- stats
+// ------------------------------------------------------------ notice picker
 
-function formatTimestamp(at: number): string {
-  return new Date(at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+/** Reflects `saved.noticeMinutes` in the segmented picker and its summary. */
+function renderNotice(): void {
+  noticeSummary.textContent =
+    saved.noticeMinutes === 0 ? 'no warning' : `${saved.noticeMinutes} min before`;
+  for (const button of noticeOptions.querySelectorAll<HTMLButtonElement>('.seg')) {
+    button.setAttribute(
+      'aria-pressed',
+      String(Number(button.dataset.minutes) === saved.noticeMinutes),
+    );
+  }
 }
+
+function buildNoticePicker(): void {
+  for (const minutes of NOTICE_CHOICES) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'seg';
+    button.dataset.minutes = String(minutes);
+    button.textContent = String(minutes);
+    button.setAttribute(
+      'aria-label',
+      minutes === 0 ? 'No warning' : `${minutes} minutes before the cutoff`,
+    );
+    button.addEventListener('click', () => {
+      const next = readForm(cutoffValues(), minutes);
+      if (next === null) return;
+      void persist(next);
+    });
+    noticeOptions.append(button);
+  }
+}
+
+// ---------------------------------------------------------------- acceptance
+
+/**
+ * Keeps the not-yet-accepted commit button naming the earliest cutoff, so the
+ * words stay true while the user edits the schedule above it (design.md D7).
+ */
+function renderAcceptLabel(): void {
+  const first = saved.cutoffs[0];
+  if (first !== undefined) acceptLabel.textContent = `I understand. Start at ${first}.`;
+}
+
+/**
+ * The options-page half of the consent gate: onboarding's "Pick a different
+ * time" lands here without accepting, so the banner offers the same commit.
+ * Accepting is what arms the schedule (via `storage.onChanged`); until then
+ * every edit on this page merely describes what the user is about to agree to.
+ */
+async function initAccept(): Promise<void> {
+  acceptBanner.hidden = await isAccepted();
+  renderAcceptLabel();
+  acceptButton.addEventListener('click', () => {
+    void (async () => {
+      try {
+        await markAccepted();
+      } catch {
+        showError('Could not save your acceptance. Try again.');
+        return;
+      }
+      acceptBanner.hidden = true;
+    })();
+  });
+}
+
+// --------------------------------------------------------------------- stats
 
 async function renderStats(): Promise<void> {
   const [stats, lastSweep] = await Promise.all([getStats(), getLastSweep()]);
-  statLifetime.textContent = String(stats.lifetimeClosed);
-  statLast.textContent = lastSweep ? formatTimestamp(lastSweep.at) : 'Never';
-  statLastClosed.textContent = lastSweep ? String(lastSweep.closed) : '—';
-}
-
-// ---------------------------------------------------------------- onboarding
-
-/**
- * Highlights the contract on first open (design.md D7). The statement itself is
- * in the markup and always visible; this only adds emphasis, then records that
- * onboarding has happened so it never emphasises again.
- *
- * `?onboarding=1` forces the highlight, which is how the background can open
- * this page in its onboarding state without depending on write ordering.
- */
-async function applyOnboarding(): Promise<void> {
-  const forced = new URLSearchParams(window.location.search).get('onboarding') === '1';
-  const first = forced || !(await isOnboarded());
-  if (!first) return;
-  contract.classList.add('is-highlighted');
-  contractNote.hidden = false;
-  await markOnboarded();
+  // No locale argument: the counters group digits the way the user's own
+  // browser does, like every other number this UI shows.
+  statLifetime.textContent = stats.lifetimeClosed.toLocaleString();
+  statLast.textContent = lastSweep ? lastSweep.closed.toLocaleString() : '—';
 }
 
 // --------------------------------------------------------------------- init
@@ -310,15 +365,17 @@ async function init(): Promise<void> {
     saved = { ...DEFAULT_SETTINGS, cutoffs: [...DEFAULT_SETTINGS.cutoffs] };
   }
 
+  buildNoticePicker();
   renderCutoffs(saved.cutoffs);
-  noticeMinutesInput.value = String(saved.noticeMinutes);
+  renderNotice();
   notifyInput.checked = saved.notify;
+  autoBookmarkInput.checked = saved.autoBookmark;
   keepPinnedInput.checked = saved.keepPinned;
 
   addCutoffButton.addEventListener('click', () => {
     void addCutoff();
   });
-  for (const control of [noticeMinutesInput, notifyInput, keepPinnedInput]) {
+  for (const control of [notifyInput, autoBookmarkInput, keepPinnedInput]) {
     control.addEventListener('change', () => {
       void saveFromForm();
     });
@@ -331,8 +388,8 @@ async function init(): Promise<void> {
     if ('stats' in changes || 'lastSweep' in changes) void renderStats().catch(() => undefined);
   });
 
+  await initAccept().catch(() => undefined);
   await renderStats().catch(() => undefined);
-  await applyOnboarding().catch(() => undefined);
 }
 
 void init();

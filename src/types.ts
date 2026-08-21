@@ -10,7 +10,7 @@
  * declaration at the same time.
  */
 
-/** User-editable settings. Exactly the four controls sweep-controls.spec allows. */
+/** User-editable settings. Exactly the five controls sweep-controls.spec allows. */
 export interface Settings {
   /**
    * Daily cutoff times as `HH:MM` in local wall-clock time.
@@ -22,6 +22,12 @@ export interface Settings {
   noticeMinutes: number;
   /** Whether the pre-cutoff system notification is shown. */
   notify: boolean;
+  /**
+   * Whether every sweep first writes the at-risk tabs to a dated folder in the
+   * browser's bookmarks (design.md D12). The bookmarks are the browser's — the
+   * extension still stores nothing.
+   */
+  autoBookmark: boolean;
   /** Whether pinned tabs survive a sweep. The only exemption that exists. */
   keepPinned: boolean;
 }
@@ -44,6 +50,13 @@ export interface LastSweep {
   at: number;
   /** Number of tabs closed by this sweep (including any folded-in settle pass). */
   closed: number;
+  /**
+   * Whether the closed tabs were written to the browser's bookmarks first —
+   * by the auto-bookmark setting or by the popup's "Bookmark all" just before
+   * "End day now". Display-only: it picks the popup's "Day ended" wording.
+   * An aggregate flag, not per-tab data (design.md D6).
+   */
+  bookmarked?: boolean;
 }
 
 /** Lifetime aggregate counters. No per-tab data, ever. */
@@ -72,8 +85,13 @@ export interface StorageShape {
   lastSweep?: LastSweep;
   /** Lifetime counters; defaults to `{lifetimeClosed: 0}` when absent. */
   stats: Stats;
-  /** Set once, when the first-install onboarding options page has been opened. */
-  onboarded?: boolean;
+  /**
+   * Set once, when the user explicitly accepts the contract — "I understand"
+   * on the onboarding page, or its options-page equivalent. Until it is true
+   * the background arms no alarms and runs no automatic sweep (design.md D7);
+   * merely viewing the onboarding page does not set it.
+   */
+  accepted?: boolean;
 }
 
 /** Current storage schema version. Bump only alongside a migration. */
@@ -84,6 +102,7 @@ export const DEFAULT_SETTINGS: Settings = {
   cutoffs: ['18:00'],
   noticeMinutes: 10,
   notify: true,
+  autoBookmark: false,
   keepPinned: false,
 };
 
@@ -96,6 +115,12 @@ export const DEFAULT_SETTINGS: Settings = {
 export type Message = {
   /** "End day now" was clicked. The background answers, then the popup closes. */
   type: 'end-day-now';
+  /**
+   * `true` when the popup's "Bookmark all" already ran in this popup session,
+   * so the sweep record can say the tabs were saved first. Advisory and
+   * display-only; it never changes what the sweep closes.
+   */
+  alreadyBookmarked?: boolean;
 };
 
 /** Reply to a {@link Message}. */

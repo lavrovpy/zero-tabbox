@@ -17,10 +17,15 @@ This is the whole product. Read it before you install it.
    focus, audio, tab group, or whether the tab was discarded by the browser's
    memory saver.
 2. **Nothing about those tabs is stored.** Not the URL, not the title, not the
-   favicon, not the group. The extension keeps three numbers: when the last
-   sweep ran, how many tabs it closed, and how many it has closed since install.
+   favicon, not the group. The extension keeps aggregates only: when the last
+   sweep ran, how many tabs it closed, whether they were bookmarked first, and
+   how many it has closed since install.
 3. **There is no way to get them back from this extension.** No undo, no
-   archive view, no export. Bookmarks are the only way to keep a page.
+   archive view, no export. Bookmarks are the only way to keep a page — and
+   that escape hatch is a button: "Bookmark all" in the popup, or the opt-in
+   "bookmark everything first" setting, write the at-risk tabs to a dated
+   `zero-tabbox` folder in *your browser's* bookmarks. The extension keeps no
+   reference to them and never reads them back.
 4. **There is no way to soften it.** No pause toggle, no "skip today", no
    snooze, no per-tab protection. The only exemption that exists is a global
    "keep pinned tabs" setting, off by default. Turning the extension off
@@ -32,16 +37,24 @@ This is the whole product. Read it before you install it.
    while the browser was shut, asleep, or crashed, the sweep runs at the next
    start — before your restored session is usable — plus one follow-up pass
    about 60 seconds later to catch tabs that session restore materialises late.
+7. **Nothing above is armed until you accept this contract.** Until you press
+   accept — on the page that opens at install, or on the settings page — no
+   sweep runs and no alarm is set. Accepting arms the schedule from that
+   moment; cutoffs that passed before you accepted are not swept afterwards.
+   "End day now" is the one thing that works beforehand, because clicking it is
+   its own consent.
 
 Defaults: one cutoff at `18:00` local time, 10 minutes of notice, system
 notification on, keep-pinned off.
 
 ## What you get before the cutoff
 
-Starting N minutes before each cutoff (N configurable 0–60, default 10), the
-toolbar badge counts down the minutes and — if you leave it on — one system
-notification fires at N minutes naming the cutoff time. The notification has no
-buttons. Setting N to 0 disables both.
+Starting N minutes before each cutoff, the toolbar badge counts down the
+minutes and — if you leave it on — one system notification fires at N minutes
+naming the cutoff time. N is one of six fixed stops — 0, 5, 10, 20, 30, 60 —
+and defaults to 10; the settings page offers nothing in between, though an
+in-between value stored by an earlier version keeps working until you pick a
+stop. The notification has no buttons. Setting N to 0 disables both.
 
 After a sweep the badge shows the number of tabs closed for up to 60 seconds,
 then clears. Nothing else announces it.
@@ -153,13 +166,17 @@ guarantee is checkable *before* you install rather than only by reading storage
 afterwards.
 
 The extension declares no host permissions, runs no content scripts, and makes
-no network request of any kind. Its four permissions are `tabs` (enumerate and
-close them), `alarms` (know when the cutoff is), `storage` (the settings and the
-three counters), and `notifications` (the pre-cutoff notice). Firefox adds
-`sessions`, which is what closes the reopen-closed-tab backdoor.
+no network request of any kind (even its two typefaces ship inside the
+package). Its five permissions are `tabs` (enumerate and close them), `alarms`
+(know when the cutoff is), `storage` (the settings and the counters),
+`notifications` (the pre-cutoff notice), and `bookmarks` (the explicit
+escape hatch — bookmarks are written only when you click "Bookmark all" or
+enable "bookmark everything first", and they belong to your browser, not the
+extension). Firefox adds `sessions`, which is what closes the
+reopen-closed-tab backdoor.
 
 Everything it stores lives in `storage.local` under exactly six keys:
-`settings`, `lastAutoCutoffId`, `lastSweep`, `stats`, `onboarded`, `version`.
+`settings`, `lastAutoCutoffId`, `lastSweep`, `stats`, `accepted`, `version`.
 Nothing per-tab, ever. That fixed list is what makes the contract auditable.
 
 ## Development
@@ -201,11 +218,12 @@ walked through by a person.
 | `src/background.ts` | Listener registration only. Every listener is top-level and synchronous, or the background is never woken for it. |
 | `src/reconcile.ts` | The schedule. Alarms are wake-up hints; correctness comes from re-deriving everything from the clock and storage on every wake. |
 | `src/sweep.ts` | One sweep: which tabs close, which window survives. |
+| `src/bookmarks.ts` | The escape hatch: writes at-risk tabs to a dated bookmarks folder. |
 | `src/cutoff.ts` | Local-time cutoff arithmetic. Pure functions. |
 | `src/storage.ts` | The only module that touches `storage.local`. |
 | `src/platform.ts` | The only module that knows which browser it is on. |
 | `src/badge.ts` | Badge text and the pre-cutoff notification. Never rejects. |
-| `src/ui/` | Popup, options page, and the one stylesheet. |
+| `src/ui/` | Popup, options page, first-install page, the one stylesheet, and the bundled fonts. |
 | `build.mjs` | Bun.build + the per-browser manifest overlay. |
 
 ### Specs

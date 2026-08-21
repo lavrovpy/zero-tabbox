@@ -46,10 +46,11 @@ Rejected: a single `lastSweep.cutoffId` holding either a date id or `'manual:' +
 
 Settings edits never sweep retroactively: when `reconcile()` is triggered by a settings change, it first fast-forwards `lastAutoCutoffId` to the latest elapsed cutoff under the **new** schedule, then re-arms. Otherwise moving a cutoff to a time already past today (18:00 → 16:00 at 17:00) would instantly close all tabs, including the options page being edited, with no pre-notice.
 
-A fresh install takes the same fast-forward branch, for the same reason. The marker is unset (`''`) on a new profile, and `latestElapsedCutoff()` always names *some* elapsed cutoff — yesterday's when none of today's has passed — so an unseeded first `reconcile()` would sweep the moment the extension is installed, closing every tab the user had open (and racing the onboarding page D7 has just opened) with no pre-notice. So: an unset marker means "nothing to catch up on", is seeded with the latest elapsed cutoff, and the first sweep happens at the next cutoff (sweep-schedule.spec "Fresh install"). Seeding also makes `''` unreachable after the first run, so the lexical-comparison invariant is untouched.
+A fresh install takes the same fast-forward branch, for the same reason. The marker is unset (`''`) on a new profile, and `latestElapsedCutoff()` always names *some* elapsed cutoff — yesterday's when none of today's has passed — so an unseeded first `reconcile()` would sweep the moment the extension is installed, closing every tab the user had open (and racing the onboarding page D7 has just opened) with no pre-notice. So: an unset marker means "nothing to catch up on", is seeded with the latest elapsed cutoff, and the first sweep happens at the next cutoff (sweep-schedule.spec "Fresh install"). Since the consent gate (D7) holds every reconcile back until the user accepts the contract, the seed actually lands on the acceptance-triggered reconcile, anchoring the schedule at the moment of consent rather than at install. Seeding also makes `''` unreachable after the first run, so the lexical-comparison invariant is untouched.
 
 ### D4. Sweep algorithm
 ```
+if settings.autoBookmark: bookmarkAtRiskTabs()   // D12; failure logged, sweep proceeds
 windows = chrome.windows.getAll({populate:true, windowTypes:['normal']})
 if none: return (nothing to do)
 keepWindow = if keepPinned: window with most pinned tabs (tie: focused, then first)
@@ -77,12 +78,12 @@ Private/incognito windows: `windows.getAll` returns them only when the user has 
 A second alarm `notice:HH:MM` at `cutoff − N minutes` fires the notification (if enabled) and starts a 1-minute repeating `badge` alarm that updates the badge text until the sweep. Badge is cleared by the sweep. Alternative: `setInterval` in the worker — dies with the worker.
 
 ### D6. Storage layout
-`chrome.storage.local` only (no `sync`: schedule sync across devices is a non-goal and `sync` has quota/latency quirks). Keys: `settings` `{cutoffs: string[], noticeMinutes, notify, keepPinned}`, `lastAutoCutoffId: string`, `lastSweep` `{reason, at, closed}`, `stats` `{lifetimeClosed}`, `onboarded: true`. Nothing else, ever — this is what makes the "no archive" spec checkable by reading storage.
+`chrome.storage.local` only (no `sync`: schedule sync across devices is a non-goal and `sync` has quota/latency quirks). Keys: `settings` `{cutoffs: string[], noticeMinutes, notify, autoBookmark, keepPinned}`, `lastAutoCutoffId: string`, `lastSweep` `{reason, at, closed, bookmarked}`, `stats` `{lifetimeClosed}`, `accepted: true`. Nothing else, ever — this is what makes the "no archive" spec checkable by reading storage. `lastSweep.bookmarked` is an aggregate boolean ("were the closed tabs written to bookmarks first"), never a list; the bookmark writes themselves go to the browser's own bookmarks (D12), not to extension storage.
 
 The manifest's `data_collection_permissions: {required: ["none"]}` (D1's Firefox overlay) is the outward-facing half of this decision: D6 makes "no archive" checkable by reading storage after the fact, the declaration makes it checkable in the install prompt beforehand. The two have to be kept in step — anything added to this key list that is not an aggregate counter invalidates the declaration, not just the spec.
 
-### D7. Onboarding = options page, once
-`onInstalled` with `reason === 'install'` opens the options page and sets `onboarded`. Updates never open anything.
+### D7. Onboarding = one dedicated screen, once, and nothing destructive before acceptance
+`onInstalled` with `reason === 'install'` opens `ui/onboarding.html` — a single screen that states the contract as numbered terms (every tab in every normal window is included, no undo/snooze/per-tab exception; closing the browser doesn't dodge it; no data is collected) with the real first cutoff in the headline. Until the user explicitly accepts, the extension is inert: viewing the page writes nothing, and `reconcile()` refuses to seed the marker, arm any schedule alarm or run an automatic sweep while the `accepted` flag is unset. Three actions: "I understand. Start at 18:00." writes `accepted` and closes the page; "Pick a different time" navigates the same tab to the options page *without* accepting — the options page shows the equivalent accept button until the flag is set; a plain-text decline underneath calls `management.uninstallSelf({showConfirmDialog: true})`, handing the user to the browser's own uninstall confirmation (self-uninstall needs no permission; self-*disable* would require `management`, which we don't request). Writing `accepted` fires `storage.onChanged`, whose reconcile takes the fast-forward branch — so acceptance anchors the schedule at that moment and never sweeps retroactively, however long consent was pending. An explicit "End day now" stays available before acceptance: the click is its own consent for that one sweep. The page is never opened again automatically; updates never open anything. The options page keeps the standing one-sentence contract in its header but no longer plays the onboarding role (this supersedes the earlier options-page-with-highlight approach and the earlier no-decline-button rule).
 
 ### D8. Startup settle pass
 Session restore populates windows asynchronously; `runtime.onStartup` can fire before restored tabs exist, so a catch-up sweep at startup may enumerate a partial tab set and miss tabs that materialise moments later — a hole in "the sweep is unavoidable", not a cosmetic flash. When a catch-up sweep runs from `onStartup`, a one-shot `settle` alarm is set for 60 s later; its handler repeats the sweep for the same cutoff (bypassing the idempotency check by design — it neither reads nor advances `lastAutoCutoffId`, and its closed-tab count is folded into the same sweep's stats). Trade-off: tabs the user opens in that first minute are closed too; acceptable, since the contract is starting the day at zero. Alternatives rejected: delaying the first sweep (leaves the restored session usable in the gap — worse); distinguishing restored tabs from user-opened ones (not reliably possible via the tabs API).
@@ -104,44 +105,23 @@ stateDiagram-v2
     Rearm --> Idle: alarms sweep:* and notice:* set to next occurrence (+ settle after startup catch-up)
 ```
 
-### D10. Visual style: shadcn's token system, hand-written CSS
-Chosen: adopt the *design language* of shadcn/ui — its token names, OKLCH palette, radius scale and control proportions — implemented as ~150 lines of hand-written CSS in one shared `ui/theme.css`, with no Tailwind, no Radix, no React. shadcn/ui is not a dependency you install (it is copy-in React components on top of Tailwind + Radix); adopting the actual stack would pull a UI framework and a CSS build step into a project whose entire UI is one button, six inputs and three stat lines — the same trade already rejected in D1.
+### D10. Visual style: the "ab" design-system tokens, hand-written CSS
+Chosen: adopt the token system of the Zero Tabbox Redesign canvas (the "ab" design system — the design is the source of truth): warm stone neutrals plus a single ember-orange accent, Geist for UI text and JetBrains Mono for numerals/labels, a 4/6/8/12px radius scale, warm-tinted shadows, and an ember focus ring. Implemented as hand-written CSS in one shared `ui/theme.css`, with no Tailwind, no Radix, no React — the same trade already rejected in D1. This supersedes the earlier shadcn/OKLCH token set.
 
-Tokens are CSS custom properties on `:root`, redefined once under `@media (prefers-color-scheme: dark)`. Values are taken verbatim from shadcn's current default (`neutral`) theme, which is OKLCH-based — verified against the upstream theming docs, Aug 2026. The subset we need:
+Structure of the stylesheet, and the two properties the spec checks by reading it (tasks.md 7.2a):
 
-```css
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);          --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);                --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --primary: oklch(0.205 0 0);         --primary-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);          --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.145 0 0);    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);          --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --primary: oklch(0.922 0 0);       --primary-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);      --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-  }
-}
-```
+- Tokens are CSS custom properties on `:root` (color ramps `--color-stone-*` / `--color-ember-*`, then semantic aliases `--color-bg/-subtle/-muted`, `--color-surface`, `--color-border/-strong`, `--color-fg/-2/-3`, `--color-accent/-hover/-active/-fg/-soft`, `--color-success/-danger`), redefined once under `@media (prefers-color-scheme: dark)`. Every other rule references tokens only, never literal colors, so "does it work in dark mode" is checkable by reading one file.
+- The canvas's light/dark switch is a canvas control, not a product control: theming follows the OS/browser automatically via `prefers-color-scheme`, and `color-scheme: light dark` is declared so the browser paints the popup backdrop, form controls and scrollbars to match, avoiding a white flash before paint in a dark-themed browser. **No theme setting is added** — the OS preference is already the right answer, and the settings surface stays fixed.
 
-One deliberate divergence from upstream: shadcn gates its dark values behind a `.dark` class (its own toggle drives it); we gate them on `prefers-color-scheme` instead, since there is no toggle to drive. `oklch()` is supported in the browsers we target (Chrome 111+, Firefox 113+) and MV3 already floors us above that. Note that the current default theme has no `--destructive-foreground`: destructive buttons use white text.
+Fonts ship with the extension (`ui/fonts/*.woff2`: Geist variable, JetBrains Mono 400/500/600; both OFL-licensed): extension pages may not fetch remote assets, and the no-network guarantee (tab-sweep.spec) would forbid a font CDN anyway. Numerals everywhere (cutoff times, countdowns, counters) use JetBrains Mono with `tnum`+`zero` feature settings so columns align and zeros are slashed.
 
-Every rule references tokens only, never literal colors, so the dark theme is a single block of variable overrides and "does it work in dark mode" is checkable by reading one file. `--destructive` is reserved for the "End day now" button: the one control in the product that destroys work should look like it.
+The accent (ember) role is reserved for the commitment controls, and there are exactly three: "End day now", the onboarding "I understand" button, and the same accept button on the options page's pre-acceptance banner (D7's landing spot for "Pick a different time"). The actions that accept the consequence should be the visually loudest, and nothing else may borrow that weight — switches and the notice-window stops signal "on" and "selected" with the soft accent tint, never the solid fill. Color is emphasis, never the message: all three labels state the action in words. This replaces the earlier red `--destructive` role; the product's one "destructive" act is its whole point, and the brand accent owning it is the redesign's statement.
 
-That reservation is why the popup mixes an icon with text rather than matching them. Settings is secondary navigation, so it is a bare gear (`.icon-link`: inline SVG at `--muted-foreground`, `--foreground` on hover, with negative margins cancelling the padding so the hit target grows without moving the glyph). "End day now" stays a full-width text button. The asymmetry is the point — the destructive control should never be the visually quiet one. Icon-only controls carry `aria-label` plus `title` and mark their artwork `aria-hidden`, and the universal `:focus-visible` rule gives the gear the same ring as every other control (sweep-controls.spec "Accessible interaction states").
+The popup stops being a clock (redesign canvas, screen 1a): it shows what is at stake ("47 tabs close at"), the next cutoff as the headline numeral with a live ETA (a per-second `MM:SS left` countdown once inside the notice window, tinted accent), the bookmark escape hatch (D12), "End day now", and a gear. Settings is secondary navigation, so it is a bare gear (`.icon-link`: inline SVG at `--color-fg-3`, `--color-fg` on hover, with negative margins cancelling the padding so the hit target grows without moving the glyph). Icon-only controls carry `aria-label` plus `title` and mark their artwork `aria-hidden`, and the universal ember `:focus-visible` ring covers every control (sweep-controls.spec "Accessible interaction states"). For 60 s after a sweep the popup opens on the "Day ended" state — closed count, whether the tabs were bookmarked first, next cutoff — the same window the post-sweep badge lives in, so the two are one moment of feedback.
 
-Theming follows the OS/browser automatically via `prefers-color-scheme`; `color-scheme: light dark` is declared so the browser paints the popup backdrop, form controls and scrollbars to match, avoiding a white flash before paint in a dark-themed browser. **No theme setting is added** — a light/dark toggle would be the fifth control on an options page whose spec fixes the control list at four, and the OS preference is already the right answer. This keeps the `Settings surface` requirement unchanged.
+The options page follows the canvas: cutoff times as chips (numeral + remove ×, dashed "Add cutoff"), the notice window as six fixed stops (0/5/10/20/30/60) with a summary label, three switches (notification, bookmark-everything-first, keep-pinned), and two "Since install" stat cards (lifetime closed, last sweep closed). Switches are checkboxes wearing switch CSS — native semantics and keyboard behaviour for free, `role="switch"` for assistive tech.
 
-Alternatives rejected: real shadcn/ui (React + Tailwind + Radix + a Tailwind build — contradicts D1); a CSS framework such as Pico or Water.css (smaller, but generic-looking and still a dependency that themes everything by element selector); unstyled browser defaults (fails the "stylish" bar and looks broken next to the browser's own UI in dark mode).
+Alternatives rejected: shipping the canvas verbatim (it is a React demo with canvas-only controls); real shadcn/ui or Tailwind (contradicts D1); system fonts only (loses the design's character for ~350 KB of OFL-licensed woff2).
 
 ### D11. Bun as runtime, bundler and test runner
 Chosen: one tool for all three — `bun install` (lockfile `bun.lock`), `Bun.build` for the IIFE bundles, and `bun test` for the unit suite. This removes esbuild and vitest as separate dependencies and leaves `tsc --noEmit` as the only non-Bun step in `verify`. Three consequences are deliberate and worth stating, because each is a capability esbuild or vitest provided for free:
@@ -151,6 +131,21 @@ Chosen: one tool for all three — `bun install` (lockfile `bun.lock`), `Bun.bui
 - **Per-file test processes.** `bun test` loads every file into one runtime and `mock.module` patches the shared registry with live bindings, so one file's mock of `../src/badge` would replace the implementation another file is exercising. `scripts/run-tests.mjs` spawns one `bun test` per file to restore the per-file module graph vitest gave for free; the cost is serial execution of a suite that runs in well under a second.
 
 Alternatives: keep Node + esbuild + vitest (rejected: three toolchain dependencies for a ~1,000-line extension, and the lowering guard is the only thing genuinely lost); Bun for install/test but esbuild for the bundle (rejected: keeps the dependency that the swap exists to remove, for a guard `tsconfig` already provides).
+
+### D12. Bookmarks are the only escape hatch — and it is clickable
+The product's answer to "what if a tab matters" has always been "bookmark it"; the redesign makes that answer a button instead of advice. Two entry points, one module (`bookmarks.ts`, the only code that writes bookmarks):
+
+- **Popup "Bookmark all N tabs"**: writes the at-risk tabs (the exact set the next sweep would close — pinned tabs excluded when `keepPinned` is on, so the label and the action count the same tabs) to the browser's bookmarks, then shows a "Saved to bookmarks / zero-tabbox / YYYY-MM-DD" confirmation. Runs only on click.
+- **Settings "Bookmark everything first"** (`settings.autoBookmark`, default off): every sweep — scheduled, catch-up, manual, settle — first writes the at-risk set to the same dated folder, then sweeps. A bookmarking failure is logged and the sweep proceeds: the sweep stays unavoidable, the escape hatch is best-effort.
+
+Destination: `zero-tabbox / YYYY-MM-DD` (local calendar day) under the browser's default bookmark parent ("Other bookmarks" on both targets — deliberately not a hard-coded root id, because the ids differ: `'2'` vs `'unfiled_____'`). An existing day folder is appended to. One failed bookmark does not abort the rest — saving 46 of 47 tabs beats saving none.
+
+Why this does not break the no-archive contract: the bookmarks are the *browser's* data, created at the user's explicit request (a click, or an opt-in setting), fully visible and deletable in the browser's own bookmark manager. The extension keeps no reference to them — the only trace in extension storage is the aggregate `lastSweep.bookmarked` boolean (D6) that picks the popup's "Day ended" wording — and no UI ever reads bookmarks back or reopens swept tabs. tab-sweep.spec is narrowed accordingly: the *sweep* still persists nothing per-tab and there is still no restore surface; the prohibition on writing bookmarks is scoped to "except through this escape hatch". The `bookmarks` permission is added to both manifests; the Firefox `data_collection_permissions: {required: ["none"]}` declaration stays accurate — local bookmark writes at user request are not data collection, and nothing is transmitted.
+
+Rejected: a "reopen last sweep" surface built on the dated folders (that is an archive with extra steps — the folder is the browser's, the extension never reads it); bookmarking silently on every sweep (the user must opt in, or the contract's teeth are gone); storing the folder id for later cleanup (a reference is a hook for exactly the feature this product refuses to grow).
+
+### D13. The settings stats are counters, not a log — the last-sweep timestamp is dropped
+The settings surface was first specified with three read-only stats: last sweep time, tabs closed last sweep, lifetime total. What ships is two — lifetime closed and last-sweep closed — and this decision records that as a choice rather than leaving it as silent drift. The stats are deliberately aggregate-only, the same line D6 draws in storage: a count answers "did it run", the schedule answers "when next", and a timestamp answers neither — it is closer to a log entry than to a counter, and a log of sweeps is the first step toward the history surface this product refuses to grow (see D12's rejected "reopen last sweep"). `lastSweep.at` stays in storage because the settle pass's recency check (D8) and the popup's 60 s "Day ended" window both need it; it simply is not rendered on the options page. This supersedes the earlier "last sweep time" wording in sweep-controls.spec "Settings surface", which now reads as aggregate stats only. Putting the timestamp back on the surface would be a new product decision, not a restoration.
 
 ## Risks / Trade-offs
 

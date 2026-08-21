@@ -67,6 +67,17 @@ function pad(value: number, width: number): string {
 }
 
 /**
+ * The *local* calendar day of `date` as `YYYY-MM-DD`.
+ *
+ * The date half of a {@link cutoffId}, and the name of the dated bookmarks
+ * folder the escape hatch writes into (design.md D12). Local getters only —
+ * see rule 1 in the module header.
+ */
+export function localDateStamp(date: Date): string {
+  return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1, 2)}-${pad(date.getDate(), 2)}`;
+}
+
+/**
  * Builds the idempotency marker for a cutoff on a given local calendar day.
  *
  * Format: `YYYY-MM-DDTHH:MM`, where the date part is `date`'s *local* calendar
@@ -85,11 +96,7 @@ export function cutoffId(date: Date, hhmm: string): string {
   if (!isValidHhMm(hhmm)) {
     throw new RangeError(`cutoffId: "${hhmm}" is not a zero-padded 24-hour HH:MM time`);
   }
-  // Local getters only — see rule 1 in the module header.
-  const y = pad(date.getFullYear(), 4);
-  const m = pad(date.getMonth() + 1, 2);
-  const d = pad(date.getDate(), 2);
-  return `${y}-${m}-${d}T${hhmm}`;
+  return `${localDateStamp(date)}T${hhmm}`;
 }
 
 /**

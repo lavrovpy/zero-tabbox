@@ -75,11 +75,15 @@ A sweep SHALL NOT support whitelists, per-domain rules, per-tab "protect" flags,
 - **THEN** that tab is closed like any other
 
 ### Requirement: Sweep does not create a recoverable archive
-The extension SHALL NOT persist the URL, title, favicon, group, or any per-tab data of closed tabs to any storage (extension storage, bookmarks, history, files, or remote), and SHALL NOT expose any UI that reopens swept tabs. Where the browser allows extensions to clear its own recently-closed list (Firefox), the sweep SHALL also remove swept tabs from that list.
+The extension SHALL NOT persist the URL, title, favicon, group, or any per-tab data of closed tabs to extension storage, history, files, or anywhere remote, and SHALL NOT expose any UI that reopens swept tabs. The single permitted write outside extension storage is the bookmark escape hatch (sweep-controls.spec "Bookmark escape hatch"): at the user's explicit request — the popup's "Bookmark all" action, or the opt-in "bookmark everything first" setting — tab titles and URLs are written to the browser's own bookmarks under a dated `zero-tabbox` folder. Those bookmarks are the browser's data, managed and deletable by the user in the browser's bookmark manager; the extension SHALL keep no reference to them beyond the aggregate "bookmarked first" flag and SHALL never read them back. No bookmark is ever written without one of those two explicit user choices. Where the browser allows extensions to clear its own recently-closed list (Firefox), the sweep SHALL also remove swept tabs from that list.
 
 #### Scenario: Storage after a sweep
 - **WHEN** a sweep has closed 40 tabs
-- **THEN** extension storage contains only aggregate data (e.g. count of tabs closed, timestamp of the sweep) and no per-tab records
+- **THEN** extension storage contains only aggregate data (e.g. count of tabs closed, timestamp of the sweep, whether they were bookmarked first) and no per-tab records
+
+#### Scenario: No silent bookmarking
+- **WHEN** a sweep runs with "bookmark everything first" off and no "Bookmark all" click preceded it
+- **THEN** no bookmark has been created
 
 #### Scenario: Recently-closed list on Firefox
 - **WHEN** a sweep closes tabs on Firefox
@@ -93,6 +97,8 @@ The extension SHALL NOT persist the URL, title, favicon, group, or any per-tab d
 The Firefox manifest SHALL declare `browser_specific_settings.gecko.data_collection_permissions` with `required: ["none"]`, stating that the extension collects no user data. This declaration SHALL remain accurate: if any future change causes the extension to transmit, sync, or persist anything beyond the aggregate counters of `Sweep records only aggregate counters`, the declaration SHALL be updated before that change ships. The extension SHALL declare no host permissions and SHALL make no network requests.
 
 Mozilla requires this key for all new Firefox extensions; `addons-linter` reports `MISSING_DATA_COLLECTION_PERMISSIONS` without it and AMO enforces it at signing. Firefox surfaces the declared value in the install prompt, which makes it the user-visible counterpart of the no-archive guarantee: the contract is checkable before install, not only by reading storage afterwards.
+
+The bookmark escape hatch does not change the declaration: bookmarks written at the user's explicit request are local browser data the user owns, not data the extension collects, and nothing is transmitted anywhere.
 
 Chrome has no equivalent manifest key. The Chrome Web Store collects the same disclosure through its privacy-practices form at listing time, so the answers there SHALL match this declaration.
 
@@ -116,7 +122,7 @@ A sweep SHALL close all in-scope tabs as one batch operation; if a tab cannot be
 - **THEN** all other tabs are closed and the sweep is recorded as completed; the blocked tab is left for the user to resolve
 
 ### Requirement: Sweep records only aggregate counters
-After each sweep the extension SHALL store the timestamp of the sweep and the number of tabs closed, and SHALL keep a running total of tabs closed since installation.
+After each sweep the extension SHALL store the timestamp of the sweep, the number of tabs closed, and whether the closed tabs were written to bookmarks first (a single boolean, never a list), and SHALL keep a running total of tabs closed since installation.
 
 #### Scenario: Counters update
 - **WHEN** a sweep closes 37 tabs

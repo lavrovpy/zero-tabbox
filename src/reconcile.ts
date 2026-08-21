@@ -20,8 +20,8 @@
 import { clearBadge, setCountdownBadge, showNoticeNotification } from './badge';
 import { latestElapsedCutoff, nextOccurrence } from './cutoff';
 import { api, createAlarm, createRepeatingAlarm } from './platform';
-import { getLastAutoCutoffId, getSettings, setLastAutoCutoffId } from './storage';
-import { sweep, type SweepResult } from './sweep';
+import { getLastAutoCutoffId, getSettings, isAccepted, setLastAutoCutoffId } from './storage';
+import { sweep, type SweepOptions, type SweepResult } from './sweep';
 import type { Settings, SweepReason } from './types';
 
 /** What caused `reconcile()` to run. Only the reason differs, not the logic. */
@@ -76,10 +76,12 @@ const MINUTE_MS = 60_000;
 export interface ReconcileDeps {
   /** Current instant. Cutoffs are local wall-clock, so this is a `Date`. */
   now(): Date;
+  /** Whether the user has explicitly accepted the contract (design.md D7). */
+  isAccepted(): Promise<boolean>;
   getSettings(): Promise<Settings>;
   getLastAutoCutoffId(): Promise<string>;
   setLastAutoCutoffId(cutoffId: string): Promise<void>;
-  sweep(reason: SweepReason): Promise<SweepResult>;
+  sweep(reason: SweepReason, options?: SweepOptions): Promise<SweepResult>;
   latestElapsedCutoff(now: Date, cutoffs: readonly string[]): string | null;
   nextOccurrence(now: Date, hhmm: string): Date;
   getAlarms(): Promise<{ name: string }[]>;
@@ -94,6 +96,7 @@ export interface ReconcileDeps {
 /** The browser-backed dependency set used everywhere outside tests. */
 export const defaultDeps: ReconcileDeps = {
   now: () => new Date(),
+  isAccepted,
   getSettings,
   getLastAutoCutoffId,
   setLastAutoCutoffId,
@@ -168,6 +171,21 @@ export async function armSettlePass(deps: ReconcileDeps = defaultDeps): Promise<
 }
 
 async function reconcileNow(trigger: ReconcileTrigger, deps: ReconcileDeps): Promise<boolean> {
+  if (!(await deps.isAccepted())) {
+    // Consent gate (design.md D7): until the user explicitly accepts the
+    // contract, no automatic sweep runs, no marker is seeded and no schedule
+    // or badge alarm is armed — the extension is inert. Writing `accepted`
+    // fires `storage.onChanged`, whose listener reconciles again; that call
+    // seeds the marker (unset → fast-forward, so acceptance never sweeps
+    // retroactively) and arms the schedule.
+    for (const alarm of await deps.getAlarms()) {
+      if (isScheduleAlarm(alarm.name) || alarm.name === ALARM.badge) {
+        await deps.clearAlarm(alarm.name);
+      }
+    }
+    return false;
+  }
+
   const settings = await deps.getSettings();
   const now = deps.now();
   const latest = deps.latestElapsedCutoff(now, settings.cutoffs);
@@ -197,28 +215,37 @@ async function reconcileNow(trigger: ReconcileTrigger, deps: ReconcileDeps): Pro
 }
 
 /**
+ * Everything `runSweep` takes beyond the reason, as one bag. These were three
+ * trailing optionals, which forced callers to pad with `undefined` to reach
+ * the one they actually meant (`runSweep('manual', undefined, undefined, x)`).
+ */
+export interface RunSweepOptions extends SweepOptions {
+  /** The id to record for an `auto` sweep; omitted otherwise. */
+  cutoffId?: string;
+  /** Injected dependency seam for tests; defaults to the real dependencies. */
+  deps?: ReconcileDeps;
+}
+
+/**
  * Runs a sweep and records it. `auto` advances `lastAutoCutoffId`; `manual` and
  * `settle` do not (design.md D3/D8), which is what keeps "End day now" from
  * cancelling the evening cutoff and keeps the settle pass part of the same
  * catch-up rather than a second sweep.
  *
- * @param cutoffId the id to record for an `auto` sweep; omitted otherwise
  * @returns the number of tabs closed, for the badge and the popup's reply
  */
-export function runSweep(
-  reason: SweepReason,
-  cutoffId?: string,
-  deps: ReconcileDeps = defaultDeps,
-): Promise<number> {
-  return serialize(() => sweepNow(reason, cutoffId, deps));
+export function runSweep(reason: SweepReason, opts: RunSweepOptions = {}): Promise<number> {
+  const { cutoffId, deps = defaultDeps, ...options } = opts;
+  return serialize(() => sweepNow(reason, cutoffId, deps, options));
 }
 
 async function sweepNow(
   reason: SweepReason,
   cutoffId: string | undefined,
   deps: ReconcileDeps,
+  options?: SweepOptions,
 ): Promise<number> {
-  const result = await deps.sweep(reason);
+  const result = await deps.sweep(reason, options);
   if (reason === 'auto' && cutoffId) await deps.setLastAutoCutoffId(cutoffId);
 
   // The countdown is over and the badge now shows the closed count instead.
@@ -377,7 +404,7 @@ export async function handleAlarm(
   if (name === ALARM.settle) {
     // Repeats the catch-up sweep for the same cutoff: it neither reads nor
     // advances the marker, and its count folds into that sweep (design.md D8).
-    await runSweep('settle', undefined, deps);
+    await runSweep('settle', { deps });
     return;
   }
   if (name === ALARM.badge) {

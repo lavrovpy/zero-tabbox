@@ -28,7 +28,7 @@ export const STORAGE_KEYS = [
   'lastAutoCutoffId',
   'lastSweep',
   'stats',
-  'onboarded',
+  'accepted',
 ] as const satisfies readonly (keyof StorageShape)[];
 
 /** Why a candidate cutoff list was rejected. Drives the options-page message. */
@@ -166,6 +166,8 @@ function mergeSettings(stored: unknown): Settings {
     cutoffs,
     noticeMinutes,
     notify: typeof raw.notify === 'boolean' ? raw.notify : DEFAULT_SETTINGS.notify,
+    autoBookmark:
+      typeof raw.autoBookmark === 'boolean' ? raw.autoBookmark : DEFAULT_SETTINGS.autoBookmark,
     keepPinned:
       typeof raw.keepPinned === 'boolean' ? raw.keepPinned : DEFAULT_SETTINGS.keepPinned,
   };
@@ -216,6 +218,7 @@ export async function setSettings(settings: Settings): Promise<void> {
     cutoffs,
     noticeMinutes: settings.noticeMinutes,
     notify: Boolean(settings.notify),
+    autoBookmark: Boolean(settings.autoBookmark),
     keepPinned: Boolean(settings.keepPinned),
   };
   await write({ settings: next });
@@ -260,7 +263,7 @@ export async function getLastSweep(): Promise<LastSweep | undefined> {
   if ((reason !== 'auto' && reason !== 'manual') || !isCount(at) || !isCount(closed)) {
     return undefined;
   }
-  return { reason, at, closed };
+  return { reason, at, closed, bookmarked: raw.bookmarked === true };
 }
 
 /**
@@ -273,6 +276,7 @@ export async function setLastSweep(lastSweep: LastSweep): Promise<void> {
       reason: lastSweep.reason,
       at: lastSweep.at,
       closed: lastSweep.closed,
+      bookmarked: lastSweep.bookmarked === true,
     },
   });
 }
@@ -305,22 +309,22 @@ export async function bumpStats(closed: number): Promise<Stats> {
   return next;
 }
 
-// --- onboarding -------------------------------------------------------------
+// --- acceptance -------------------------------------------------------------
 
 /**
- * Records that the one-time onboarding options page has been shown
- * (design.md D7). Idempotent.
+ * Records that the user explicitly accepted the contract (design.md D7) —
+ * an "I understand" click on the onboarding page or the options page, never
+ * a mere page view. Idempotent. Writing it fires `storage.onChanged`, which
+ * is what makes the background arm the schedule.
  */
-export async function markOnboarded(): Promise<void> {
-  await write({ onboarded: true });
+export async function markAccepted(): Promise<void> {
+  await write({ accepted: true });
 }
 
 /**
- * Whether onboarding has already been shown.
- *
- * The options page uses this to decide whether to *highlight* the contract
- * statement — the statement itself is always rendered (sweep-controls.spec).
+ * Whether the contract has been accepted. Until this is true, `reconcile()`
+ * arms nothing and sweeps nothing (design.md D7) — the extension is inert.
  */
-export async function isOnboarded(): Promise<boolean> {
-  return (await read('onboarded')) === true;
+export async function isAccepted(): Promise<boolean> {
+  return (await read('accepted')) === true;
 }

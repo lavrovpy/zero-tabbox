@@ -8,67 +8,71 @@
   </head>
   <body>
     <!--
-      tasks.md 6.2. Exactly four controls plus read-only stats: cutoff times
-      (1–4), notice minutes (0–60), notify toggle, keep-pinned toggle.
-      Autosave; no Save button, no theme selector, no pause/skip/snooze/restore
+      tasks.md 6.2. Exactly five controls plus read-only stats: cutoff times
+      (1–4, as chips), badge-countdown start (fixed choices, 0–60), notify
+      toggle, bookmark-everything-first toggle, keep-pinned toggle. Autosave;
+      no Save button, no theme selector, no pause/skip/snooze/restore
       (sweep-controls.spec "Settings surface" / "No softening controls").
+      The contract sentence is always rendered; first-install onboarding is
+      its own page (ui/onboarding.html, design.md D7).
     -->
     <main class="page">
-      <header class="stack-tight">
-        <h1>zero-tabbox</h1>
-        <p class="hint">Every tab closes at your cutoff. Settings save as you change them.</p>
-      </header>
-
-      <!--
-        The contract statement is always rendered; on first open the script adds
-        `is-highlighted` (design.md D7 / sweep-controls.spec "One-time
-        onboarding states the contract").
-      -->
-      <section id="contract" class="card contract" aria-labelledby="contract-title">
-        <h2 id="contract-title" class="card-title">The contract</h2>
-        <p class="contract-statement">
+      <header class="stack-loose">
+        <div class="brand">
+          <img src="../icons/icon48.png" width="24" height="24" alt="" />
+          <h1>zero-tabbox</h1>
+        </div>
+        <p class="intro">
           At each cutoff every tab closes. Nothing is saved. Bookmark what matters before
           the cutoff.
         </p>
-        <p id="contract-note" class="hint" hidden>
-          There is no undo, no archive and no restore — that is the whole point. This page
-          opens by itself only once; reach it later from the extension menu.
+      </header>
+
+      <!--
+        Shown only until the contract is accepted (design.md D7): the landing
+        spot for onboarding's "Pick a different time". Adjust the schedule
+        below, then commit — the background arms nothing until this is pressed
+        here or on the onboarding page.
+      -->
+      <section id="accept-banner" class="accept-banner" hidden>
+        <p class="accept-note">
+          Nothing closes yet — the schedule stays off until you accept.
         </p>
+        <button id="accept" class="btn btn-accent" type="button">
+          <span id="accept-label">I understand. Start at 18:00.</span>
+        </button>
       </section>
 
-      <section class="card" aria-labelledby="schedule-title">
-        <h2 id="schedule-title" class="card-title">Cutoff times</h2>
-        <p class="hint">Between 1 and 4 times a day, in 24-hour local time.</p>
-        <div
-          id="cutoff-list"
-          class="cutoff-list"
-          role="group"
-          aria-labelledby="schedule-title"
-        ></div>
-        <p class="row actions">
-          <button id="add-cutoff" class="btn btn-sm" type="button">Add cutoff</button>
-        </p>
+      <section class="stack-loose" aria-labelledby="schedule-title">
+        <h2 id="schedule-title" class="section-title">Cutoff times</h2>
+        <div id="cutoff-list" class="chip-row" role="group" aria-labelledby="schedule-title">
+          <!-- Chips are rendered here; the add button stays last in the row. -->
+          <button id="add-cutoff" class="chip-add" type="button">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Add cutoff
+          </button>
+        </div>
         <p id="cutoff-error" class="alert" role="alert"></p>
       </section>
 
-      <section class="card" aria-labelledby="notice-title">
-        <h2 id="notice-title" class="card-title">Notice and exemptions</h2>
-
-        <div class="field">
-          <span class="field-text">
-            <label class="label" for="notice-minutes">Notice before cutoff</label>
-            <span class="hint">Minutes of badge countdown, 0–60. Set 0 for no warning.</span>
-          </span>
-          <input
-            id="notice-minutes"
-            class="input input-number"
-            type="number"
-            min="0"
-            max="60"
-            step="1"
-            inputmode="numeric"
-          />
+      <section class="stack-loose" aria-labelledby="notice-title">
+        <div class="notice-block">
+          <div class="notice-head">
+            <span id="notice-title" class="label">Badge countdown starts</span>
+            <span id="notice-summary" class="field-summary"></span>
+          </div>
+          <div
+            id="notice-options"
+            class="seg-row"
+            role="group"
+            aria-labelledby="notice-title"
+          ></div>
         </div>
+
+        <hr class="divider" />
 
         <div class="field">
           <span class="field-text">
@@ -78,34 +82,42 @@
           <input id="notify" class="switch" type="checkbox" role="switch" />
         </div>
 
+        <hr class="divider" />
+
+        <div class="field">
+          <span class="field-text">
+            <label class="label" for="auto-bookmark">Bookmark everything first</label>
+            <span class="hint hint-wide">
+              Writes every open tab to a dated bookmarks folder, then sweeps.
+            </span>
+          </span>
+          <input id="auto-bookmark" class="switch" type="checkbox" role="switch" />
+        </div>
+
+        <hr class="divider" />
+
         <div class="field">
           <span class="field-text">
             <label class="label" for="keep-pinned">Keep pinned tabs</label>
-            <span class="hint">The only exemption. Pinned tabs survive every sweep.</span>
+            <span class="hint">Pinned tabs survive every sweep.</span>
           </span>
           <input id="keep-pinned" class="switch" type="checkbox" role="switch" />
         </div>
       </section>
 
-      <section class="card" aria-labelledby="stats-title">
-        <h2 id="stats-title" class="card-title">Stats</h2>
-        <dl class="stats">
-          <div class="stat">
-            <dt>Last sweep</dt>
-            <dd id="stat-last">—</dd>
+      <section class="stack-loose" aria-labelledby="stats-title">
+        <h2 id="stats-title" class="section-title">Since install</h2>
+        <div class="stat-row">
+          <div class="stat-card">
+            <span id="stat-lifetime" class="stat-value">0</span>
+            <span class="hint">tabs closed</span>
           </div>
-          <div class="stat">
-            <dt>Tabs closed last sweep</dt>
-            <dd id="stat-last-closed">—</dd>
+          <div class="stat-card">
+            <span id="stat-last" class="stat-value">—</span>
+            <span class="hint">last sweep</span>
           </div>
-          <div class="stat">
-            <dt>Tabs closed since install</dt>
-            <dd id="stat-lifetime">—</dd>
-          </div>
-        </dl>
+        </div>
       </section>
-
-      <p id="save-status" class="status" role="status" aria-live="polite"></p>
     </main>
     <script src="options.js"></script>
   </body>
