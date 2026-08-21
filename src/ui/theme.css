@@ -305,6 +305,23 @@ button {
   background: var(--color-border);
 }
 
+/* Not-yet-accepted commit banner on the options page (design.md D7). */
+.accept-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+}
+
+.accept-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-fg-2);
+}
+
 /* --------------------------------------------------------------- buttons */
 
 .btn {
@@ -370,6 +387,26 @@ button {
 .btn-accent:active {
   background: var(--color-accent-active);
   border-color: var(--color-accent-active);
+}
+
+/*
+ * Plain-text action (the onboarding decline): deliberately quiet — it must
+ * be findable without competing with the commitment buttons above it.
+ */
+.btn-plain {
+  border: 0;
+  padding: 4px;
+  background: none;
+  color: var(--color-fg-3);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn-plain:hover {
+  color: var(--color-fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* Icon-only links (the settings gear): padded hit target, no underline. */
@@ -822,7 +859,15 @@ button {
 
 .onboarding-actions {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.onboarding-primary {
+  display: flex;
   gap: 10px;
+  width: 100%;
 }
 
 .onboarding-actions .btn {

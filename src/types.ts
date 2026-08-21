@@ -85,8 +85,13 @@ export interface StorageShape {
   lastSweep?: LastSweep;
   /** Lifetime counters; defaults to `{lifetimeClosed: 0}` when absent. */
   stats: Stats;
-  /** Set once, when the first-install onboarding options page has been opened. */
-  onboarded?: boolean;
+  /**
+   * Set once, when the user explicitly accepts the contract — "I understand"
+   * on the onboarding page, or its options-page equivalent. Until it is true
+   * the background arms no alarms and runs no automatic sweep (design.md D7);
+   * merely viewing the onboarding page does not set it.
+   */
+  accepted?: boolean;
 }
 
 /** Current storage schema version. Bump only alongside a migration. */

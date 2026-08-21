@@ -18,7 +18,9 @@ import type { MessageResponse } from './types';
 /**
  * The onboarding entry point (design.md D7): a dedicated one-screen page that
  * states the terms of the contract before the user keeps the extension.
- * It is opened exactly once, on install; it writes the `onboarded` flag itself.
+ * It is opened exactly once, on install. Until the user explicitly accepts
+ * there ("I understand", which writes the `accepted` flag) or on the options
+ * page, `reconcile()` refuses to arm the schedule or sweep.
  */
 const ONBOARDING_PAGE = 'ui/onboarding.html';
 
@@ -83,7 +85,10 @@ api.alarms.onAlarm.addListener((alarm) => {
 
 api.storage.onChanged.addListener((changes, areaName) => {
   // Settings edits reschedule immediately, without sweeping retroactively.
-  if (areaName !== 'local' || !('settings' in changes)) return;
+  // `accepted` flipping true is what arms the schedule for the first time
+  // (design.md D7) — it takes the same fast-forward path, so accepting never
+  // sweeps retroactively either.
+  if (areaName !== 'local' || !('settings' in changes || 'accepted' in changes)) return;
   guard('onChanged', () => reconcile('settings-changed'));
 });
 

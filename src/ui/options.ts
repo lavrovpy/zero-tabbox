@@ -20,6 +20,8 @@ import {
   getLastSweep,
   getSettings,
   getStats,
+  isAccepted,
+  markAccepted,
   setSettings,
 } from '../storage';
 import { DEFAULT_SETTINGS, LIMITS } from '../types';
@@ -54,6 +56,9 @@ const autoBookmarkInput = el<HTMLInputElement>('auto-bookmark');
 const keepPinnedInput = el<HTMLInputElement>('keep-pinned');
 const statLast = el<HTMLElement>('stat-last');
 const statLifetime = el<HTMLElement>('stat-lifetime');
+const acceptBanner = el<HTMLElement>('accept-banner');
+const acceptButton = el<HTMLButtonElement>('accept');
+const acceptLabel = el<HTMLSpanElement>('accept-label');
 
 /**
  * The last successfully persisted settings, kept so the cutoff chips can be
@@ -153,6 +158,7 @@ async function persist(next: Settings): Promise<boolean> {
   }
   clearError();
   renderNotice();
+  renderAcceptLabel();
   return true;
 }
 
@@ -284,6 +290,39 @@ function buildNoticePicker(): void {
   }
 }
 
+// ---------------------------------------------------------------- acceptance
+
+/**
+ * Keeps the not-yet-accepted commit button naming the earliest cutoff, so the
+ * words stay true while the user edits the schedule above it (design.md D7).
+ */
+function renderAcceptLabel(): void {
+  const first = saved.cutoffs[0];
+  if (first !== undefined) acceptLabel.textContent = `I understand. Start at ${first}.`;
+}
+
+/**
+ * The options-page half of the consent gate: onboarding's "Pick a different
+ * time" lands here without accepting, so the banner offers the same commit.
+ * Accepting is what arms the schedule (via `storage.onChanged`); until then
+ * every edit on this page merely describes what the user is about to agree to.
+ */
+async function initAccept(): Promise<void> {
+  acceptBanner.hidden = await isAccepted();
+  renderAcceptLabel();
+  acceptButton.addEventListener('click', () => {
+    void (async () => {
+      try {
+        await markAccepted();
+      } catch {
+        showError('Could not save your acceptance. Try again.');
+        return;
+      }
+      acceptBanner.hidden = true;
+    })();
+  });
+}
+
 // --------------------------------------------------------------------- stats
 
 async function renderStats(): Promise<void> {
@@ -324,6 +363,7 @@ async function init(): Promise<void> {
     if ('stats' in changes || 'lastSweep' in changes) void renderStats().catch(() => undefined);
   });
 
+  await initAccept().catch(() => undefined);
   await renderStats().catch(() => undefined);
 }
 

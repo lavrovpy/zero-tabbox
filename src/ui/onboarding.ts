@@ -2,15 +2,17 @@
  * First-install onboarding (design.md D7): one screen stating the terms
  * of the contract, opened once by the background's `onInstalled` handler.
  *
- * Both buttons accept the contract — there is deliberately no "no thanks"
- * button, because declining is the browser's own uninstall flow, not ours.
- * "I understand" closes the page and leaves the default schedule armed;
- * "Pick a different time" goes to settings in the same tab. Either way the
- * `onboarded` flag is written so this page is never opened again
- * automatically (sweep-controls.spec "One-time onboarding").
+ * Nothing destructive happens until the contract is explicitly accepted:
+ * viewing this page writes nothing, and the background arms no schedule
+ * while the `accepted` flag is unset. "I understand" writes it and closes
+ * the page; "Pick a different time" goes to settings in the same tab, where
+ * the equivalent accept button waits; the plain-text decline underneath
+ * hands off to the browser's own uninstall confirmation — uninstalling is
+ * the one thing an extension may do to itself without extra permissions
+ * (disabling requires the "management" permission, which we don't ask for).
  */
 import { api } from '../platform';
-import { getSettings, markOnboarded } from '../storage';
+import { getSettings, markAccepted } from '../storage';
 
 function el<T extends HTMLElement>(id: string): T {
   const node = document.getElementById(id);
@@ -20,6 +22,7 @@ function el<T extends HTMLElement>(id: string): T {
 
 const accept = el<HTMLButtonElement>('accept');
 const pickTime = el<HTMLButtonElement>('pick-time');
+const decline = el<HTMLButtonElement>('decline');
 
 /** Closes this page's own tab; falls back to `window.close` if the API balks. */
 async function closeSelf(): Promise<void> {
@@ -36,20 +39,32 @@ async function closeSelf(): Promise<void> {
 }
 
 accept.addEventListener('click', () => {
-  void closeSelf();
+  void (async () => {
+    try {
+      await markAccepted();
+    } catch {
+      // Failing to record acceptance fails safe — the schedule stays unarmed.
+      // Keep the page open so the click can be retried.
+      return;
+    }
+    await closeSelf();
+  })();
 });
 
 pickTime.addEventListener('click', () => {
   // Same-tab navigation, not `openOptionsPage()`: the user is mid-flow and a
-  // second tab would leave this one behind, still showing the terms.
+  // second tab would leave this one behind, still showing the terms. Not an
+  // acceptance — the options page shows its own accept button until then.
   window.location.href = api.runtime.getURL('ui/options.html');
 });
 
-async function init(): Promise<void> {
-  // The flag is written on view, not on click: the page has been shown, which
-  // is all "once" means. Both buttons work even if this write fails.
-  await markOnboarded().catch(() => undefined);
+decline.addEventListener('click', () => {
+  // The browser shows its own confirmation dialog; cancelling it rejects the
+  // promise, which is not an error — the user simply changed their mind.
+  void api.management.uninstallSelf({ showConfirmDialog: true }).catch(() => undefined);
+});
 
+async function init(): Promise<void> {
   // The headline states the real first cutoff, which on a fresh install is the
   // default 18:00 — but if the user reaches settings first and comes back, the
   // words still tell the truth.

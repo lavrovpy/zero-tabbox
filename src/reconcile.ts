@@ -20,7 +20,7 @@
 import { clearBadge, setCountdownBadge, showNoticeNotification } from './badge';
 import { latestElapsedCutoff, nextOccurrence } from './cutoff';
 import { api, createAlarm, createRepeatingAlarm } from './platform';
-import { getLastAutoCutoffId, getSettings, setLastAutoCutoffId } from './storage';
+import { getLastAutoCutoffId, getSettings, isAccepted, setLastAutoCutoffId } from './storage';
 import { sweep, type SweepOptions, type SweepResult } from './sweep';
 import type { Settings, SweepReason } from './types';
 
@@ -76,6 +76,8 @@ const MINUTE_MS = 60_000;
 export interface ReconcileDeps {
   /** Current instant. Cutoffs are local wall-clock, so this is a `Date`. */
   now(): Date;
+  /** Whether the user has explicitly accepted the contract (design.md D7). */
+  isAccepted(): Promise<boolean>;
   getSettings(): Promise<Settings>;
   getLastAutoCutoffId(): Promise<string>;
   setLastAutoCutoffId(cutoffId: string): Promise<void>;
@@ -94,6 +96,7 @@ export interface ReconcileDeps {
 /** The browser-backed dependency set used everywhere outside tests. */
 export const defaultDeps: ReconcileDeps = {
   now: () => new Date(),
+  isAccepted,
   getSettings,
   getLastAutoCutoffId,
   setLastAutoCutoffId,
@@ -168,6 +171,21 @@ export async function armSettlePass(deps: ReconcileDeps = defaultDeps): Promise<
 }
 
 async function reconcileNow(trigger: ReconcileTrigger, deps: ReconcileDeps): Promise<boolean> {
+  if (!(await deps.isAccepted())) {
+    // Consent gate (design.md D7): until the user explicitly accepts the
+    // contract, no automatic sweep runs, no marker is seeded and no schedule
+    // or badge alarm is armed — the extension is inert. Writing `accepted`
+    // fires `storage.onChanged`, whose listener reconciles again; that call
+    // seeds the marker (unset → fast-forward, so acceptance never sweeps
+    // retroactively) and arms the schedule.
+    for (const alarm of await deps.getAlarms()) {
+      if (isScheduleAlarm(alarm.name) || alarm.name === ALARM.badge) {
+        await deps.clearAlarm(alarm.name);
+      }
+    }
+    return false;
+  }
+
   const settings = await deps.getSettings();
   const now = deps.now();
   const latest = deps.latestElapsedCutoff(now, settings.cutoffs);

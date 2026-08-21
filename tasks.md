@@ -6,7 +6,7 @@
 
 ## 2. Storage and settings
 
-- [ ] 2.1 Define typed storage schema (`settings`, `lastAutoCutoffId`, `lastSweep` — including the aggregate `bookmarked` flag — `stats`, `onboarded`, `version`) with defaults (`cutoffs: ['18:00']`, `noticeMinutes: 10`, `notify: true`, `autoBookmark: false`, `keepPinned: false`)
+- [ ] 2.1 Define typed storage schema (`settings`, `lastAutoCutoffId`, `lastSweep` — including the aggregate `bookmarked` flag — `stats`, `accepted`, `version`) with defaults (`cutoffs: ['18:00']`, `noticeMinutes: 10`, `notify: true`, `autoBookmark: false`, `keepPinned: false`)
 - [ ] 2.2 Implement `storage.ts` with `getSettings/setSettings`, `getLastAutoCutoffId/setLastAutoCutoffId`, `getLastSweep/setLastSweep`, `bumpStats`; validate cutoffs (1–4 entries, `HH:MM`, unique, sorted)
 - [ ] 2.3 Unit-test validation and defaults
 
@@ -35,7 +35,7 @@
 - [ ] 6.0 Build `ui/theme.css` per design.md D10: the "ab" design-system tokens from the redesign canvas (stone/ember ramps + semantic aliases, Geist/JetBrains Mono `@font-face` for the bundled `ui/fonts/*.woff2`, radius scale, warm shadows, ember focus ring, `--ease-ab`), dark overrides under `@media (prefers-color-scheme: dark)` only, `color-scheme: light dark`, and component styles for buttons (accent role reserved for the commitment actions), chips, segmented picker, switch, stat cards. No Tailwind, no Radix, no React
 - [ ] 6.1 Popup per the redesign: at-risk count sentence, next cutoff as headline numeral with live ETA (per-second accent countdown inside the notice window), "Bookmark all N tabs" (→ `bookmarkAtRiskTabs`, then the saved-to-folder confirmation), "End day now" (solid accent, text label; sends message → `sweep('manual')` with the already-bookmarked flag, closes popup), gear to options; for 60 s after a sweep show the "Day ended" state (closed count, bookmarked-first note, next cutoff, "Back to the day") instead
 - [ ] 6.2 Options page per the redesign: contract sentence in the header; cutoff chips (time input + remove ×, dashed "Add cutoff", max 4); badge-countdown picker with stops 0/5/10/20/30/60 and a summary label; notify, bookmark-everything-first and keep-pinned switches; "Since install" stat cards (lifetime closed, last sweep closed); autosave on change; no theme selector
-- [ ] 6.3 First-install onboarding page (`ui/onboarding.html`, design.md D7): terms list, headline naming the first cutoff, "I understand" (closes the tab) and "Pick a different time" (same-tab to options); writes `onboarded` on view; `onInstalled` (`reason === 'install'`) opens it once, updates open nothing
+- [ ] 6.3 First-install onboarding page (`ui/onboarding.html`, design.md D7): terms list, headline naming the first cutoff, "I understand" (writes `accepted`, closes the tab), "Pick a different time" (same-tab to options, which shows its own accept button until `accepted` is set) and a plain-text decline (browser's own uninstall confirmation); nothing is armed and no automatic sweep runs until `accepted` is written; `onInstalled` (`reason === 'install'`) opens it once, updates open nothing
 - [ ] 6.4 Theme verification: popup, options and onboarding pages in light and dark browser themes on Chrome and Firefox — no light flash before paint, popup backdrop and form controls follow the theme, OS theme change repaints an open options page without reload
 - [ ] 6.5 Accessibility pass: keyboard-only traversal of all three surfaces, visible focus ring on every control, WCAG AA contrast checked in both themes
 

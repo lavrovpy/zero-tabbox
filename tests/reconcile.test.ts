@@ -74,6 +74,7 @@ function nextOccurrence(now: Date, hhmm: string): Date {
 
 interface State {
   now: Date;
+  accepted: boolean;
   settings: Settings;
   marker: string;
   closedPerSweep: number;
@@ -93,11 +94,14 @@ const REPEATING = -1;
  */
 const LONG_AGO = '2020-01-01T00:00';
 
-function harness(overrides: Partial<Pick<State, 'now' | 'marker' | 'closedPerSweep'>> & {
+function harness(overrides: Partial<Pick<State, 'now' | 'accepted' | 'marker' | 'closedPerSweep'>> & {
   settings?: Partial<Settings>;
 } = {}): { state: State; deps: ReconcileDeps } {
   const state: State = {
     now: overrides.now ?? new Date(2026, 7, 19, 18, 5),
+    // Accepted by default: every test below this describes the post-consent
+    // schedule; the consent gate has its own describe block.
+    accepted: overrides.accepted ?? true,
     settings: { ...DEFAULT_SETTINGS, ...overrides.settings },
     marker: overrides.marker ?? LONG_AGO,
     closedPerSweep: overrides.closedPerSweep ?? 7,
@@ -109,6 +113,7 @@ function harness(overrides: Partial<Pick<State, 'now' | 'marker' | 'closedPerSwe
 
   const deps: ReconcileDeps = {
     now: () => state.now,
+    isAccepted: async () => state.accepted,
     getSettings: async () => state.settings,
     getLastAutoCutoffId: async () => state.marker,
     setLastAutoCutoffId: async (cutoffId) => {
@@ -265,6 +270,66 @@ describe('reconcile — fresh install', () => {
 
     expect(state.sweeps).toEqual(['auto']);
     expect(state.marker).toBe('2026-08-19T18:00');
+  });
+});
+
+describe('reconcile — consent gate (design.md D7)', () => {
+  // Until the user explicitly accepts the contract, the extension is inert:
+  // no sweep, no marker seeding, no alarms. Viewing the onboarding page is
+  // not acceptance — only the "I understand" click writes the flag.
+  it('neither sweeps nor arms anything before acceptance, on any trigger', async () => {
+    const { state, deps } = harness({ accepted: false, marker: '' });
+
+    await reconcile('installed', deps);
+    await reconcile('startup', deps);
+    await reconcile('alarm', deps);
+
+    expect(state.sweeps).toEqual([]);
+    expect(state.marker).toBe('');
+    expect(state.alarms.size).toBe(0);
+  });
+
+  it('clears a schedule that was somehow armed, as long as consent is missing', async () => {
+    const { state, deps } = harness({ accepted: false });
+    state.alarms.set(`${ALARM.sweepPrefix}18:00`, 1);
+    state.alarms.set(`${ALARM.noticePrefix}18:00`, 1);
+    state.alarms.set(ALARM.badge, REPEATING);
+
+    await reconcile('wake', deps);
+
+    expect(state.alarms.size).toBe(0);
+    expect(state.sweeps).toEqual([]);
+  });
+
+  it('seeds the marker and arms the schedule when acceptance lands, without sweeping', async () => {
+    // Install at 10:00, accept at 19:05 — after the 18:00 cutoff has elapsed.
+    // Acceptance must anchor the schedule at that moment, not catch up on
+    // cutoffs that passed while the extension was awaiting consent.
+    const { state, deps } = harness({
+      accepted: false,
+      now: new Date(2026, 7, 19, 19, 5),
+      marker: '',
+      settings: { cutoffs: ['18:00'] },
+    });
+    await reconcile('installed', deps);
+
+    state.accepted = true;
+    await reconcile('settings-changed', deps); // the `accepted` write lands here
+
+    expect(state.sweeps).toEqual([]);
+    expect(state.marker).toBe('2026-08-19T18:00');
+    expect(state.alarms.get(`${ALARM.sweepPrefix}18:00`)).toBe(
+      new Date(2026, 7, 20, 18, 0).getTime(),
+    );
+  });
+
+  it('still allows an explicit manual sweep — the click is its own consent', async () => {
+    const { state, deps } = harness({ accepted: false });
+
+    const closed = await runSweep('manual', undefined, deps);
+
+    expect(closed).toBe(7);
+    expect(state.sweeps).toEqual(['manual']);
   });
 });
 

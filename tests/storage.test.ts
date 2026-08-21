@@ -67,8 +67,8 @@ const {
   getLastSweep,
   getSettings,
   getStats,
-  isOnboarded,
-  markOnboarded,
+  isAccepted,
+  markAccepted,
   setLastAutoCutoffId,
   setLastSweep,
   setSettings,
@@ -321,13 +321,13 @@ describe('lastSweep and stats', () => {
   });
 });
 
-describe('onboarding', () => {
+describe('acceptance', () => {
   it('is false until marked, then true and idempotent', async () => {
-    await expect(isOnboarded()).resolves.toBe(false);
-    await markOnboarded();
-    await expect(isOnboarded()).resolves.toBe(true);
-    await markOnboarded();
-    await expect(isOnboarded()).resolves.toBe(true);
+    await expect(isAccepted()).resolves.toBe(false);
+    await markAccepted();
+    await expect(isAccepted()).resolves.toBe(true);
+    await markAccepted();
+    await expect(isAccepted()).resolves.toBe(true);
   });
 });
 
@@ -340,7 +340,7 @@ describe('the no-archive guarantee', () => {
     await setLastAutoCutoffId('2026-08-19T18:00');
     await setLastSweep({ reason: 'auto', at: Date.now(), closed: 12 });
     await bumpStats(12);
-    await markOnboarded();
+    await markAccepted();
 
     expect(new Set(Object.keys(store))).toEqual(new Set(STORAGE_KEYS));
     // ...and nothing per-tab hides inside the values.

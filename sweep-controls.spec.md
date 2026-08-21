@@ -138,7 +138,7 @@ The extension SHALL NOT provide any of the following: pause/disable toggle, "ski
 - **THEN** no pause, skip, snooze, or restore control is present
 
 ### Requirement: One-time onboarding states the contract
-On first install the extension SHALL open a dedicated one-screen onboarding page, once. It SHALL state the first cutoff time in its headline, that bookmarks are the only way to keep a page, and the contract as five numbered terms: every tab in every normal window closes; nothing about them is stored; there is no undo, archive, snooze or per-tab protection; closing the browser does not dodge the cutoff; and no data leaves the browser. It SHALL offer exactly two actions, both of which accept the contract: one confirming the stated cutoff, and one leading to the settings page to pick a different time. There SHALL be no decline control — declining is uninstalling. This page SHALL NOT be shown again automatically.
+On first install the extension SHALL open a dedicated one-screen onboarding page, once. It SHALL state the first cutoff time in its headline, that bookmarks are the only way to keep a page, and the contract as numbered terms: every tab in every normal window is included, with no undo, snooze or per-tab exception; closing the browser does not dodge the cutoff; and no data is collected. It SHALL offer three actions: an accept button confirming the stated cutoff, a button leading to the settings page to pick a different time (which is not itself acceptance), and a plain-text decline that starts the browser's own uninstall confirmation. This page SHALL NOT be shown again automatically.
 
 #### Scenario: First install
 - **WHEN** the extension is installed for the first time
@@ -146,8 +146,23 @@ On first install the extension SHALL open a dedicated one-screen onboarding page
 
 #### Scenario: Pick a different time
 - **WHEN** the user chooses "Pick a different time"
-- **THEN** the same tab navigates to the settings page
+- **THEN** the same tab navigates to the settings page, which offers the same accept button until the contract is accepted
+
+#### Scenario: Decline
+- **WHEN** the user chooses the decline action
+- **THEN** the browser's own uninstall confirmation opens; cancelling it leaves the page as it was
 
 #### Scenario: Update
 - **WHEN** the extension is updated to a new version
 - **THEN** no page is opened automatically
+
+### Requirement: No sweep before the contract is accepted
+Until the user explicitly accepts the contract — the accept button on the onboarding page, or its equivalent on the settings page — the extension SHALL NOT run an automatic sweep and SHALL NOT arm any schedule alarm. Viewing the onboarding page SHALL NOT count as acceptance. Acceptance SHALL arm the schedule from that moment; cutoffs that elapsed before acceptance SHALL NOT be swept retroactively. An explicit "End day now" remains available before acceptance — the click is its own consent for that one sweep.
+
+#### Scenario: Onboarding closed without accepting
+- **WHEN** the extension is installed and the onboarding page is closed without pressing an accept button
+- **THEN** no sweep runs at the next cutoff and no schedule alarm is armed
+
+#### Scenario: Acceptance after a cutoff has elapsed
+- **WHEN** the user accepts at 19:05 with an 18:00 cutoff
+- **THEN** no sweep runs for the elapsed 18:00, and the next sweep is at the following day's 18:00

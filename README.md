@@ -168,7 +168,7 @@ extension). Firefox adds `sessions`, which is what closes the
 reopen-closed-tab backdoor.
 
 Everything it stores lives in `storage.local` under exactly six keys:
-`settings`, `lastAutoCutoffId`, `lastSweep`, `stats`, `onboarded`, `version`.
+`settings`, `lastAutoCutoffId`, `lastSweep`, `stats`, `accepted`, `version`.
 Nothing per-tab, ever. That fixed list is what makes the contract auditable.
 
 ## Development
