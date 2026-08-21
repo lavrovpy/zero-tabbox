@@ -107,7 +107,7 @@ api.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
       (message as { alreadyBookmarked?: unknown }).alreadyBookmarked === true;
     void (async () => {
       try {
-        const closed = await runSweep('manual', undefined, undefined, { alreadyBookmarked });
+        const closed = await runSweep('manual', { alreadyBookmarked });
         sendResponse({ ok: true, closed } satisfies MessageResponse);
       } catch (error) {
         sendResponse({ ok: false, error: String(error) } satisfies MessageResponse);

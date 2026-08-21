@@ -326,7 +326,7 @@ describe('reconcile — consent gate (design.md D7)', () => {
   it('still allows an explicit manual sweep — the click is its own consent', async () => {
     const { state, deps } = harness({ accepted: false });
 
-    const closed = await runSweep('manual', undefined, deps);
+    const closed = await runSweep('manual', { deps });
 
     expect(closed).toBe(7);
     expect(state.sweeps).toEqual(['manual']);
@@ -343,7 +343,7 @@ describe('reconcile — manual sweeps', () => {
       settings: { cutoffs: ['18:00'] },
     });
 
-    const closed = await runSweep('manual', undefined, deps);
+    const closed = await runSweep('manual', { deps });
 
     expect(closed).toBe(7);
     expect(state.sweeps).toEqual(['manual']);
@@ -360,7 +360,7 @@ describe('reconcile — manual sweeps', () => {
     const { state, deps } = harness({ now: new Date(2026, 7, 19, 16, 30) });
     state.alarms.set(ALARM.badge, REPEATING);
 
-    await runSweep('manual', undefined, deps);
+    await runSweep('manual', { deps });
 
     expect(state.alarms.has(ALARM.badge)).toBe(false);
     expect(state.alarms.get(ALARM.badgeClear)).toBe(state.now.getTime() + 60_000);

@@ -215,21 +215,27 @@ async function reconcileNow(trigger: ReconcileTrigger, deps: ReconcileDeps): Pro
 }
 
 /**
+ * Everything `runSweep` takes beyond the reason, as one bag. These were three
+ * trailing optionals, which forced callers to pad with `undefined` to reach
+ * the one they actually meant (`runSweep('manual', undefined, undefined, x)`).
+ */
+export interface RunSweepOptions extends SweepOptions {
+  /** The id to record for an `auto` sweep; omitted otherwise. */
+  cutoffId?: string;
+  /** Injected dependency seam for tests; defaults to the real dependencies. */
+  deps?: ReconcileDeps;
+}
+
+/**
  * Runs a sweep and records it. `auto` advances `lastAutoCutoffId`; `manual` and
  * `settle` do not (design.md D3/D8), which is what keeps "End day now" from
  * cancelling the evening cutoff and keeps the settle pass part of the same
  * catch-up rather than a second sweep.
  *
- * @param cutoffId the id to record for an `auto` sweep; omitted otherwise
- * @param options display-only sweep context (see {@link SweepOptions})
  * @returns the number of tabs closed, for the badge and the popup's reply
  */
-export function runSweep(
-  reason: SweepReason,
-  cutoffId?: string,
-  deps: ReconcileDeps = defaultDeps,
-  options?: SweepOptions,
-): Promise<number> {
+export function runSweep(reason: SweepReason, opts: RunSweepOptions = {}): Promise<number> {
+  const { cutoffId, deps = defaultDeps, ...options } = opts;
   return serialize(() => sweepNow(reason, cutoffId, deps, options));
 }
 
@@ -398,7 +404,7 @@ export async function handleAlarm(
   if (name === ALARM.settle) {
     // Repeats the catch-up sweep for the same cutoff: it neither reads nor
     // advances the marker, and its count folds into that sweep (design.md D8).
-    await runSweep('settle', undefined, deps);
+    await runSweep('settle', { deps });
     return;
   }
   if (name === ALARM.badge) {
