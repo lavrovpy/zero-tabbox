@@ -82,9 +82,9 @@ want it yourself.
 Neither store listing exists yet; both flows below install a local build.
 
 ```bash
-npm install
-npm run build      # writes dist/chrome and dist/firefox
-npm run package    # writes artifacts/zero-tabbox-<browser>-<version>.zip
+bun install
+bun run build      # writes dist/chrome and dist/firefox
+bun run package    # writes artifacts/zero-tabbox-<browser>-<version>.zip
 ```
 
 ### Chrome (unpacked)
@@ -165,21 +165,21 @@ Nothing per-tab, ever. That fixed list is what makes the contract auditable.
 ## Development
 
 ```bash
-npm install
-npm run typecheck    # tsc --noEmit
-npm run test         # vitest, unit tests only
-npm run build        # both browsers into dist/
-npm run build:chrome # one browser
-npm run watch        # rebuild on change
-npm run lint:firefox # addons-linter, warnings treated as errors
-npm run package      # zip both dist/ trees into artifacts/
-npm run verify       # typecheck + test + build + lint, in that order
-npm run icons        # regenerate icons/ from the generator script
+bun install
+bun run typecheck    # tsc --noEmit
+bun run test         # bun test, one process per file, unit tests only
+bun run build        # both browsers into dist/
+bun run build:chrome # one browser
+bun run watch        # rebuild on change
+bun run lint:firefox # addons-linter, warnings treated as errors
+bun run package      # zip both dist/ trees into artifacts/
+bun run verify       # typecheck + test + build + lint, in that order
+bun run icons        # regenerate icons/ from the generator script
 ```
 
-Requires Node 22 or newer.
+Requires Bun 1.2 or newer.
 
-TypeScript, bundled with esbuild. No framework, no Tailwind, no React — the UI
+TypeScript, bundled with Bun.build. No framework, no Tailwind, no React — the UI
 is one button, six inputs and three stat lines, and the stylesheet is ~150 lines
 of hand-written CSS using shadcn's OKLCH token names. Light and dark follow the
 OS via `prefers-color-scheme`; there is deliberately no theme setting.
@@ -202,7 +202,7 @@ walked through by a person.
 | `src/platform.ts` | The only module that knows which browser it is on. |
 | `src/badge.ts` | Badge text and the pre-cutoff notification. Never rejects. |
 | `src/ui/` | Popup, options page, and the one stylesheet. |
-| `build.mjs` | esbuild + the per-browser manifest overlay. |
+| `build.mjs` | Bun.build + the per-browser manifest overlay. |
 
 ### Specs
 

@@ -6,26 +6,25 @@
   "description": "Closes every tab at your daily cutoff. No archive, no undo.",
   "license": "MIT",
   "engines": {
-    "node": ">=22"
+    "bun": ">=1.2"
   },
   "scripts": {
-    "build": "node build.mjs --browser=chrome --browser=firefox",
-    "build:chrome": "node build.mjs --browser=chrome",
-    "build:firefox": "node build.mjs --browser=firefox",
-    "watch": "node build.mjs --browser=chrome --browser=firefox --watch",
-    "icons": "node scripts/make-icons.mjs",
-    "package": "node scripts/package.mjs",
-    "test": "vitest run",
+    "build": "bun ./build.mjs --browser=chrome --browser=firefox",
+    "build:chrome": "bun ./build.mjs --browser=chrome",
+    "build:firefox": "bun ./build.mjs --browser=firefox",
+    "watch": "bun ./build.mjs --browser=chrome --browser=firefox --watch",
+    "icons": "bun scripts/make-icons.mjs",
+    "package": "bun scripts/package.mjs",
+    "test": "bun scripts/run-tests.mjs",
     "typecheck": "tsc --noEmit",
     "lint:firefox": "addons-linter --warnings-as-errors dist/firefox",
-    "verify": "npm run typecheck && npm run test && npm run build && npm run lint:firefox"
+    "verify": "bun run typecheck && bun run test && bun run build && bun run lint:firefox"
   },
   "devDependencies": {
+    "@types/bun": "^1.2.10",
     "@types/chrome": "^0.2.6",
     "addons-linter": "^10.10.0",
-    "esbuild": "^0.28.2",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.11",
     "web-ext": "^10.6.0"
   }
 }

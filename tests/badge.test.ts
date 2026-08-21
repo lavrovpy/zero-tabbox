@@ -8,9 +8,9 @@
  * `setClosedBadge`, so a badge failure that escaped would turn a completed sweep
  * into a failed one and lose its counters.
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 
-const { calls, mockApi, fail } = vi.hoisted(() => {
+const { calls, mockApi, fail } = (() => {
   const calls = {
     badge: [] as string[],
     notifications: [] as { id: string; options: Record<string, unknown> }[],
@@ -39,9 +39,9 @@ const { calls, mockApi, fail } = vi.hoisted(() => {
   };
 
   return { calls, mockApi, fail };
-});
+})();
 
-vi.mock('../src/platform', () => ({
+mock.module('../src/platform', () => ({
   api: mockApi as unknown as typeof chrome,
   isFirefox: () => false,
   createAlarm: () => Promise.resolve(),
@@ -57,7 +57,7 @@ beforeEach(() => {
   calls.badge.length = 0;
   calls.notifications.length = 0;
   fail.now = false;
-  vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  spyOn(console, 'warn').mockImplementation(() => undefined);
 });
 
 describe('setCountdownBadge', () => {

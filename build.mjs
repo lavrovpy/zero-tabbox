@@ -1,10 +1,10 @@
 /**
  * Build script for zero-tabbox.
  *
- *   node build.mjs --browser=chrome --browser=firefox [--watch]
+ *   bun ./build.mjs --browser=chrome --browser=firefox [--watch]
  *
  * For each requested browser it:
- *   1. bundles the three TypeScript entry points with esbuild into dist/<browser>/,
+ *   1. bundles the three TypeScript entry points with Bun.build into dist/<browser>/,
  *   2. copies the static assets (ui/*.html, ui/*.css, icons/*),
  *   3. writes dist/<browser>/manifest.json from src/manifest.base.json plus the
  *      per-browser overlay below (design.md D1).
@@ -16,8 +16,7 @@
  *   dist/<browser>/icons/icon{16,32,48,128}.png
  *   dist/<browser>/manifest.json
  */
-import * as esbuild from 'esbuild';
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, rmSync, watch as fsWatch, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -35,6 +34,11 @@ const BROWSERS = ['chrome', 'firefox'];
  *  - Firefox 140: built-in data-collection consent UI, which is what makes the
  *    `data_collection_permissions` declaration meaningful at install time.
  * Both floors clear MV3, non-persistent backgrounds and `oklch()` CSS.
+ *
+ * Unlike esbuild, Bun.build cannot lower syntax to a browser-version target —
+ * these floors only feed the manifests now. That is safe because tsconfig
+ * targets ES2022 and both floors (Chrome 120, Firefox 140) support all of
+ * ES2022 natively, so the bundles ship the syntax the sources are written in.
  */
 const MIN_CHROME = '120';
 const MIN_FIREFOX = '140.0';
@@ -82,11 +86,15 @@ const OVERLAYS = {
   }),
 };
 
-/** esbuild entry points, mapped to their output path inside dist/<browser>/. */
+/**
+ * Bundle entry points. With `root: SRC`, Bun.build mirrors each entry's path
+ * under dist/<browser>/ — src/ui/popup.ts lands at ui/popup.js, matching the
+ * layout the .html files and the manifests expect.
+ */
 const ENTRY_POINTS = [
-  { in: join(SRC, 'background.ts'), out: 'background' },
-  { in: join(SRC, 'ui', 'popup.ts'), out: 'ui/popup' },
-  { in: join(SRC, 'ui', 'options.ts'), out: 'ui/options' },
+  join(SRC, 'background.ts'),
+  join(SRC, 'ui', 'popup.ts'),
+  join(SRC, 'ui', 'options.ts'),
 ];
 
 /** Static files copied verbatim, as [source, destination-relative-to-dist]. */
@@ -128,60 +136,79 @@ function copyStatic(browser) {
   }
 }
 
-/** @returns {import('esbuild').BuildOptions} */
-function esbuildOptions(browser) {
-  return {
-    entryPoints: ENTRY_POINTS,
+async function bundle(browser) {
+  const result = await Bun.build({
+    entrypoints: ENTRY_POINTS,
+    root: SRC,
     outdir: join(DIST, browser),
-    bundle: true,
     // IIFE keeps the Firefox event page on a classic script and lets the Chrome
     // service worker skip `"type": "module"` — one output shape for both.
     format: 'iife',
-    platform: 'browser',
+    target: 'browser',
     // No build-time browser define on purpose: platform.ts detects the browser
-    // at runtime so the same code path is exercised under vitest.
-    target: browser === 'chrome' ? [`chrome${MIN_CHROME}`] : ['firefox140'],
-    logLevel: 'info',
-    legalComments: 'none',
+    // at runtime so the same code path is exercised under `bun test`.
     minify: false,
-    sourcemap: false,
-  };
+    sourcemap: 'none',
+  });
+  if (!result.success) {
+    throw new AggregateError(result.logs, `bundle failed for ${browser}`);
+  }
 }
 
 async function buildOnce(browser) {
   rmSync(join(DIST, browser), { recursive: true, force: true });
   mkdirSync(join(DIST, browser), { recursive: true });
-  await esbuild.build(esbuildOptions(browser));
+  await bundle(browser);
   copyStatic(browser);
   writeManifest(browser);
   console.log(`built dist/${browser}`);
 }
 
-async function watch(browser) {
-  mkdirSync(join(DIST, browser), { recursive: true });
-  copyStatic(browser);
-  writeManifest(browser);
-  const ctx = await esbuild.context({
-    ...esbuildOptions(browser),
-    plugins: [
-      {
-        name: 'zero-tabbox-static',
-        setup(build) {
-          build.onEnd(() => {
-            // Static assets and the manifest are cheap to redo on every rebuild,
-            // which keeps `npm run watch` correct when an .html/.css file changes.
-            copyStatic(browser);
-            writeManifest(browser);
-          });
-        },
-      },
-    ],
-  });
-  await ctx.watch();
-  console.log(`watching dist/${browser}`);
+/**
+ * Bun.build has no incremental watch API (esbuild's context/rebuild), so watch
+ * mode re-runs the full build on every change. A full build is well under a
+ * second, and rebuilding everything — bundles, static assets and the manifest —
+ * on every event is what keeps `bun run watch` correct when an .html/.css file
+ * changes.
+ */
+function watch(browsers) {
+  let timer;
+  let building = false;
+  let dirty = false;
+
+  const rebuild = async () => {
+    if (building) {
+      dirty = true;
+      return;
+    }
+    building = true;
+    try {
+      for (const browser of browsers) await buildOnce(browser);
+    } catch (error) {
+      console.error(error);
+    }
+    building = false;
+    if (dirty) {
+      dirty = false;
+      await rebuild();
+    }
+  };
+
+  const schedule = () => {
+    clearTimeout(timer);
+    timer = setTimeout(rebuild, 50);
+  };
+
+  for (const dir of [SRC, join(ROOT, 'icons')]) {
+    fsWatch(dir, { recursive: true }, schedule);
+  }
+  console.log(`watching ${browsers.map((b) => `dist/${b}`).join(', ')}`);
 }
 
 const { browsers, watch: isWatch } = parseArgs(process.argv.slice(2));
 for (const browser of browsers) {
-  await (isWatch ? watch(browser) : buildOnce(browser));
+  await buildOnce(browser);
+}
+if (isWatch) {
+  watch(browsers);
 }

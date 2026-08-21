@@ -3,9 +3,12 @@
  *
  * Placeholder art on purpose: a rounded dark square with a white ring — "zero".
  * Written by hand (zlib + a minimal PNG encoder) so the repo needs no image
- * dependency and `npm run icons` regenerates them deterministically.
+ * dependency and `bun run icons` regenerates them deterministically. The
+ * pixels are always identical, but the deflate bytes depend on the runtime's
+ * zlib — regenerating under a different Bun/zlib version may rewrite the
+ * files without changing the image.
  *
- * Usage: node scripts/make-icons.mjs
+ * Usage: bun scripts/make-icons.mjs
  */
 import { deflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';

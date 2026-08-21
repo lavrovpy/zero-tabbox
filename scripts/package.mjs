@@ -1,7 +1,7 @@
 /**
  * Packages the built extensions into distributable zips (tasks.md 7.4).
  *
- *   node scripts/package.mjs [--browser=chrome] [--browser=firefox]
+ *   bun scripts/package.mjs [--browser=chrome] [--browser=firefox]
  *
  * Produces `artifacts/zero-tabbox-<browser>-<version>.zip`, zipped from *inside*
  * `dist/<browser>` so `manifest.json` sits at the archive root — both stores and
@@ -44,7 +44,7 @@ mkdirSync(ARTIFACTS, { recursive: true });
 for (const browser of browsers) {
   const source = join(DIST, browser);
   if (!existsSync(join(source, 'manifest.json'))) {
-    throw new Error(`dist/${browser} is missing or unbuilt — run \`npm run build\` first.`);
+    throw new Error(`dist/${browser} is missing or unbuilt — run \`bun run build\` first.`);
   }
 
   const zipPath = join(ARTIFACTS, `zero-tabbox-${browser}-${version}.zip`);
