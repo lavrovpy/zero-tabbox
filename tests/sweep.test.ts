@@ -7,10 +7,10 @@
  * that Firefox's recently-closed list is only cleared of entries this sweep
  * created (tab-sweep.spec "Sweep does not create a recoverable archive").
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import type { LastSweep } from '../src/types';
 
-const { store, mockApi } = vi.hoisted(() => {
+const { store, mockApi } = (() => {
   const store = {
     lastSweep: undefined as LastSweep | undefined,
     lifetimeClosed: 0,
@@ -52,9 +52,9 @@ const { store, mockApi } = vi.hoisted(() => {
   };
 
   return { store, mockApi };
-});
+})();
 
-vi.mock('../src/platform', () => ({
+mock.module('../src/platform', () => ({
   api: mockApi as unknown as typeof chrome,
   isFirefox: () => false,
   forgetClosed: (since?: number) => {
@@ -63,12 +63,12 @@ vi.mock('../src/platform', () => ({
   },
 }));
 
-vi.mock('../src/badge', () => ({
+mock.module('../src/badge', () => ({
   setClosedBadge: () => Promise.resolve(),
   clearBadge: () => Promise.resolve(),
 }));
 
-vi.mock('../src/storage', () => ({
+mock.module('../src/storage', () => ({
   getSettings: () =>
     Promise.resolve({ cutoffs: ['18:00'], noticeMinutes: 10, notify: true, keepPinned: false }),
   getLastSweep: () => Promise.resolve(store.lastSweep),
@@ -90,7 +90,7 @@ beforeEach(() => {
   store.forgetSince.length = 0;
   store.removed.length = 0;
   store.created = 0;
-  vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  spyOn(console, 'warn').mockImplementation(() => undefined);
 });
 
 describe('sweep — records', () => {

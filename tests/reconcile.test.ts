@@ -7,33 +7,27 @@
  * dependencies with a fake clock, fake storage and a fake alarm table, so no
  * browser and none of the sibling modules' implementations are involved.
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'bun:test';
 
-// `platform.ts` reads `globalThis.chrome` at module scope. Hoisted above the
-// imports below so the module graph loads the same way it would in a browser.
-vi.hoisted(() => {
-  (globalThis as Record<string, unknown>).chrome = {
-    alarms: {
-      create: async () => undefined,
-      clear: async () => true,
-      getAll: async () => [],
-      onAlarm: { addListener: () => undefined },
-    },
-    runtime: { onStartup: { addListener: () => undefined } },
-  };
-});
-
-import {
-  ALARM,
-  armSettlePass,
-  handleAlarm,
-  handleNoticeAlarm,
-  reconcile,
-  runSweep,
-  SETTLE_DELAY_MS,
-  type ReconcileDeps,
-} from '../src/reconcile';
+import type { ReconcileDeps } from '../src/reconcile';
 import { DEFAULT_SETTINGS, type Settings, type SweepReason } from '../src/types';
+
+// `platform.ts` reads `globalThis.chrome` at module scope. Static imports would
+// hoist above this assignment, so `reconcile` is imported dynamically below —
+// after the fake is in place — and the module graph loads the same way it would
+// in a browser.
+(globalThis as Record<string, unknown>).chrome = {
+  alarms: {
+    create: async () => undefined,
+    clear: async () => true,
+    getAll: async () => [],
+    onAlarm: { addListener: () => undefined },
+  },
+  runtime: { onStartup: { addListener: () => undefined } },
+};
+
+const { ALARM, armSettlePass, handleAlarm, handleNoticeAlarm, reconcile, runSweep, SETTLE_DELAY_MS } =
+  await import('../src/reconcile');
 
 // --- Local, deliberately independent cutoff arithmetic -----------------------
 // `cutoff.ts` has its own tests; reimplementing the three functions here keeps

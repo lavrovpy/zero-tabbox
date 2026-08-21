@@ -7,12 +7,12 @@
  * `structuredClone` on the way in and out, exactly as the real API does — that
  * is what catches a getter handing callers a reference to a stored object.
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 
 import { DEFAULT_SETTINGS, STORAGE_VERSION } from '../src/types';
 import type { Settings } from '../src/types';
 
-const { store, mockApi } = vi.hoisted(() => {
+const { store, mockApi } = (() => {
   const store: Record<string, unknown> = {};
 
   const local = {
@@ -50,9 +50,9 @@ const { store, mockApi } = vi.hoisted(() => {
   };
 
   return { store, mockApi: { storage: { local } } };
-});
+})();
 
-vi.mock('../src/platform', () => ({
+mock.module('../src/platform', () => ({
   api: mockApi as unknown as typeof chrome,
   isFirefox: () => false,
   createAlarm: () => Promise.resolve(),

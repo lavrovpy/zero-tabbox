@@ -35,27 +35,31 @@ jobs:
             echo "::notice title=Nothing to build yet::No package.json found. Build, typecheck, tests and extension lint start running once task 1.1 (project setup) lands."
           fi
 
-      - uses: actions/setup-node@v7
+      - uses: oven-sh/setup-bun@v2
         if: steps.probe.outputs.ready == 'true'
         with:
-          node-version: 22
-          cache: npm
+          # Version lives in .bun-version so CI and contributors read one file.
+          # Pinned, not `latest`: the build and tests lean on version-specific
+          # Bun behaviour (no Bun.build watch API, process-wide mock.module
+          # registry, TZ caching), so a Bun release should break CI in a commit
+          # that bumps that file — not spontaneously on an unrelated PR.
+          bun-version-file: .bun-version
 
       - name: Install
         if: steps.probe.outputs.ready == 'true'
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Typecheck
         if: steps.probe.outputs.ready == 'true'
-        run: npm run typecheck
+        run: bun run typecheck
 
       - name: Unit tests
         if: steps.probe.outputs.ready == 'true'
-        run: npm test
+        run: bun run test
 
       - name: Build both browser targets
         if: steps.probe.outputs.ready == 'true'
-        run: npm run build
+        run: bun run build
 
       # addons-linter (what web-ext lint wraps) validates against Firefox rules:
       # it rejects background.service_worker with MANIFEST_FIELD_UNSUPPORTED, so
@@ -66,7 +70,7 @@ jobs:
       # findings, so any warning here is a real regression.
       - name: Lint the Firefox build (addons-linter)
         if: steps.probe.outputs.ready == 'true'
-        run: npx --yes web-ext lint --source-dir dist/firefox --self-hosted --warnings-as-errors
+        run: bunx web-ext lint --source-dir dist/firefox --self-hosted --warnings-as-errors
 
       # Chrome has no official manifest linter, so assert the invariants that
       # matter for our build instead: valid JSON, MV3, and the Chrome-only
@@ -74,7 +78,7 @@ jobs:
       - name: Sanity-check the Chrome manifest
         if: steps.probe.outputs.ready == 'true'
         run: |
-          node -e '
+          bun -e '
             const fs = require("fs");
             const m = JSON.parse(fs.readFileSync("dist/chrome/manifest.json", "utf8"));
             const fail = (msg) => { console.error("::error::" + msg); process.exitCode = 1; };

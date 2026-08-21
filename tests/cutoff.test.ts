@@ -12,7 +12,7 @@
  *    If a host ever stops honouring it, `TZ_SWITCHING_WORKS` turns those blocks
  *    into skips rather than false failures.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 
 import { cutoffId, isValidHhMm, latestElapsedCutoff, nextOccurrence, parseHhMm } from '../src/cutoff';
 
@@ -25,15 +25,23 @@ const HOUR_MS = 3_600_000;
  */
 declare const process: { env: Record<string, string | undefined> };
 
+/**
+ * The zone the test runner started in (`bun test` pins this to UTC unless TZ
+ * is exported). Restoration below assigns this concrete name rather than
+ * deleting TZ: after a `delete process.env.TZ`, Bun keeps the previous zone
+ * cached and silently ignores every later TZ assignment, which would leave all
+ * the switches below stuck on the first zone used.
+ */
+const HOST_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 /** Runs `fn` with `process.env.TZ` temporarily set to `tz`. */
 function withTz<T>(tz: string, fn: () => T): T {
-  const previous = process.env.TZ;
+  const previous = process.env.TZ ?? HOST_TZ;
   process.env.TZ = tz;
   try {
     return fn();
   } finally {
-    if (previous === undefined) delete process.env.TZ;
-    else process.env.TZ = previous;
+    process.env.TZ = previous;
   }
 }
 
@@ -208,6 +216,12 @@ describe('nextOccurrence', () => {
 
   it('always lands on the requested wall clock, in whatever zone the host uses', () => {
     for (const hhmm of ['00:00', '09:05', '13:00', '18:00', '23:59']) {
+      // Narrows `HhMm | null` without a cast, and fails loudly if this fixture
+      // list ever drifts away from valid HH:MM.
+      const expected = parseHhMm(hhmm);
+      if (expected === null) throw new Error(`fixture "${hhmm}" is not valid HH:MM`);
+      const { hours, minutes } = expected;
+
       for (const now of [
         new Date(2026, 2, 8, 1, 30),
         new Date(2026, 6, 19, 12, 0),
@@ -215,7 +229,6 @@ describe('nextOccurrence', () => {
         new Date(2026, 11, 31, 23, 30),
       ]) {
         const next = nextOccurrence(now, hhmm);
-        const [hours, minutes] = hhmm.split(':').map(Number);
         expect(next.getHours(), `${hhmm} @ ${now.toString()}`).toBe(hours);
         expect(next.getMinutes(), `${hhmm} @ ${now.toString()}`).toBe(minutes);
         const delta = next.getTime() - now.getTime();

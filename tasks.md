@@ -1,6 +1,6 @@
 ## 1. Project setup
 
-- [ ] 1.1 Initialise repo: TypeScript, esbuild bundling to `dist/` (plus a copy step for static `.html` / `.css` assets), `@types/chrome`, vitest; npm scripts `build`, `watch`, `test`, `typecheck` (the names CI invokes)
+- [ ] 1.1 Initialise repo: TypeScript, `Bun.build` bundling to `dist/` (plus a copy step for static `.html` / `.css` assets), `@types/chrome`, `@types/bun`, `bun test` (per design.md D11); scripts `build`, `watch`, `test`, `typecheck` (the names CI invokes)
 - [ ] 1.2 Write per-browser MV3 manifests (shared base + build-time overlay, per design.md D1). Common: `action` with popup, `options_ui`, `commands` (`end-day-now`, default `Alt+Shift+E`), `incognito: "spanning"`, permissions `tabs`, `alarms`, `storage`, `notifications`; no host permissions. Chrome overlay: `background.service_worker`. Firefox overlay: event-page `background.scripts`, `browser_specific_settings.gecko.id`, `browser_specific_settings.gecko.data_collection_permissions` = `{"required": ["none"]}` (now required for all new Firefox extensions — addons-linter reports `MISSING_DATA_COLLECTION_PERMISSIONS` without it, and "none" is the honest value here per D6), and the `sessions` permission
 - [ ] 1.3 Add `platform.ts` shim: `forgetClosed()` no-op on Chrome, wired to `browser.sessions.forgetClosedTab/Window` on Firefox
 
