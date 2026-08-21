@@ -17,7 +17,7 @@ import type { MessageResponse } from './types';
 
 /**
  * The onboarding entry point (design.md D7): a dedicated one-screen page that
- * states the five terms of the contract before the user keeps the extension.
+ * states the terms of the contract before the user keeps the extension.
  * It is opened exactly once, on install; it writes the `onboarded` flag itself.
  */
 const ONBOARDING_PAGE = 'ui/onboarding.html';

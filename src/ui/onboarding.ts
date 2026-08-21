@@ -1,5 +1,5 @@
 /**
- * First-install onboarding (design.md D7): one screen stating the five terms
+ * First-install onboarding (design.md D7): one screen stating the terms
  * of the contract, opened once by the background's `onInstalled` handler.
  *
  * Both buttons accept the contract — there is deliberately no "no thanks"
@@ -57,9 +57,7 @@ async function init(): Promise<void> {
     const settings = await getSettings();
     const first = settings.cutoffs[0];
     if (first !== undefined) {
-      for (const id of ['cutoff-time', 'cutoff-time-2']) {
-        el<HTMLSpanElement>(id).textContent = first;
-      }
+      el<HTMLSpanElement>('cutoff-time').textContent = first;
       el<HTMLSpanElement>('accept-label').textContent = `I understand. Start at ${first}.`;
     }
   } catch {

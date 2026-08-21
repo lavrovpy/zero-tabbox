@@ -142,7 +142,7 @@ On first install the extension SHALL open a dedicated one-screen onboarding page
 
 #### Scenario: First install
 - **WHEN** the extension is installed for the first time
-- **THEN** the onboarding page opens with the five terms and "Every tab closes at 18:00" (the default cutoff) in the headline
+- **THEN** the onboarding page opens with the terms and "Every tab closes at 18:00" (the default cutoff) in the headline
 
 #### Scenario: Pick a different time
 - **WHEN** the user chooses "Pick a different time"
