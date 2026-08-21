@@ -6,7 +6,7 @@
   "description": "Closes every tab at your daily cutoff. No archive, no undo.",
   "license": "MIT",
   "engines": {
-    "bun": ">=1.2"
+    "bun": ">=1.3"
   },
   "scripts": {
     "build": "bun ./build.mjs --browser=chrome --browser=firefox",

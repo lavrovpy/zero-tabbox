@@ -177,7 +177,9 @@ bun run verify       # typecheck + test + build + lint, in that order
 bun run icons        # regenerate icons/ from the generator script
 ```
 
-Requires Bun 1.2 or newer. `bun run watch` uses recursive `fs.watch`, which is
+Requires Bun 1.3 or newer. The exact version CI runs is pinned in
+`.bun-version` (read by `oven-sh/setup-bun`), so bumping Bun is a one-line
+commit that CI verifies. `bun run watch` uses recursive `fs.watch`, which is
 well supported on macOS and Windows but historically patchy on Linux — if a save
 does not trigger a rebuild there, re-run `bun run build`.
 
