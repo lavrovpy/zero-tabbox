@@ -38,7 +38,11 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         if: steps.probe.outputs.ready == 'true'
         with:
-          bun-version: latest
+          # Pinned, not `latest`: the build and tests lean on version-specific
+          # Bun behaviour (no Bun.build watch API, process-wide mock.module
+          # registry, TZ caching), so a Bun release should break CI in a commit
+          # that bumps this line — not spontaneously on an unrelated PR.
+          bun-version: 1.2.10
 
       - name: Install
         if: steps.probe.outputs.ready == 'true'

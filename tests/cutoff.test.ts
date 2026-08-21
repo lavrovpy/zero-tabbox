@@ -216,6 +216,12 @@ describe('nextOccurrence', () => {
 
   it('always lands on the requested wall clock, in whatever zone the host uses', () => {
     for (const hhmm of ['00:00', '09:05', '13:00', '18:00', '23:59']) {
+      // Narrows `HhMm | null` without a cast, and fails loudly if this fixture
+      // list ever drifts away from valid HH:MM.
+      const expected = parseHhMm(hhmm);
+      if (expected === null) throw new Error(`fixture "${hhmm}" is not valid HH:MM`);
+      const { hours, minutes } = expected;
+
       for (const now of [
         new Date(2026, 2, 8, 1, 30),
         new Date(2026, 6, 19, 12, 0),
@@ -223,7 +229,6 @@ describe('nextOccurrence', () => {
         new Date(2026, 11, 31, 23, 30),
       ]) {
         const next = nextOccurrence(now, hhmm);
-        const [hours, minutes] = hhmm.split(':').map(Number) as [number, number];
         expect(next.getHours(), `${hhmm} @ ${now.toString()}`).toBe(hours);
         expect(next.getMinutes(), `${hhmm} @ ${now.toString()}`).toBe(minutes);
         const delta = next.getTime() - now.getTime();

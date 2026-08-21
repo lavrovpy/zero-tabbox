@@ -81,6 +81,8 @@ The "End day now" button SHALL be styled with the destructive token role, visual
 ### Requirement: Accessible interaction states
 Interactive controls SHALL have a visible keyboard focus indicator using the focus-ring token, SHALL be reachable and operable by keyboard alone, and text SHALL meet WCAG AA contrast (4.5:1 for body text, 3:1 for large text and UI boundaries) in both themes.
 
+Any control rendered as an icon alone SHALL carry a text alternative naming its action, its decorative artwork SHALL be hidden from assistive technology, and its clickable area SHALL be padded beyond the drawn glyph. Only secondary navigation MAY be icon-only; the "End day now" action SHALL remain text-labelled (see "Destructive action is visually distinct").
+
 #### Scenario: Keyboard-only use of the popup
 - **WHEN** the user opens the popup and presses Tab
 - **THEN** focus moves to "End day now" with a visible ring, and Enter runs the sweep
@@ -89,12 +91,20 @@ Interactive controls SHALL have a visible keyboard focus indicator using the foc
 - **WHEN** the popup and options page are measured in light and in dark theme
 - **THEN** all text and control boundaries meet the stated contrast ratios
 
+#### Scenario: The settings gear announces itself
+- **WHEN** a screen reader reaches the settings gear in the popup
+- **THEN** it is announced as "Settings", and the gear artwork itself is not announced as a separate element
+
+#### Scenario: The settings gear is reachable by keyboard
+- **WHEN** the user tabs past "End day now"
+- **THEN** focus moves to the settings gear with a visible ring, and Enter opens the options page
+
 ### Requirement: No softening controls
 The extension SHALL NOT provide any of the following: pause/disable toggle, "skip today", snooze, undo/restore, archive view, whitelist, per-tab protection, or export of swept tabs. Turning the extension off requires the browser's own extension management page.
 
 #### Scenario: Popup contents
 - **WHEN** the user opens the toolbar popup
-- **THEN** it shows the next cutoff time, the "End day now" button, and a link to settings — nothing else
+- **THEN** it shows the next cutoff time, the "End day now" button, and an icon-only settings link (a gear) — nothing else
 
 #### Scenario: Options page contents
 - **WHEN** the user opens the options page

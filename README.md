@@ -122,7 +122,7 @@ channel:
 2. Sign the build:
 
    ```bash
-   npx web-ext sign \
+   bunx web-ext sign \
      --channel unlisted \
      --api-key "$AMO_JWT_ISSUER" \
      --api-secret "$AMO_JWT_SECRET" \
@@ -170,14 +170,16 @@ bun run typecheck    # tsc --noEmit
 bun run test         # bun test, one process per file, unit tests only
 bun run build        # both browsers into dist/
 bun run build:chrome # one browser
-bun run watch        # rebuild on change
+bun run watch        # rebuild on change (in place; never unlinks dist/)
 bun run lint:firefox # addons-linter, warnings treated as errors
 bun run package      # zip both dist/ trees into artifacts/
 bun run verify       # typecheck + test + build + lint, in that order
 bun run icons        # regenerate icons/ from the generator script
 ```
 
-Requires Bun 1.2 or newer.
+Requires Bun 1.2 or newer. `bun run watch` uses recursive `fs.watch`, which is
+well supported on macOS and Windows but historically patchy on Linux — if a save
+does not trigger a rebuild there, re-run `bun run build`.
 
 TypeScript, bundled with Bun.build. No framework, no Tailwind, no React — the UI
 is one button, six inputs and three stat lines, and the stylesheet is ~150 lines

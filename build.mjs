@@ -153,10 +153,22 @@ async function bundle(browser) {
   if (!result.success) {
     throw new AggregateError(result.logs, `bundle failed for ${browser}`);
   }
+  // esbuild's `logLevel: 'info'` printed diagnostics from successful builds too.
+  // Bun.build only returns them, so print them or a warning vanishes silently.
+  for (const log of result.logs) console.warn(String(log));
 }
 
-async function buildOnce(browser) {
-  rmSync(join(DIST, browser), { recursive: true, force: true });
+/**
+ * `clean: false` leaves the existing dist/<browser> directory in place.
+ * Watch mode needs that: a browser with the extension loaded unpacked from
+ * that directory unloads it the moment the directory is unlinked, so cleaning
+ * on every rebuild would drop the extension being developed. Outputs are
+ * overwritten in place instead — the only thing that can then survive is the
+ * output of a file that was renamed in src/, which the next one-shot
+ * `bun run build` (clean: true) clears.
+ */
+async function buildOnce(browser, { clean = true } = {}) {
+  if (clean) rmSync(join(DIST, browser), { recursive: true, force: true });
   mkdirSync(join(DIST, browser), { recursive: true });
   await bundle(browser);
   copyStatic(browser);
@@ -183,7 +195,7 @@ function watch(browsers) {
     }
     building = true;
     try {
-      for (const browser of browsers) await buildOnce(browser);
+      for (const browser of browsers) await buildOnce(browser, { clean: false });
     } catch (error) {
       console.error(error);
     }

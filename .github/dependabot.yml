@@ -8,8 +8,9 @@ updates:
     commit-message:
       prefix: ci
 
-  # Starts working once task 1.1 adds package.json; harmless until then.
-  - package-ecosystem: npm
+  # Bun, not npm: the lockfile is bun.lock and there is no package-lock.json
+  # for the npm updater to resolve against.
+  - package-ecosystem: bun
     directory: /
     schedule:
       interval: monthly
