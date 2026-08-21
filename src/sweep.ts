@@ -6,9 +6,19 @@
  * tabs it closes — only counts, via `storage.ts`.
  */
 import { clearBadge, setClosedBadge } from './badge';
+import { bookmarkAtRiskTabs } from './bookmarks';
 import { api, forgetClosed } from './platform';
 import { bumpStats, getLastSweep, getSettings, setLastSweep } from './storage';
 import type { SweepReason } from './types';
+
+/** Caller-supplied context that never changes what a sweep closes. */
+export interface SweepOptions {
+  /**
+   * The popup already ran "Bookmark all" in this popup session, so the sweep
+   * record can say the tabs were saved first (design.md D12). Display-only.
+   */
+  alreadyBookmarked?: boolean;
+}
 
 /** Outcome of a single sweep, for stats and the post-sweep badge. */
 export interface SweepResult {
@@ -65,8 +75,22 @@ interface NormalWindow {
  * Never rejects for a per-tab failure; rejects only if the tab enumeration
  * itself fails.
  */
-export async function sweep(reason: SweepReason): Promise<SweepResult> {
+export async function sweep(reason: SweepReason, options: SweepOptions = {}): Promise<SweepResult> {
   const settings = await getSettings();
+
+  // The opt-in "Bookmark everything first" (design.md D12) runs before any tab
+  // is touched, so the saved set is exactly the set about to be closed. A
+  // bookmarking failure is logged, not fatal: the sweep stays unavoidable.
+  let bookmarked = options.alreadyBookmarked === true;
+  if (settings.autoBookmark) {
+    try {
+      await bookmarkAtRiskTabs(settings.keepPinned);
+      bookmarked = true;
+    } catch (error) {
+      console.warn('[zero-tabbox] auto-bookmark before the sweep failed', error);
+    }
+  }
+
   const windows = await enumerateNormalWindows();
 
   // Private and regular windows are two independent contexts: `tabs.move`
@@ -101,7 +125,7 @@ export async function sweep(reason: SweepReason): Promise<SweepResult> {
     }
   }
 
-  await record(reason, toClose.length);
+  await record(reason, toClose.length, bookmarked);
   await forgetClosed(removalStarted);
   return { closed: toClose.length };
 }
@@ -277,7 +301,7 @@ const SETTLE_FOLD_WINDOW_MS = 5 * 60_000;
  * that lands in the 60 s gap replaces `lastSweep` with a `manual` record, and
  * folding into that one would rewrite the user's manual sweep instead.
  */
-async function record(reason: SweepReason, closed: number): Promise<void> {
+async function record(reason: SweepReason, closed: number, bookmarked: boolean): Promise<void> {
   let total = closed;
   if (reason === 'settle') {
     const previous = await getLastSweep();
@@ -286,12 +310,16 @@ async function record(reason: SweepReason, closed: number): Promise<void> {
       previous.reason === 'auto' &&
       Date.now() - previous.at <= SETTLE_FOLD_WINDOW_MS;
     total = owns ? previous.closed + closed : closed;
-    await setLastSweep({ reason: 'auto', at: Date.now(), closed: total });
+    // Folding keeps the owning sweep's `bookmarked`: the settle pass either
+    // bookmarked under the same setting or had nothing new to save.
+    const foldedBookmarked = owns ? previous.bookmarked === true || bookmarked : bookmarked;
+    await setLastSweep({ reason: 'auto', at: Date.now(), closed: total, bookmarked: foldedBookmarked });
   } else {
     await setLastSweep({
       reason: reason === 'manual' ? 'manual' : 'auto',
       at: Date.now(),
       closed,
+      bookmarked,
     });
   }
   await bumpStats(closed);

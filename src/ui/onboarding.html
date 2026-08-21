@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>zero-tabbox</title>
+    <link rel="stylesheet" href="theme.css" />
+  </head>
+  <body class="onboarding-body">
+    <!--
+      First install, one screen (design.md D7, sweep-controls.spec "One-time
+      onboarding states the contract"). The five terms are the whole contract;
+      both buttons accept it — one keeps the default cutoff, the other goes
+      straight to settings to pick another time. This page opens exactly once
+      and is never shown again automatically.
+    -->
+    <main class="onboarding-card">
+      <div class="onboarding-top">
+        <div class="brand">
+          <img src="../icons/icon48.png" width="28" height="28" alt="" />
+          <span>zero-tabbox</span>
+        </div>
+        <h1 class="onboarding-headline">
+          Every tab closes at <span id="cutoff-time">18:00</span>.<br />Nothing is saved.
+        </h1>
+        <p class="onboarding-lede">
+          If a tab matters, bookmark it. If you don't, it's gone at
+          <span id="cutoff-time-2">18:00</span>. Read the five terms before you keep the
+          extension.
+        </p>
+        <ol class="terms">
+          <li>Every tab in every normal window closes — audio, groups and discarded tabs included.</li>
+          <li>Nothing about them is stored. Not the URL, not the title, not the favicon.</li>
+          <li>There is no undo, no archive, no snooze and no per-tab protection.</li>
+          <li>Closing the browser does not dodge it. A missed cutoff runs at the next start.</li>
+          <li>No data leaves the browser. Nothing is collected, nothing is sent.</li>
+        </ol>
+      </div>
+      <div class="onboarding-actions">
+        <button id="accept" class="btn btn-accent" type="button">
+          <span id="accept-label">I understand. Start at 18:00.</span>
+        </button>
+        <button id="pick-time" class="btn btn-secondary" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" />
+          </svg>
+          Pick a different time
+        </button>
+      </div>
+    </main>
+    <script src="onboarding.js"></script>
+  </body>
+</html>

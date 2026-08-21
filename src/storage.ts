@@ -166,6 +166,8 @@ function mergeSettings(stored: unknown): Settings {
     cutoffs,
     noticeMinutes,
     notify: typeof raw.notify === 'boolean' ? raw.notify : DEFAULT_SETTINGS.notify,
+    autoBookmark:
+      typeof raw.autoBookmark === 'boolean' ? raw.autoBookmark : DEFAULT_SETTINGS.autoBookmark,
     keepPinned:
       typeof raw.keepPinned === 'boolean' ? raw.keepPinned : DEFAULT_SETTINGS.keepPinned,
   };
@@ -216,6 +218,7 @@ export async function setSettings(settings: Settings): Promise<void> {
     cutoffs,
     noticeMinutes: settings.noticeMinutes,
     notify: Boolean(settings.notify),
+    autoBookmark: Boolean(settings.autoBookmark),
     keepPinned: Boolean(settings.keepPinned),
   };
   await write({ settings: next });
@@ -260,7 +263,7 @@ export async function getLastSweep(): Promise<LastSweep | undefined> {
   if ((reason !== 'auto' && reason !== 'manual') || !isCount(at) || !isCount(closed)) {
     return undefined;
   }
-  return { reason, at, closed };
+  return { reason, at, closed, bookmarked: raw.bookmarked === true };
 }
 
 /**
@@ -273,6 +276,7 @@ export async function setLastSweep(lastSweep: LastSweep): Promise<void> {
       reason: lastSweep.reason,
       at: lastSweep.at,
       closed: lastSweep.closed,
+      bookmarked: lastSweep.bookmarked === true,
     },
   });
 }

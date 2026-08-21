@@ -16,15 +16,11 @@ import { armSettlePass, handleAlarm, reconcile, runSweep } from './reconcile';
 import type { MessageResponse } from './types';
 
 /**
- * The onboarding entry point (design.md D7).
- *
- * `?onboarding=1` rather than a bare `openOptionsPage()`: the options page is
- * the only writer of the `onboarded` flag, so opening it in its onboarding
- * state must not depend on which of the two contexts wins a race to storage.
- * `options_ui.open_in_tab` is true, so this is the same surface the browser's
- * own "Options" menu item opens.
+ * The onboarding entry point (design.md D7): a dedicated one-screen page that
+ * states the five terms of the contract before the user keeps the extension.
+ * It is opened exactly once, on install; it writes the `onboarded` flag itself.
  */
-const ONBOARDING_PAGE = 'ui/options.html?onboarding=1';
+const ONBOARDING_PAGE = 'ui/onboarding.html';
 
 /**
  * Runs a handler, logging and swallowing both synchronous throws and
@@ -100,9 +96,13 @@ api.commands.onCommand.addListener((command) => {
 api.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
   const type = messageType(message);
   if (type === 'end-day-now') {
+    // Display-only context: whether the popup already ran "Bookmark all", so
+    // the sweep record can say the tabs were saved first (design.md D12).
+    const alreadyBookmarked =
+      (message as { alreadyBookmarked?: unknown }).alreadyBookmarked === true;
     void (async () => {
       try {
-        const closed = await runSweep('manual');
+        const closed = await runSweep('manual', undefined, undefined, { alreadyBookmarked });
         sendResponse({ ok: true, closed } satisfies MessageResponse);
       } catch (error) {
         sendResponse({ ok: false, error: String(error) } satisfies MessageResponse);

@@ -21,7 +21,7 @@ import { clearBadge, setCountdownBadge, showNoticeNotification } from './badge';
 import { latestElapsedCutoff, nextOccurrence } from './cutoff';
 import { api, createAlarm, createRepeatingAlarm } from './platform';
 import { getLastAutoCutoffId, getSettings, setLastAutoCutoffId } from './storage';
-import { sweep, type SweepResult } from './sweep';
+import { sweep, type SweepOptions, type SweepResult } from './sweep';
 import type { Settings, SweepReason } from './types';
 
 /** What caused `reconcile()` to run. Only the reason differs, not the logic. */
@@ -79,7 +79,7 @@ export interface ReconcileDeps {
   getSettings(): Promise<Settings>;
   getLastAutoCutoffId(): Promise<string>;
   setLastAutoCutoffId(cutoffId: string): Promise<void>;
-  sweep(reason: SweepReason): Promise<SweepResult>;
+  sweep(reason: SweepReason, options?: SweepOptions): Promise<SweepResult>;
   latestElapsedCutoff(now: Date, cutoffs: readonly string[]): string | null;
   nextOccurrence(now: Date, hhmm: string): Date;
   getAlarms(): Promise<{ name: string }[]>;
@@ -203,22 +203,25 @@ async function reconcileNow(trigger: ReconcileTrigger, deps: ReconcileDeps): Pro
  * catch-up rather than a second sweep.
  *
  * @param cutoffId the id to record for an `auto` sweep; omitted otherwise
+ * @param options display-only sweep context (see {@link SweepOptions})
  * @returns the number of tabs closed, for the badge and the popup's reply
  */
 export function runSweep(
   reason: SweepReason,
   cutoffId?: string,
   deps: ReconcileDeps = defaultDeps,
+  options?: SweepOptions,
 ): Promise<number> {
-  return serialize(() => sweepNow(reason, cutoffId, deps));
+  return serialize(() => sweepNow(reason, cutoffId, deps, options));
 }
 
 async function sweepNow(
   reason: SweepReason,
   cutoffId: string | undefined,
   deps: ReconcileDeps,
+  options?: SweepOptions,
 ): Promise<number> {
-  const result = await deps.sweep(reason);
+  const result = await deps.sweep(reason, options);
   if (reason === 'auto' && cutoffId) await deps.setLastAutoCutoffId(cutoffId);
 
   // The countdown is over and the badge now shows the closed count instead.

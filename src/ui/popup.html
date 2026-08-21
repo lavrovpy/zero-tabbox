@@ -7,33 +7,74 @@
   </head>
   <body class="popup">
     <!--
-      tasks.md 6.1. The popup shows exactly three things: the next cutoff (with
-      minutes remaining), "End day now", and the settings gear. Nothing else
-      may be added — not even read-only stats, which live on the options page
-      (sweep-controls.spec "No softening controls" / "Settings surface").
+      tasks.md 6.1. The popup answers two questions — when the next cutoff runs
+      and how many tabs it takes — and offers the one honest way to prepare:
+      bookmark the tabs, or end the day now (sweep-controls.spec "Popup
+      contents"). The bookmark button is the only escape hatch; it writes to
+      the browser's bookmarks, never to the extension (design.md D12). Right
+      after a sweep the popup shows the "Day ended" state instead. Nothing
+      resembling pause, snooze or restore may be added (sweep-controls.spec
+      "No softening controls").
     -->
-    <main class="stack">
-      <header class="stack-tight" aria-live="polite">
-        <p class="eyebrow">Next cutoff</p>
-        <p class="headline" id="next-cutoff-time">--:--</p>
-        <p class="muted" id="next-cutoff-eta">Checking the schedule…</p>
-      </header>
-
-      <button id="end-day-now" class="btn btn-destructive btn-block" type="button">
-        End day now
-      </button>
-
-      <hr class="divider" />
-
-      <footer class="row-end">
+    <main id="view-live" class="stack" hidden>
+      <header class="row-between">
+        <div class="stack-tight" aria-live="polite">
+          <p id="at-risk" class="at-risk">Checking the schedule…</p>
+          <p class="row-baseline">
+            <span id="next-cutoff-time" class="numeral headline">--:--</span>
+            <span id="next-cutoff-eta" class="numeral eta"></span>
+          </p>
+        </div>
         <a id="open-options" class="icon-link" href="#" aria-label="Settings" title="Settings">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
         </a>
-      </footer>
+      </header>
+
+      <hr class="divider" />
+
+      <div class="actions">
+        <button id="bookmark-all" class="btn" type="button" hidden>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
+          <span id="bookmark-all-label">Bookmark all tabs</span>
+        </button>
+        <p id="bookmark-saved" class="saved-row" hidden>
+          <svg class="icon-success" viewBox="0 0 24 24" width="15" height="15" fill="none"
+               stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+               stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          <span>Saved to</span>
+          <span id="bookmark-folder" class="mono-label"></span>
+        </p>
+        <button id="end-day-now" class="btn btn-accent" type="button">End day now</button>
+      </div>
+    </main>
+
+    <main id="view-swept" class="stack" hidden>
+      <div class="stack-tight">
+        <p class="swept-label">Day ended</p>
+        <p class="row-baseline">
+          <span id="swept-count" class="numeral headline">0</span>
+          <span id="swept-unit" class="swept-unit">tabs closed</span>
+        </p>
+        <p id="swept-note" class="swept-note">Nothing was saved. One clean window is left.</p>
+      </div>
+
+      <hr class="divider" />
+
+      <p class="next-cutoff-row">
+        <span>Next cutoff</span>
+        <span id="swept-next-cutoff" class="numeral">--:--</span>
+      </p>
+
+      <button id="back-to-day" class="btn btn-quiet" type="button">Back to the day</button>
     </main>
     <script src="popup.js"></script>
   </body>

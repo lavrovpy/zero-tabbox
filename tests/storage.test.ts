@@ -159,6 +159,7 @@ describe('getSettings', () => {
       cutoffs: ['18:00'],
       noticeMinutes: 10,
       notify: true,
+      autoBookmark: false,
       keepPinned: false,
     });
   });
@@ -169,6 +170,7 @@ describe('getSettings', () => {
       cutoffs: ['18:00'],
       noticeMinutes: 30,
       notify: true,
+      autoBookmark: false,
       keepPinned: false,
     });
   });
@@ -184,6 +186,7 @@ describe('getSettings', () => {
       cutoffs: ['18:00'],
       noticeMinutes: 10,
       notify: true,
+      autoBookmark: false,
       keepPinned: true, // the one valid field survives
     });
   });
@@ -216,6 +219,7 @@ describe('setSettings', () => {
       cutoffs: ['13:00', '18:00'],
       noticeMinutes: 0,
       notify: false,
+      autoBookmark: false,
       keepPinned: false,
     });
     expect(store.version).toBe(STORAGE_VERSION);
@@ -280,6 +284,17 @@ describe('lastSweep and stats', () => {
       reason: 'manual',
       at: 1_755_000_000_000,
       closed: 37,
+      bookmarked: false,
+    });
+  });
+
+  it('round-trips the bookmarked-first flag', async () => {
+    await setLastSweep({ reason: 'auto', at: 1_755_000_000_000, closed: 12, bookmarked: true });
+    await expect(getLastSweep()).resolves.toEqual({
+      reason: 'auto',
+      at: 1_755_000_000_000,
+      closed: 12,
+      bookmarked: true,
     });
   });
 
