@@ -228,6 +228,11 @@ button {
   color: var(--color-fg);
 }
 
+/* The next-cutoff time in the live popup view. */
+.headline-sm {
+  font-size: 26px;
+}
+
 .mono-label {
   font-family: var(--font-mono);
   font-size: 11px;
