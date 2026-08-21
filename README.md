@@ -37,16 +37,24 @@ This is the whole product. Read it before you install it.
    while the browser was shut, asleep, or crashed, the sweep runs at the next
    start — before your restored session is usable — plus one follow-up pass
    about 60 seconds later to catch tabs that session restore materialises late.
+7. **Nothing above is armed until you accept this contract.** Until you press
+   accept — on the page that opens at install, or on the settings page — no
+   sweep runs and no alarm is set. Accepting arms the schedule from that
+   moment; cutoffs that passed before you accepted are not swept afterwards.
+   "End day now" is the one thing that works beforehand, because clicking it is
+   its own consent.
 
 Defaults: one cutoff at `18:00` local time, 10 minutes of notice, system
 notification on, keep-pinned off.
 
 ## What you get before the cutoff
 
-Starting N minutes before each cutoff (N configurable 0–60, default 10), the
-toolbar badge counts down the minutes and — if you leave it on — one system
-notification fires at N minutes naming the cutoff time. The notification has no
-buttons. Setting N to 0 disables both.
+Starting N minutes before each cutoff, the toolbar badge counts down the
+minutes and — if you leave it on — one system notification fires at N minutes
+naming the cutoff time. N is one of six fixed stops — 0, 5, 10, 20, 30, 60 —
+and defaults to 10; the settings page offers nothing in between, though an
+in-between value stored by an earlier version keeps working until you pick a
+stop. The notification has no buttons. Setting N to 0 disables both.
 
 After a sweep the badge shows the number of tabs closed for up to 60 seconds,
 then clears. Nothing else announces it.
