@@ -38,9 +38,6 @@ const SUGGESTED_CUTOFFS = ['18:00', '13:00', '09:00', '22:00', '16:00'] as const
  */
 const NOTICE_CHOICES = [0, 5, 10, 20, 30, 60] as const;
 
-/** How long the "Saved" acknowledgement stays on screen, in milliseconds. */
-const SAVED_NOTICE_MS = 1800;
-
 function el<T extends HTMLElement>(id: string): T {
   const node = document.getElementById(id);
   if (node === null) throw new Error(`options.html is missing #${id}`);
@@ -57,7 +54,6 @@ const autoBookmarkInput = el<HTMLInputElement>('auto-bookmark');
 const keepPinnedInput = el<HTMLInputElement>('keep-pinned');
 const statLast = el<HTMLElement>('stat-last');
 const statLifetime = el<HTMLElement>('stat-lifetime');
-const saveStatus = el<HTMLParagraphElement>('save-status');
 
 /**
  * The last successfully persisted settings, kept so the cutoff chips can be
@@ -65,8 +61,6 @@ const saveStatus = el<HTMLParagraphElement>('save-status');
  * notice picker knows the current value (it has no input element of its own).
  */
 let saved: Settings = { ...DEFAULT_SETTINGS, cutoffs: [...DEFAULT_SETTINGS.cutoffs] };
-
-let savedNoticeTimer: ReturnType<typeof setTimeout> | undefined;
 
 // --------------------------------------------------------------- messaging
 
@@ -76,14 +70,6 @@ function showError(message: string): void {
 
 function clearError(): void {
   cutoffError.textContent = '';
-}
-
-function announceSaved(): void {
-  saveStatus.textContent = 'Saved';
-  if (savedNoticeTimer !== undefined) clearTimeout(savedNoticeTimer);
-  savedNoticeTimer = setTimeout(() => {
-    saveStatus.textContent = '';
-  }, SAVED_NOTICE_MS);
 }
 
 /** Maps a validation failure from storage.ts onto copy the user can act on. */
@@ -166,7 +152,6 @@ async function persist(next: Settings): Promise<boolean> {
     saved = next;
   }
   clearError();
-  announceSaved();
   renderNotice();
   return true;
 }
