@@ -13,12 +13,7 @@
  */
 import { api } from '../platform';
 import { getSettings, markAccepted } from '../storage';
-
-function el<T extends HTMLElement>(id: string): T {
-  const node = document.getElementById(id);
-  if (node === null) throw new Error(`onboarding.html is missing #${id}`);
-  return node as T;
-}
+import { el } from './dom';
 
 const accept = el<HTMLButtonElement>('accept');
 const pickTime = el<HTMLButtonElement>('pick-time');

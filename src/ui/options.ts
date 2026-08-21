@@ -26,6 +26,7 @@ import {
 } from '../storage';
 import { DEFAULT_SETTINGS, LIMITS } from '../types';
 import type { Settings } from '../types';
+import { el } from './dom';
 
 /**
  * Times offered when the user adds a cutoff, first unused one wins. There are
@@ -39,12 +40,6 @@ const SUGGESTED_CUTOFFS = ['18:00', '13:00', '09:00', '22:00', '16:00'] as const
  * so a previously stored in-between value keeps working until a stop is picked.
  */
 const NOTICE_CHOICES = [0, 5, 10, 20, 30, 60] as const;
-
-function el<T extends HTMLElement>(id: string): T {
-  const node = document.getElementById(id);
-  if (node === null) throw new Error(`options.html is missing #${id}`);
-  return node as T;
-}
 
 const cutoffList = el<HTMLDivElement>('cutoff-list');
 const addCutoffButton = el<HTMLButtonElement>('add-cutoff');
@@ -171,6 +166,33 @@ async function saveFromForm(): Promise<void> {
 
 // -------------------------------------------------------------- cutoff chips
 
+/** Namespace SVG elements must be created in; `createElement` yields a dead node. */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * The chip's × glyph, built node by node.
+ *
+ * Every other icon in this extension is authored in the markup; this one has to
+ * be created per chip, and it is still built with the DOM rather than parsed
+ * from a string, so no user-influenced value can ever reach an HTML parser.
+ */
+function closeIcon(): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', '13');
+  svg.setAttribute('height', '13');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', 'M18 6 6 18M6 6l12 12');
+  svg.append(path);
+  return svg;
+}
+
 /**
  * Rebuilds the cutoff chips (time input + remove button each), keeping the
  * dashed "Add cutoff" button last in the row.
@@ -202,12 +224,13 @@ function renderCutoffs(cutoffs: readonly string[], focusIndex = -1): void {
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'chip-remove';
-    // The visible affordance is just an ×; assistive tech gets the whole story.
-    remove.setAttribute('aria-label', `Remove cutoff ${value || 'not set'}`);
-    remove.innerHTML =
-      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" ' +
-      'stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
-      '<path d="M18 6 6 18M6 6l12 12" /></svg>';
+    // The visible affordance is just an ×, so the whole story goes to assistive
+    // tech and to the hover tooltip alike, and the glyph itself is hidden from
+    // the accessibility tree (design.md D10, icon-only controls).
+    const removeLabel = `Remove cutoff ${value || 'not set'}`;
+    remove.setAttribute('aria-label', removeLabel);
+    remove.title = removeLabel;
+    remove.append(closeIcon());
     remove.addEventListener('click', () => {
       void removeCutoff(index);
     });
@@ -327,8 +350,10 @@ async function initAccept(): Promise<void> {
 
 async function renderStats(): Promise<void> {
   const [stats, lastSweep] = await Promise.all([getStats(), getLastSweep()]);
-  statLifetime.textContent = stats.lifetimeClosed.toLocaleString('en-US');
-  statLast.textContent = lastSweep ? lastSweep.closed.toLocaleString('en-US') : '—';
+  // No locale argument: the counters group digits the way the user's own
+  // browser does, like every other number this UI shows.
+  statLifetime.textContent = stats.lifetimeClosed.toLocaleString();
+  statLast.textContent = lastSweep ? lastSweep.closed.toLocaleString() : '—';
 }
 
 // --------------------------------------------------------------------- init
