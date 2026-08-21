@@ -93,11 +93,29 @@
   --color-fg-2: var(--color-stone-700);
   --color-fg-3: var(--color-stone-500);
 
-  --color-accent: var(--color-ember-500);
-  --color-accent-hover: var(--color-ember-600);
+  /*
+   * The light accent is a deepened ember, not --color-ember-500: white on the
+   * ramp's #ff5a1f measured 3.12:1 and the ramp on --color-bg 2.96:1, both
+   * short of the 4.5:1 that sweep-controls.spec "Accessible interaction
+   * states" requires. #c2410c carries the same ember identity at 5.18:1 for
+   * white text on the solid fill.
+   */
+  --color-accent: #c2410c;
+  /* Hover and active must both stay >= 4.5:1 for white text, and must darken
+     rather than lighten: the ramp's ember-600 (#e9430e) is only 3.98:1, so
+     using it here would drop a hovered commitment button out of AA. The three
+     states step down 5.18:1 -> 5.38:1 -> 5.57:1. */
+  --color-accent-hover: #c23a0b;
   --color-accent-active: var(--color-ember-700);
   --color-accent-fg: #ffffff;
   --color-accent-soft: var(--color-ember-100);
+  /* Accent as *text* on --color-bg (the notice countdown and the term
+     numerals), 4.92:1. Currently the same value as the solid fill; it is a
+     separate token because the two roles sit on opposite grounds and so have
+     independent contrast floors — the text role can be retuned without
+     touching every accent-filled button. Anything that paints accent-colored
+     TEXT must use this token, not --color-accent. */
+  --color-accent-text: #c2410c;
 
   --color-success: #0a7c5a;
   --color-danger: #b42318;
@@ -149,6 +167,7 @@
     --color-accent-active: var(--color-ember-500);
     --color-accent-fg: var(--color-stone-950);
     --color-accent-soft: rgba(255, 122, 46, 0.14);
+    --color-accent-text: var(--color-ember-400);
 
     --color-success: #34d399;
     --color-danger: #f87171;
@@ -366,10 +385,11 @@ button {
 }
 
 /*
- * The accent role is reserved for the two commitment buttons in the product:
- * "End day now" and the onboarding "I understand" — the controls that accept
- * the consequence (sweep-controls.spec "Destructive action is visually
- * distinct"). The label states the action in words; color is emphasis only.
+ * The accent role is reserved for the three commitment controls: "End day
+ * now", the onboarding "I understand", and the options accept banner — the
+ * controls that accept the consequence (sweep-controls.spec "Commitment
+ * actions carry the solid accent"). The label states the action in words;
+ * color is emphasis only.
  */
 .btn-accent {
   height: 44px;
@@ -445,8 +465,10 @@ button {
   color: var(--color-fg-3);
 }
 
+/* The per-second countdown inside the notice window: accent as text, so it
+   takes the text-contrast token rather than the solid-fill one. */
 .eta.is-notice {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 /* The post-bookmark confirmation row that replaces the bookmark button. */
@@ -715,18 +737,27 @@ button {
   height: 14px;
   translate: 0 -50%;
   border-radius: var(--radius-full);
-  background: var(--color-stone-400);
+  background: var(--color-fg-3);
   transition: left 140ms var(--ease-ab), background-color 140ms var(--ease-ab);
 }
 
+/*
+ * On-state = soft accent tint plus an accent border and an accent knob. The
+ * solid accent fill is reserved for the three commitment controls
+ * (sweep-controls.spec "Commitment actions carry the solid accent": no other
+ * control may use it), so the switch follows the same pattern as
+ * .seg[aria-pressed='true']. Tint alone would read as unchanged at a glance,
+ * so the border and the knob carry the state with it — and the position
+ * change means the state is never signalled by color alone.
+ */
 .switch:checked {
   border-color: var(--color-accent);
-  background: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .switch:checked::after {
   left: 21px;
-  background: var(--color-accent-fg);
+  background: var(--color-accent);
 }
 
 /* ---------------------------------------------------------------- stats */
@@ -852,7 +883,7 @@ button {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   flex: none;
   width: 20px;
 }

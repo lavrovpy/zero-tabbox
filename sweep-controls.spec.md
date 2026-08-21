@@ -98,8 +98,8 @@ The popup and all extension pages SHALL share one stylesheet built on CSS custom
 - **WHEN** the stylesheet is inspected
 - **THEN** color values appear only in the token definition blocks, and the dark theme is expressed solely as token overrides
 
-### Requirement: Destructive action is visually distinct
-The "End day now" button SHALL be styled with the solid accent (ember) role — the strongest visual weight in the popup, reserved for the actions that accept the sweep's consequence — and SHALL be visually distinct from any neutral or secondary control, in both themes. No other control in the popup or options page may use the solid accent fill (selected and on states use the soft accent tint). It SHALL NOT be the only affordance carrying meaning by color alone — its label SHALL state the action in words.
+### Requirement: Commitment actions carry the solid accent
+The solid accent (ember) fill SHALL be the strongest visual weight on any surface that uses it, and SHALL be reserved for exactly three controls — the popup's "End day now" button, the onboarding accept button, and the accept button in the options page's pre-acceptance banner — the actions by which the user accepts the sweep's consequence. Each SHALL be visually distinct from any neutral or secondary control, in both themes. No other control on any extension surface may use the solid accent fill: selected, checked and on states (the switches, the notice-window stops) SHALL use the soft accent tint instead. The fill SHALL NOT be the only affordance carrying meaning by color alone — each of the three labels SHALL state the action in words.
 
 #### Scenario: Popup button styling
 - **WHEN** the user opens the popup in either theme
@@ -108,7 +108,7 @@ The "End day now" button SHALL be styled with the solid accent (ember) role — 
 ### Requirement: Accessible interaction states
 Interactive controls SHALL have a visible keyboard focus indicator using the focus-ring token, SHALL be reachable and operable by keyboard alone, and text SHALL meet WCAG AA contrast (4.5:1 for body text, 3:1 for large text and UI boundaries) in both themes.
 
-Any control rendered as an icon alone SHALL carry a text alternative naming its action, its decorative artwork SHALL be hidden from assistive technology, and its clickable area SHALL be padded beyond the drawn glyph. Only secondary navigation MAY be icon-only; the "End day now" action SHALL remain text-labelled (see "Destructive action is visually distinct").
+Any control rendered as an icon alone SHALL carry a text alternative naming its action, its decorative artwork SHALL be hidden from assistive technology, and its clickable area SHALL be padded beyond the drawn glyph. Only secondary navigation MAY be icon-only; the "End day now" action SHALL remain text-labelled (see "Commitment actions carry the solid accent").
 
 #### Scenario: Keyboard-only use of the popup
 - **WHEN** the user opens the popup and presses Tab
