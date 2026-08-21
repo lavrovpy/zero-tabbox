@@ -36,17 +36,48 @@ export interface AtRiskTab {
 /**
  * The tabs the next sweep would close, i.e. every tab in every normal window
  * minus pinned tabs when `keepPinned` is on. This is the popup's "N tabs close
- * at" number and the set "Bookmark all" writes — the label and the action must
- * count the same tabs.
+ * at" number, and it counts private-window tabs because the sweep closes them
+ * too — the warning must match what actually happens.
+ *
+ * Not the set "Bookmark all" writes; that is {@link bookmarkableTabs}.
  *
  * Tabs without a URL (still loading, or restricted pages the API redacts) are
  * excluded: they cannot be bookmarked, and with the `tabs` permission granted
  * they do not occur in practice.
  */
 export async function atRiskTabs(keepPinned: boolean): Promise<AtRiskTab[]> {
+  return collect(keepPinned, { includePrivate: true });
+}
+
+/**
+ * The subset of {@link atRiskTabs} that may be written to the browser's
+ * bookmarks: the same tabs minus everything in a private window.
+ *
+ * The two differ because the two actions differ in permanence. Sweeping a
+ * private tab is ephemeral — it closes, and the session it belonged to was
+ * never going to outlive the window anyway. Bookmarking one is permanent: the
+ * title and URL would land in a bookmark folder that survives the private
+ * session, the browser restart and the extension itself, which is exactly the
+ * record a private window exists to not leave. Private windows are only
+ * visible here at all when the user granted private-browsing access, and that
+ * grant is not consent to make their browsing permanent.
+ *
+ * So with private windows open the popup honestly shows two numbers: the sweep
+ * closes more tabs than "Bookmark all" can save.
+ */
+export async function bookmarkableTabs(keepPinned: boolean): Promise<AtRiskTab[]> {
+  return collect(keepPinned, { includePrivate: false });
+}
+
+/** Shared enumeration behind {@link atRiskTabs} and {@link bookmarkableTabs}. */
+async function collect(
+  keepPinned: boolean,
+  options: { includePrivate: boolean },
+): Promise<AtRiskTab[]> {
   const windows = await api.windows.getAll({ populate: true, windowTypes: ['normal'] });
   const tabs: AtRiskTab[] = [];
   for (const window of windows) {
+    if (window.incognito && !options.includePrivate) continue;
     for (const tab of window.tabs ?? []) {
       if (keepPinned && tab.pinned) continue;
       if (!tab.url) continue;
@@ -77,9 +108,13 @@ async function ensureFolder(title: string, parentId?: string): Promise<string> {
 }
 
 /**
- * Writes every at-risk tab to `bookmarks / zero-tabbox / YYYY-MM-DD` (dated
- * with the local calendar day of `now`), creating the folders as needed and
- * appending when the day's folder already exists.
+ * Writes every bookmarkable at-risk tab to `bookmarks / zero-tabbox /
+ * YYYY-MM-DD` (dated with the local calendar day of `now`), creating the
+ * folders as needed and appending when the day's folder already exists.
+ *
+ * Private-window tabs are never written (see {@link bookmarkableTabs}), so on a
+ * profile with private windows open this saves fewer tabs than the sweep
+ * closes.
  *
  * One failed bookmark does not abort the rest — saving 46 of 47 tabs before a
  * sweep beats saving none — but the enumeration itself failing rejects, so
@@ -93,7 +128,7 @@ export async function bookmarkAtRiskTabs(
   keepPinned: boolean,
   now: Date = new Date(),
 ): Promise<BookmarkAllResult> {
-  const tabs = await atRiskTabs(keepPinned);
+  const tabs = await bookmarkableTabs(keepPinned);
   const day = localDateStamp(now);
   const folderPath = `bookmarks / ${ROOT_FOLDER} / ${day}`;
   if (tabs.length === 0) return { count: 0, folderPath };

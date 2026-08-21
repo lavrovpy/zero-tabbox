@@ -16,11 +16,12 @@
  * a terminated service worker just to render a clock would be a worse trade
  * than recomputing two Date fields from the same storage the background reads.
  */
-import { atRiskTabs, bookmarkAtRiskTabs } from '../bookmarks';
+import { atRiskTabs, bookmarkAtRiskTabs, bookmarkableTabs } from '../bookmarks';
 import { nextOccurrence } from '../cutoff';
 import { api } from '../platform';
 import { getLastSweep, getSettings } from '../storage';
 import type { Message, Settings } from '../types';
+import { el } from './dom';
 
 /** The next configured cutoff, resolved to a concrete upcoming instant. */
 interface NextCutoff {
@@ -36,12 +37,6 @@ interface NextCutoff {
  * minimal") — the two are one moment of feedback, then the product moves on.
  */
 const SWEPT_VIEW_MS = 60_000;
-
-function el<T extends HTMLElement>(id: string): T {
-  const node = document.getElementById(id);
-  if (node === null) throw new Error(`popup.html is missing #${id}`);
-  return node as T;
-}
 
 const viewLive = el<HTMLElement>('view-live');
 const viewSwept = el<HTMLElement>('view-swept');
@@ -199,17 +194,24 @@ async function showLive(): Promise<void> {
     etaTimer = setInterval(() => renderEta(settings, next), 1000);
   }
 
-  // What is at stake: the tabs the next sweep would close. Failure degrades to
-  // the sentence without a number — the schedule is still shown.
+  // What is at stake: the tabs the next sweep would close. The button counts a
+  // different set — private tabs are swept but never bookmarked — so with a
+  // private window open the two numbers legitimately disagree, and each has to
+  // tell the truth about its own action. Failure degrades to the sentence
+  // without a number — the schedule is still shown.
   try {
-    const tabs = await atRiskTabs(settings.keepPinned);
-    const count = tabs.length;
+    const [atRisk, saveable] = await Promise.all([
+      atRiskTabs(settings.keepPinned),
+      bookmarkableTabs(settings.keepPinned),
+    ]);
+    const count = atRisk.length;
+    const saveableCount = saveable.length;
     atRiskLine.textContent =
       count === 1 ? '1 tab closes at' : `${count} tabs close at`;
     bookmarkAllLabel.textContent =
-      count === 1 ? 'Bookmark the tab' : `Bookmark all ${count} tabs`;
+      saveableCount === 1 ? 'Bookmark the tab' : `Bookmark all ${saveableCount} tabs`;
     bookmarkAll.hidden = bookmarkedThisSession;
-    bookmarkAll.disabled = count === 0;
+    bookmarkAll.disabled = saveableCount === 0;
   } catch {
     atRiskLine.textContent = 'Tabs close at';
     bookmarkAllLabel.textContent = 'Bookmark all tabs';
