@@ -11,9 +11,22 @@
  * the one thing an extension may do to itself without extra permissions
  * (disabling requires the "management" permission, which we don't ask for).
  */
+import { localize, t } from '../i18n';
 import { api } from '../platform';
 import { getSettings, markAccepted } from '../storage';
+import { DEFAULT_SETTINGS } from '../types';
 import { el } from './dom';
+
+/**
+ * The cutoff the markup's static English already names, and the fallback for
+ * both strings written below.
+ *
+ * `DEFAULT_SETTINGS.cutoffs` is never empty, so the `??` is `noUncheckedIndexedAccess`
+ * paying its way rather than a real branch — but deriving the value keeps the
+ * literal `18:00` in `onboarding.html` and the default in `types.ts` from
+ * drifting apart silently.
+ */
+const DEFAULT_CUTOFF = DEFAULT_SETTINGS.cutoffs[0] ?? '18:00';
 
 const accept = el<HTMLButtonElement>('accept');
 const pickTime = el<HTMLButtonElement>('pick-time');
@@ -59,20 +72,40 @@ decline.addEventListener('click', () => {
   void api.management.uninstallSelf({ showConfirmDialog: true }).catch(() => undefined);
 });
 
+/**
+ * The first cutoff — the time both the headline and the accept label name.
+ *
+ * `getSettings()` is total, so the catch is belt and braces; either way the
+ * answer is a real HH:MM, because a page that cannot read storage must still
+ * state the contract rather than a blank.
+ */
+async function firstCutoff(): Promise<string> {
+  try {
+    return (await getSettings()).cutoffs[0] ?? DEFAULT_CUTOFF;
+  } catch {
+    // The static 18:00 in the markup is this same default, so the sentence is
+    // still true — it is only the language that may be wrong for a moment.
+    return DEFAULT_CUTOFF;
+  }
+}
+
 async function init(): Promise<void> {
+  // The read is started BEFORE `localize()` is awaited so the two storage round
+  // trips overlap. `localize()` is what un-hides the body, and neither string
+  // written below is part of its DOM walk (both interpolate the time), so
+  // reading serially would paint the English defaults for a frame first.
+  const cutoff = firstCutoff();
+  await localize();
   // The headline states the real first cutoff, which on a fresh install is the
   // default 18:00 — but if the user reaches settings first and comes back, the
   // words still tell the truth.
-  try {
-    const settings = await getSettings();
-    const first = settings.cutoffs[0];
-    if (first !== undefined) {
-      el<HTMLSpanElement>('cutoff-time').textContent = first;
-      el<HTMLSpanElement>('accept-label').textContent = `I understand. Start at ${first}.`;
-    }
-  } catch {
-    // The static 18:00 in the markup matches the default settings.
-  }
+  const time = await cutoff;
+  // The whole <h1> is rewritten, not just #cutoff-time: Ukrainian puts «о»
+  // before the time and reorders the sentence around it, so the time is not a
+  // slot the surrounding English can keep. #cutoff-time stays in the markup as
+  // part of the visible English default and is not read back.
+  el<HTMLHeadingElement>('headline').textContent = t('onboardingHeadline', { time });
+  el<HTMLSpanElement>('accept-label').textContent = t('onboardingAccept', { time });
 }
 
 void init();

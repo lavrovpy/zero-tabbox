@@ -18,6 +18,7 @@
  *     literals outside `ui/theme.css` (tasks.md 7.2a). The badge carries a
  *     number, and the number is the whole message.
  */
+import { initI18n, t } from './i18n';
 import { api } from './platform';
 
 /** Id of the pre-cutoff notification, fixed so a second notice replaces the first. */
@@ -81,8 +82,18 @@ export async function clearBadge(): Promise<void> {
  * `type`/`title`/`message`/`iconUrl`, so the options must stay within those
  * four; `iconUrl` is a packaged extension icon.
  *
- * The copy states the cutoff time and restates the contract, because this is
- * the last moment at which bookmarking anything is still possible.
+ * The copy (`noticeTitle`, and the `noticeMessage` plural group) states the
+ * cutoff time and restates the contract, because this is the last moment at
+ * which bookmarking anything is still possible. The whole body is ONE message
+ * with `$COUNT$` inline rather than a "N minutes" lead concatenated onto a
+ * fixed tail: Ukrainian inflects the verb before the numeral as well as the
+ * noun after it («Залишилася 1 хвилина» / «Залишилися 3 хвилини»), so the two
+ * halves cannot be translated independently (design.md D14).
+ *
+ * There is no DOM here, so this resolves the locale with {@link initI18n}, not
+ * `localize()`. It has to happen per notice: the background is torn down
+ * between the alarm being set and it firing, and a woken worker starts on the
+ * module-default `'en'` until the setting is re-read.
  *
  * @param cutoffHhMm the cutoff the notice is for, `HH:MM`, named in the message
  * @param minutesAhead how far ahead of the cutoff the notice is firing
@@ -92,13 +103,21 @@ export async function showNoticeNotification(
   minutesAhead: number,
 ): Promise<void> {
   const minutes = Math.max(0, Math.round(minutesAhead));
-  const lead = minutes === 1 ? '1 minute' : `${minutes} minutes`;
+  try {
+    await initI18n();
+  } catch (error) {
+    // `initI18n` is already total, but rule 1 above admits no exceptions — and
+    // this is caught separately from the notification so that a locale we could
+    // not resolve costs the user a translation, never the notice itself. `t()`
+    // then falls back to whichever locale is still active.
+    console.warn('[zero-tabbox] could not resolve the notice locale', error);
+  }
   try {
     await api.notifications.create(NOTICE_ID, {
       type: 'basic',
       iconUrl: api.runtime.getURL(NOTICE_ICON),
-      title: `All tabs close at ${cutoffHhMm}`,
-      message: `${lead} left. Bookmark anything you need — nothing is saved.`,
+      title: t('noticeTitle', { time: cutoffHhMm }),
+      message: t('noticeMessage', { count: minutes }),
     });
   } catch (error) {
     // A notification the browser refused (permission revoked, focus assist,

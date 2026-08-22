@@ -1,0 +1,478 @@
+{
+  "popupChecking": {
+    "message": "Checking the schedule…",
+    "description": "Popup, live view. Initial text of the #at-risk line (popup.html), visible for the moment before storage resolves and the real at-risk count replaces it. Never re-set from TS, so it must read as a transient status, not as an error. Keep the ellipsis as the single U+2026 character. One line in the 320px popup header, sharing the row with the settings icon (~250px usable); must not wrap."
+  },
+  "popupSettings": {
+    "message": "Settings",
+    "description": "Popup, live view. Both the aria-label and the title of the gear icon-link (#open-options) that opens the options page; one key drives both attributes. Screen-reader name and hover tooltip — there is no visible text."
+  },
+  "popupTabsAtRisk_one": {
+    "message": "$COUNT$ tab closes at",
+    "description": "Popup, live view. Plural group with popupTabsAtRisk_other. The #at-risk line, which precedes the big cutoff time on the NEXT line — an unfinished sentence that the HH:MM completes, so the translation must still lead into a time. Counts the tabs the next sweep would close (private tabs included), which can legitimately differ from the bookmark button's count below. One line in the 320px popup header beside the settings icon (~250px usable); must not wrap.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "popupTabsAtRisk_other": {
+    "message": "$COUNT$ tabs close at",
+    "description": "Popup, live view. The 'other' form of the popupTabsAtRisk group. $COUNT$ can be 0 — '0 tabs close at' is reachable when only pinned tabs remain and Keep pinned tabs is on. Still an unfinished sentence completed by the cutoff time on the next line. One line in the 320px popup header; must not wrap, including at three-digit counts.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "popupTabsCloseAt": {
+    "message": "Tabs close at",
+    "description": "Popup, live view, degraded state. Written to the #at-risk line when counting the tabs fails; the schedule is still rendered, so this is the same lead-in as popupTabsAtRisk with the number dropped. Deliberately NOT part of the plural group — no count exists. Must still read as an unfinished sentence completed by the cutoff time on the next line. One line in the 320px popup header, beside the settings icon."
+  },
+  "popupScheduleUnavailable": {
+    "message": "Schedule unavailable",
+    "description": "Popup, live view, degraded state. Written to the #at-risk line when reading settings from storage throws; the cutoff time stays at the '--:--' default and no ETA is shown. Reports that the popup could not read the schedule, without claiming that no sweep will happen. One line in the 320px popup header, beside the settings icon."
+  },
+  "popupNoCutoff": {
+    "message": "No cutoff configured",
+    "description": "Popup, live view. Written to the #at-risk line when settings loaded fine but the schedule is empty or every entry is invalid; the time shows '--:--' and the ETA is blank. A real state, not a failure — nothing will be closed until a cutoff is added. 'cutoff' is the domain term, same wording as everywhere else. One line in the 320px popup header."
+  },
+  "popupEtaLessThanMinute": {
+    "message": "in less than a minute",
+    "description": "Popup, live view. formatEta(0), written into #next-cutoff-eta beside the big cutoff time; shown when fewer than 30 seconds' worth of rounding remains and the notice window is not active. Reads as a time-until phrase attached to the time next to it. Shares one baseline row with the HH:MM headline in the 320px popup — the longest of the four ETA strings and the tightest fit; keep it short."
+  },
+  "popupEtaMinutes": {
+    "message": "in $MINUTES$ min",
+    "description": "Popup, live view. formatEta for a total under 60 minutes, written into #next-cutoff-eta. $MINUTES$ is a whole number 1-59. 'min' is an abbreviated unit, deliberately abbreviated to fit; it is not pluralized in English and must stay an invariant abbreviation rather than becoming a plural group. Shares one baseline row with the HH:MM headline in the 320px popup.",
+    "placeholders": {
+      "minutes": {
+        "content": "$1",
+        "example": "25"
+      }
+    }
+  },
+  "popupEtaHours": {
+    "message": "in $HOURS$ h",
+    "description": "Popup, live view. formatEta for a whole number of hours, written into #next-cutoff-eta. $HOURS$ is a whole number >= 1. Abbreviated unit, not pluralized, matching popupEtaMinutes. Shares one baseline row with the HH:MM headline in the 320px popup; keep the unit abbreviated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popupEtaHoursMinutes": {
+    "message": "in $HOURS$ h $MINUTES$ min",
+    "description": "Popup, live view. formatEta for hours plus a remainder, written into #next-cutoff-eta. Two whole-number placeholders; $MINUTES$ is 1-59. The two unit abbreviations must match popupEtaHours and popupEtaMinutes exactly so the four ETA strings read as one family. The longest ETA form, sharing one baseline row with the HH:MM headline in the 320px popup — both units must stay abbreviated or the row wraps.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "3"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "25"
+      }
+    }
+  },
+  "popupCountdownLeft": {
+    "message": "$TIME$ left",
+    "description": "Popup, live view. formatCountdown, written into #next-cutoff-eta once a second while the notice window is active. $TIME$ is a pre-formatted zero-padded MM:SS string built in TS — do not reformat or re-order the digits. This must stay ONE key with the placeholder, not a bare suffix concatenated after the clock, because other languages put the word before the value. The word conveys urgency at this point, not an estimate. Shares one baseline row with the HH:MM headline in the 320px popup and re-renders every second, so it must not change width or wrap as the digits tick down.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "04:37"
+      }
+    }
+  },
+  "popupBookmarkAllTabs": {
+    "message": "Bookmark all tabs",
+    "description": "Popup, live view. The countless form of the bookmark button label. Used in two places and therefore NOT part of the plural group: as the visible default markup before the tab count is known, and as the degraded fallback written when tab enumeration fails. Because no number is available, the wording must work with an unknown quantity. Full-width button label next to a 15px bookmark icon in the 320px popup; the counted variants (popupBookmarkAll_one/_other) are longer and set the real width budget."
+  },
+  "popupBookmarkAll_one": {
+    "message": "Bookmark the tab",
+    "description": "Popup, live view. Plural group with popupBookmarkAll_other. The bookmark button label when exactly one tab can be saved. Note this 'one' form carries NO number — it says 'the tab', not '1 tab' — so it has no placeholder even though its sibling does; keep that asymmetry if it reads naturally in the target language. Counts bookmarkable tabs, which excludes private-window tabs and can therefore be lower than the at-risk count on the line above. Bookmarking is the only escape hatch (design.md D12), so the label must name the action plainly. Full-width button label after a 15px icon in the 320px popup."
+  },
+  "popupBookmarkAll_other": {
+    "message": "Bookmark all $COUNT$ tabs",
+    "description": "Popup, live view. The 'other' form of the popupBookmarkAll group. $COUNT$ is the number of bookmarkable tabs; it can be 0, in which case this label is shown with the button disabled — so the wording must not be nonsense at zero. Full-width button label after a 15px icon in the 320px popup; the longest button string in the surface at three-digit counts.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "popupSavedTo": {
+    "message": "Saved to",
+    "description": "Popup, live view. Confirmation row shown after the bookmark action succeeds. A sentence fragment: the bookmark folder path is rendered immediately after it in a mono label on the same line, so translate it as a lead-in that can be followed by a path, not as a complete sentence. Shares one 320px row with a checkmark icon and a path that can itself be long (e.g. 'zero-tabbox/2026-08-22'); keep the fragment very short."
+  },
+  "popupEndDayNow": {
+    "message": "End day now",
+    "description": "Popup, live view. The accent button (#end-day-now) that triggers an immediate sweep with no confirmation dialog. This is the destructive primary action; the copy is deliberately blunt and must stay blunt — no softening, no question form, nothing that reads like 'finish up'. Same action as the keyboard command described by commandEndDayNow, so the two should agree in wording."
+  },
+  "popupDayEnded": {
+    "message": "Day ended",
+    "description": "Popup, swept view. The label above the count of closed tabs, shown for the 60 s after a sweep. A flat statement of fact reported after the event — not a celebration and not an apology."
+  },
+  "popupSweptUnit_one": {
+    "message": "tab closed",
+    "description": "Popup, swept view. Plural group with popupSweptUnit_other. The unit that follows the big number in #swept-count on the same baseline row — the number is rendered as a separate span and is NOT interpolated into this string, so the message is the bare unit phrase with no placeholder. Selected against the closed-tab count. Sits to the right of a large headline numeral on one 320px baseline row; must stay a short two-word phrase."
+  },
+  "popupSweptUnit_other": {
+    "message": "tabs closed",
+    "description": "Popup, swept view. The 'other' form of the popupSweptUnit group; also the visible default markup in popup.html. Note 0 selects this form and is reachable — a sweep that closed nothing still shows this view. Bare unit phrase, no number token. Sits to the right of a large headline numeral on one 320px baseline row; must stay a short two-word phrase. Distinct from optionsStatTabsClosed, which is a stat-card caption on another surface."
+  },
+  "popupSweptNoteBookmarked": {
+    "message": "All of them were bookmarked first. One clean window is left.",
+    "description": "Popup, swept view. The branch of #swept-note shown when the sweep bookmarked the tabs before closing them. 'All of them' refers back to the count rendered directly above, so the sentence must continue to read as a follow-on to that number. The second sentence is shared verbatim with popupSweptNoteUnsaved and should be translated identically in both. The longest string in the popup; wraps to 3 lines at 320px — do not lengthen it in translation."
+  },
+  "popupSweptNoteUnsaved": {
+    "message": "Nothing was saved. One clean window is left.",
+    "description": "Popup, swept view. The branch of #swept-note for a sweep that ran without bookmarking; also the visible default in popup.html. Two short sentences: the first states the loss plainly, the second states what remains. Keep the bluntness of the first sentence — the product destroyed the tabs and says so. Wraps to 2-3 lines at 320px; keep it to two short sentences so it does not push the view taller."
+  },
+  "popupNextCutoff": {
+    "message": "Next cutoff",
+    "description": "Popup, swept view. Left half of the row under the divider; the HH:MM of the next scheduled cutoff (or '--:--') is rendered right-aligned on the same row. A label, not a sentence. 'cutoff' is the domain term and must match the options page. Shares one 320px row with the time on the right; keep it short enough that the two never collide."
+  },
+  "popupBackToDay": {
+    "message": "Back to the day",
+    "description": "Popup, swept view. The quiet button that dismisses the 'Day ended' state and returns the popup to the live view. It only changes what the popup shows — it restores nothing and undoes nothing — so the wording must not imply recovery, resuming, or going back in time."
+  },
+  "optionsPageTitle": {
+    "message": "zero-tabbox settings",
+    "description": "Browser tab title of the settings page, also written to document.title at runtime. The brand token 'zero-tabbox' is NOT translated and must appear verbatim; only the word 'settings' is localized."
+  },
+  "optionsIntro": {
+    "message": "At each cutoff every tab closes. Nothing is saved. Bookmark what matters before the cutoff.",
+    "description": "Standing contract sentence in the options page header, directly under the wordmark. Three blunt statements; keep the three-sentence rhythm and the force — this is the warning that the product destroys work, not a friendly blurb."
+  },
+  "optionsAcceptNote": {
+    "message": "Nothing closes yet — the schedule stays off until you accept.",
+    "description": "Accept banner, shown only until the contract is accepted (design.md D7). Reassures that the schedule is inert and states the precondition. Sits directly above the accept button. Keep the em dash (U+2014)."
+  },
+  "optionsCutoffsTitle": {
+    "message": "Cutoff times",
+    "description": "Section heading (h2) above the row of cutoff-time chips. 'cutoff' is the domain term and must match the popup."
+  },
+  "optionsAddCutoff": {
+    "message": "Add cutoff",
+    "description": "Dashed button at the end of the chip row that appends another cutoff time. The text sits next to a small + icon inside a 36px-high inline button that shares one wrapping row with up to four time chips inside the 620px column, so keep it to roughly the length of the English (two short words)."
+  },
+  "optionsCutoffAriaLabel": {
+    "message": "Cutoff $INDEX$",
+    "description": "aria-label on each chip's time input, set in renderCutoffs(). $INDEX$ is the 1-based position of the chip in the row, not a quantity — it distinguishes otherwise identical time fields for assistive tech, so do not pluralize it. Screen-reader only; never visible.",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsRemoveCutoffAriaLabel": {
+    "message": "Remove cutoff $TIME$",
+    "description": "aria-label AND title of the per-chip × button. The visible affordance is only an ×, so this string carries the whole story to assistive tech and to the hover tooltip alike (design.md D10). $TIME$ is the chip's HH:MM value, or the localized optionsCutoffNotSet when the field is blank — because it can be either a time or a phrase, avoid a construction that forces case agreement on it.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "optionsCutoffNotSet": {
+    "message": "not set",
+    "description": "Substituted for $TIME$ in optionsRemoveCutoffAriaLabel when the chip's time input is still empty. A lower-case fragment used mid-phrase; it is never shown on its own."
+  },
+  "optionsErrorTooFew_one": {
+    "message": "Keep at least $COUNT$ cutoff time.",
+    "description": "Validation error in #cutoff-error for the 'too-few' branch of cutoffErrorMessage(). Plural group with optionsErrorTooFew_other. $COUNT$ is LIMITS.minCutoffs from src/types.ts (currently 1) — never bake the digit into the message. It is passed as the `count` param, so it both selects the plural form and substitutes the token; that is why the placeholder is COUNT rather than MIN.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsErrorTooFew_other": {
+    "message": "Keep at least $COUNT$ cutoff times.",
+    "description": "The 'other' form of the optionsErrorTooFew group. Unreachable while LIMITS.minCutoffs is 1, but required so the group is complete if the limit ever rises.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsErrorTooFewRemove_one": {
+    "message": "Keep at least $COUNT$ cutoff time. The schedule cannot be empty.",
+    "description": "Longer variant of optionsErrorTooFew, shown when the user tries to remove the last chip. Deliberately adds the reason; keep both sentences. $COUNT$ is LIMITS.minCutoffs, passed as `count`.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsErrorTooFewRemove_other": {
+    "message": "Keep at least $COUNT$ cutoff times. The schedule cannot be empty.",
+    "description": "The 'other' form of the optionsErrorTooFewRemove group. Unreachable while LIMITS.minCutoffs is 1, but required so the group is complete.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsErrorTooMany_one": {
+    "message": "You can have at most $COUNT$ cutoff time.",
+    "description": "The 'one' form of the optionsErrorTooMany group. Unreachable while LIMITS.maxCutoffs is 4, but required so the group is complete if the limit ever drops to 1.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsErrorTooMany_other": {
+    "message": "You can have at most $COUNT$ cutoff times.",
+    "description": "Limit error shown from two call sites: the 'too-many' branch of cutoffErrorMessage() and addCutoff()'s pre-check when a fifth cutoff is attempted. One key serves both. $COUNT$ is LIMITS.maxCutoffs from src/types.ts (currently 4), passed as `count` so the noun agrees.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "4"
+      }
+    }
+  },
+  "optionsErrorDuplicate": {
+    "message": "$VALUE$ is already in the list.",
+    "description": "The 'duplicate' branch of cutoffErrorMessage(). $VALUE$ is the offending HH:MM time, or the localized optionsErrorDuplicateFallback when storage did not report one. The placeholder is the grammatical subject at the head of the sentence; keep it in subject position.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "optionsErrorDuplicateFallback": {
+    "message": "That time",
+    "description": "Substituted for $VALUE$ in optionsErrorDuplicate when InvalidCutoffsError carries no value. A capitalized sentence-initial noun phrase, not a sentence — it must read correctly as the subject of that message."
+  },
+  "optionsErrorFormat": {
+    "message": "$VALUE$ is not a valid time. Use HH:MM.",
+    "description": "The 'format' branch of cutoffErrorMessage(). $VALUE$ is the rejected input, or the localized optionsErrorFormatFallback when none was reported. 'HH:MM' is the required 24-hour zero-padded format; the format-hint letters may be localized if that is clearer, but the colon and the two-field shape must stay. The placeholder is the sentence-initial subject.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "25:00"
+      }
+    }
+  },
+  "optionsErrorFormatFallback": {
+    "message": "That value",
+    "description": "Substituted for $VALUE$ in optionsErrorFormat when InvalidCutoffsError carries no value. A capitalized sentence-initial noun phrase, not a sentence."
+  },
+  "optionsErrorEmptyCutoff": {
+    "message": "Every cutoff needs a time.",
+    "description": "Shown by readForm() in #cutoff-error when a chip's time input is blank — the one failure the markup cannot express, so it is checked in the page rather than in storage.ts."
+  },
+  "optionsErrorNoticeRange": {
+    "message": "Notice must be between $MIN$ and $MAX$ minutes.",
+    "description": "Shown by persist() when setSettings throws a RangeError for noticeMinutes. $MIN$ is LIMITS.minNoticeMinutes (0) and $MAX$ is LIMITS.maxNoticeMinutes (60) from src/types.ts — never bake the digits in. Not plural-selected (two numbers, one noun); in languages with number agreement the noun should agree with the upper bound.",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "0"
+      },
+      "max": {
+        "content": "$2",
+        "example": "60"
+      }
+    }
+  },
+  "optionsErrorSaveFailed": {
+    "message": "Could not save your settings.",
+    "description": "Generic write failure in persist(), for any error that is not a validation or range failure. Nothing changed on disk. Keep it plain and non-apologetic."
+  },
+  "optionsErrorAcceptFailed": {
+    "message": "Could not save your acceptance. Try again.",
+    "description": "Shown in #cutoff-error when markAccepted() throws, so the consent gate stays closed and the banner remains visible. The second sentence is an instruction; keep both sentences."
+  },
+  "optionsNoticeLabel": {
+    "message": "Badge countdown starts",
+    "description": "Label for the segmented minutes picker (0/5/10/20/30/60) that sets how long before a cutoff the badge starts counting down. Sits on the left of a space-between row whose right side holds the summary (optionsNoticeSummary / optionsNoticeSummaryOff); both must fit on a single line, so keep it under about 30 characters."
+  },
+  "optionsNoticeSummaryOff": {
+    "message": "no warning",
+    "description": "Visible summary to the right of the 'Badge countdown starts' label when noticeMinutes is 0 — no countdown and no notification. A lower-case fragment, not a sentence. Shares one baseline row with optionsNoticeLabel inside the 620px column."
+  },
+  "optionsNoticeSummary": {
+    "message": "$MINUTES$ min before",
+    "description": "Visible summary to the right of the 'Badge countdown starts' label for any non-zero value. $MINUTES$ is the stored noticeMinutes. 'min' is the abbreviated unit and stays invariant, so this is deliberately NOT plural-selected. Keep the abbreviation abbreviated — the full word does not fit. Shares one baseline row with optionsNoticeLabel inside the 620px column.",
+    "placeholders": {
+      "minutes": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "optionsNoticeOptionOffAriaLabel": {
+    "message": "No warning",
+    "description": "aria-label of the '0' button in the segmented notice picker; the button's visible text is the bare numeral 0, which says nothing on its own. Screen-reader only; sentence-initial capital, no period. Note the lower-case optionsNoticeSummaryOff is a different, visible string."
+  },
+  "optionsNoticeOptionAriaLabel_one": {
+    "message": "$COUNT$ minute before the cutoff",
+    "description": "Plural group with optionsNoticeOptionAriaLabel_other: the aria-label of each non-zero button in the segmented notice picker, whose visible text is only the numeral. $COUNT$ is the button's minute value, passed as `count` so the noun agrees. Screen-reader only, no period. The current stops are 5/10/20/30/60, so this form is unreachable today — the picker's stops are data, not a guarantee, so the group must still be complete.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsNoticeOptionAriaLabel_other": {
+    "message": "$COUNT$ minutes before the cutoff",
+    "description": "The 'other' form of the optionsNoticeOptionAriaLabel group; the form every current stop (5, 10, 20, 30, 60) selects. Screen-reader only, no period.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "optionsNotifyLabel": {
+    "message": "System notification",
+    "description": "Label of the toggle row that enables the OS-level pre-cutoff notification. Bound to the switch via <label for=\"notify\">."
+  },
+  "optionsNotifyHint": {
+    "message": "One notification when the countdown starts. No snooze.",
+    "description": "Hint under the System notification label. 'No snooze' is a deliberate refusal statement — the product offers no softening controls; keep it as a flat, final sentence."
+  },
+  "optionsAutoBookmarkLabel": {
+    "message": "Bookmark everything first",
+    "description": "Label of the toggle row that bookmarks all open tabs before each sweep. Bookmarks are the only escape hatch in this product."
+  },
+  "optionsAutoBookmarkHint": {
+    "message": "Writes every open tab to a dated bookmarks folder, then sweeps.",
+    "description": "Hint under 'Bookmark everything first'. Describes the browser-bookmarks write (design.md D12). The folder name itself (zero-tabbox) is never localized and is not part of this string."
+  },
+  "optionsKeepPinnedLabel": {
+    "message": "Keep pinned tabs",
+    "description": "Label of the toggle row that exempts pinned tabs from the sweep."
+  },
+  "optionsKeepPinnedHint": {
+    "message": "Pinned tabs survive every sweep.",
+    "description": "Hint under 'Keep pinned tabs'. Pinning is the only exemption that exists; keep the statement absolute."
+  },
+  "optionsStatsTitle": {
+    "message": "Since install",
+    "description": "Section heading (h2) above the two read-only stat cards."
+  },
+  "optionsStatTabsClosed": {
+    "message": "tabs closed",
+    "description": "Caption under the lifetime counter in the left stat card. A lower-case caption, not a sentence; it follows a large number rendered above it, so it must read as a standalone label and must NOT be pluralized against that number — this is why it is a separate key from the popupSweptUnit plural group even though the English text matches. The stat card is half of the 620px column (~270px) at 12px; keep to one line, roughly 20 characters."
+  },
+  "optionsStatLastSweep": {
+    "message": "last sweep",
+    "description": "Caption under the right stat card, whose value is the number of tabs closed by the most recent sweep (or an em dash when none has run). A lower-case caption, same shape as optionsStatTabsClosed. Keep to one line, roughly 20 characters."
+  },
+  "optionsLanguageLabel": {
+    "message": "Language",
+    "description": "Label of the sixth settings row: the UI language picker (the `locale` setting: auto / en / uk). Same visual shape as the other field labels."
+  },
+  "optionsLanguageAuto": {
+    "message": "Auto",
+    "description": "First option of the language picker: follow the browser UI language. Unlike the two language names beside it, this label IS translated in every catalog."
+  },
+  "optionsLanguageEnglish": {
+    "message": "English",
+    "description": "Second option of the language picker. A language endonym: it must stay the literal string 'English' in EVERY catalog, including uk — do not translate it. Present in every catalog anyway so the option set is complete and the picker renders from one source."
+  },
+  "optionsLanguageUkrainian": {
+    "message": "Українська",
+    "description": "Third option of the language picker. A language endonym: it must stay the literal string 'Українська' in EVERY catalog, including en — do not translate it to 'Ukrainian'. The English catalog therefore holds a Cyrillic value; that is intentional."
+  },
+  "onboardingHeadline": {
+    "message": "Every tab closes at $TIME$.",
+    "description": "Onboarding, the H1 — the biggest thing on the first-install screen and the sentence the whole contract hangs on. A flat statement of fact, not a warning and not an offer: every tab, no qualifier. $TIME$ is the first cutoff in HH:MM 24-hour form (18:00 on a fresh install). Implementation note: the markup keeps the English sentence with a <span id=\"cutoff-time\"> as the visible default, but the localized render must write the whole <h1> from TS, because a textContent replacement would destroy that span.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "onboardingLede": {
+    "message": "Bookmarks are the only way to keep a page. Read the terms before you keep the extension.",
+    "description": "Onboarding, the paragraph under the headline. Two sentences doing two jobs: the first names the ONLY escape hatch (there is no archive and no undo — bookmarks, nothing else), the second tells the user to read before consenting. Keep both sentences and keep 'only'. 'keep the extension' deliberately implies that the alternative is to uninstall it, which is what the decline button below actually does."
+  },
+  "onboardingTerm1": {
+    "message": "Every tab in every normal window is included — no undo, no snooze, no per-tab exceptions.",
+    "description": "Onboarding, first numbered contract term. LOAD-BEARING CONSENT COPY — the bluntness IS the product. Do not soften it into politeness, do not hedge it with 'usually' / 'as a rule' / 'by default', and do not collapse the three negations into one. The doubled 'Every … every' and the three-item denial list exist so the user cannot later claim they were not told; a translation that reads as gentle or reassuring is a mistranslation. 'normal window' is the technical scope (i.e. not popup/app windows) and must stay a scope statement, not a value judgement. Keep the em dash (U+2014)."
+  },
+  "onboardingTerm2": {
+    "message": "Quitting the browser doesn't dodge it. A missed cutoff runs at the next start.",
+    "description": "Onboarding, second numbered contract term. LOAD-BEARING CONSENT COPY — preserve the force. It closes the loophole the user is already imagining, so the first sentence must land as a flat refusal, not as an FYI. 'dodge' is deliberately informal and adversarial — it names the user's evasion attempt out loud; do not neutralise it into 'does not prevent' or 'will not help'. The second sentence states the mechanism: a cutoff missed while the browser was closed fires at the next browser start. Keep two short sentences."
+  },
+  "onboardingTerm3": {
+    "message": "No data is collected — everything stays on your device.",
+    "description": "Onboarding, third numbered contract term. The one term that is reassurance rather than warning, and it earns its place by being just as absolute as the other two: no telemetry, no accounts, no sync, nothing leaves the machine. Keep it categorical — 'No data is collected', not 'we collect minimal data' — and do not pad it with marketing, or the list stops reading as a contract. Keep the em dash (U+2014)."
+  },
+  "onboardingAccept": {
+    "message": "I understand. Start at $TIME$.",
+    "description": "SHARED BY TWO SURFACES — one key, deliberately: the onboarding accept button and the options page's accept-banner button (renderAcceptLabel(), rewritten whenever the schedule changes so it always names the earliest cutoff). Both are the same consent gate and must read identically. This click IS the consent — it writes the accepted flag and is the moment the extension is allowed to start destroying tabs. $TIME$ is the first cutoff, HH:MM 24-hour. First person on purpose: the user is the one making the statement, so keep it as the user's own words, not an imperative aimed at them. Two short sentences; the second restates the commitment so the button is never a bare 'OK'. It sits inside the primary accent button, which is not fixed-width but looks broken when it wraps to two lines — keep it close to the English length.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "onboardingPickTime": {
+    "message": "Pick a different time",
+    "description": "Onboarding, the secondary button under accept. Navigates to the options page in the same tab; it is NOT an acceptance, so the label must stay neutral about consent — it offers a different cutoff, not a way out. An imperative addressed to the user, unlike onboardingAccept. 'time' here means the cutoff time. Implementation note: the button holds an aria-hidden clock SVG followed by the text, so the text needs its own <span> — a textContent write on the button would delete the icon."
+  },
+  "onboardingDecline": {
+    "message": "I don't want this — uninstall the extension",
+    "description": "Onboarding, the plain-text decline under the two buttons. Hands off to the browser's own uninstall confirmation. First person like the accept label, so the two choices read as the same person speaking. Deliberately unhedged: the refusal and its consequence are one sentence, because declining this contract means removing the extension — there is no 'maybe later' state. Do not translate it into a softer 'No thanks'; the uninstall must stay visible in the label so nobody clicks it expecting a dismissal. Keep the em dash (U+2014)."
+  },
+  "noticeTitle": {
+    "message": "All tabs close at $TIME$",
+    "description": "Pre-cutoff system notification, title line (src/badge.ts). Shown once before a cutoff when settings.notify is on; the notification has no buttons and does nothing on click, so the title plus message are the entire message. $TIME$ is the cutoff in HH:MM 24-hour form. No period — it is a title. States the fact, not a request: 'All tabs close', never a passive 'will be closed' or 'are about to be closed'. Chrome and Firefox truncate the title to roughly one line (~40-50 characters), so keep it short.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "noticeMessage_one": {
+    "message": "$COUNT$ minute left. Bookmark anything you need — nothing is saved.",
+    "description": "Pre-cutoff notification body, plural group with noticeMessage_other, 'one' form. The WHOLE sentence is one message with $COUNT$ inline — it must never be split into a separate lead and tail, because languages with number agreement inflect both the noun and the verb that follows it. $COUNT$ is Math.max(0, Math.round(minutesAhead)), so 0 is reachable and the zero-selecting form must read correctly. This is the last moment bookmarking is possible, so the second sentence must keep both halves — the instruction AND the reason ('nothing is saved'). Do not drop the reason to save room and do not soften it to 'nothing is kept automatically'. The body gets about two lines before truncation on both platforms. Keep the em dash (U+2014).",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "noticeMessage_other": {
+    "message": "$COUNT$ minutes left. Bookmark anything you need — nothing is saved.",
+    "description": "Pre-cutoff notification body, the 'other' form of the noticeMessage group — used for every COUNT except 1, including 0. Preserve the register: a flat countdown followed by a blunt instruction and the reason for it. The em-dash clause 'nothing is saved' is the contract restated at the last possible second and must not be softened or dropped. Same two-line notification budget as noticeMessage_one.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "extDescription": {
+    "message": "Closes every tab at your daily cutoff. No archive, no undo.",
+    "description": "Manifest `description` (src/manifest.base.json), referenced as __MSG_extDescription__. One of exactly two manifest strings that get localized, and it follows the BROWSER UI language via default_locale, not the extension's own locale setting — so on an English browser it shows English even when the UI setting is Ukrainian (design.md D14). This is the first thing a prospective user reads and it must warn as much as it describes: sentence one is the behaviour, sentence two is the two things the product refuses to do. Keep both denials — 'No archive, no undo' is honest disclosure, not a feature list. Store listing blurb: keep under about 132 characters."
+  },
+  "commandEndDayNow": {
+    "message": "End day now: close all tabs",
+    "description": "Manifest commands['end-day-now'].description (src/manifest.base.json), referenced as __MSG_commandEndDayNow__. The label for the Alt+Shift+E shortcut in the browser's own shortcuts UI, and like extDescription it follows the BROWSER UI language rather than the extension's locale setting. Two halves separated by a colon: the command's name, then plainly what it does — this row sits next to other extensions' shortcuts with no other context and pressing the key is instantly destructive. Keep the colon structure and keep 'all'; the second half is the warning. Not a polite invitation — it is a trigger label. Shown in a narrow, truncating column, so keep it near this length."
+  }
+}

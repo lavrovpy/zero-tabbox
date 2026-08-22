@@ -131,6 +131,7 @@ const DEFAULTS: Settings = {
   notify: true,
   autoBookmark: false,
   keepPinned: false,
+  locale: 'auto',
 };
 
 function fakeTab(id: number, url: string, options: { pinned?: boolean } = {}): FakeTab {

@@ -10,7 +10,25 @@
  * declaration at the same time.
  */
 
-/** User-editable settings. Exactly the five controls sweep-controls.spec allows. */
+/**
+ * `en` and `uk` are the two shipped catalogs (`_locales/<lang>/messages.json`).
+ *
+ * Defined here rather than in `i18n.ts` to keep the dependency arrow pointing
+ * one way: `i18n.ts` reads settings through `storage.ts`, which imports this
+ * module, so defining the type there and importing it here would close a
+ * cycle. `i18n.ts` re-exports both names for callers who think of them as i18n
+ * concepts.
+ */
+export type Locale = 'en' | 'uk';
+
+/** The stored `locale` setting: a fixed locale, or follow the browser. */
+export type LocaleSetting = 'auto' | Locale;
+
+/**
+ * User-editable settings: the five sweep controls sweep-controls.spec allows,
+ * plus `locale`. The sixth is not a sixth sweep control — it changes nothing
+ * about what closes or when, only which language says so (design.md D14).
+ */
 export interface Settings {
   /**
    * Daily cutoff times as `HH:MM` in local wall-clock time.
@@ -30,6 +48,17 @@ export interface Settings {
   autoBookmark: boolean;
   /** Whether pinned tabs survive a sweep. The only exemption that exists. */
   keepPinned: boolean;
+  /**
+   * Which language the extension's own UI renders in. `'auto'` follows the
+   * browser's UI language (anything starting `uk` gets Ukrainian, everything
+   * else English); `'en'` and `'uk'` pin it regardless of the browser.
+   *
+   * A setting rather than a plain `chrome.i18n` lookup because that API reads
+   * the browser UI language and cannot be overridden per call — see the header
+   * of `i18n.ts` and design.md D14. Note it governs the UI only: the manifest's
+   * description and command label always follow the browser.
+   */
+  locale: LocaleSetting;
 }
 
 /** Why a sweep ran. Only `auto` advances the idempotency marker (design.md D3). */
@@ -104,6 +133,7 @@ export const DEFAULT_SETTINGS: Settings = {
   notify: true,
   autoBookmark: false,
   keepPinned: false,
+  locale: 'auto',
 };
 
 /**

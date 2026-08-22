@@ -42,7 +42,7 @@ After a sweep the extension SHALL update the toolbar badge to show the number of
 - **THEN** it shows "Day ended", `37` tabs closed, that they were bookmarked first, and the next cutoff — and "Back to the day" returns to the live view
 
 ### Requirement: Settings surface
-The options page SHALL expose exactly: cutoff times (1–4, as removable chips with an "Add cutoff" affordance), the badge-countdown start (the fixed stops of "Pre-cutoff notice", with a plain-words summary such as "10 min before" or "no warning"), "system notification" on/off, "bookmark everything first" on/off, "keep pinned tabs" on/off, and read-only stats since install (lifetime tabs closed and tabs closed by the last sweep). Changes SHALL be saved without a separate "Save" step. The page header SHALL carry the standing contract sentence: at each cutoff every tab closes, nothing is saved, bookmark what matters.
+The options page SHALL expose exactly: cutoff times (1–4, as removable chips with an "Add cutoff" affordance), the badge-countdown start (the fixed stops of "Pre-cutoff notice", with a plain-words summary such as "10 min before" or "no warning"), "system notification" on/off, "bookmark everything first" on/off, "keep pinned tabs" on/off, the interface language (`Auto`, English, Українська — where `Auto` follows the browser's UI language and falls back to English), and read-only stats since install (lifetime tabs closed and tabs closed by the last sweep). Changes SHALL be saved without a separate "Save" step. The page header SHALL carry the standing contract sentence: at each cutoff every tab closes, nothing is saved, bookmark what matters.
 
 #### Scenario: Add a second cutoff
 - **WHEN** the user adds `13:00` to an existing `18:00` schedule

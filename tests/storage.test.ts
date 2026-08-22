@@ -161,6 +161,7 @@ describe('getSettings', () => {
       notify: true,
       autoBookmark: false,
       keepPinned: false,
+      locale: 'auto',
     });
   });
 
@@ -172,6 +173,7 @@ describe('getSettings', () => {
       notify: true,
       autoBookmark: false,
       keepPinned: false,
+      locale: 'auto',
     });
   });
 
@@ -188,6 +190,7 @@ describe('getSettings', () => {
       notify: true,
       autoBookmark: false,
       keepPinned: true, // the one valid field survives
+      locale: 'auto',
     });
   });
 
@@ -221,6 +224,7 @@ describe('setSettings', () => {
       notify: false,
       autoBookmark: false,
       keepPinned: false,
+      locale: 'auto',
     });
     expect(store.version).toBe(STORAGE_VERSION);
     expect(STORAGE_VERSION).toBe(1);
