@@ -4,3 +4,8 @@ artifacts/
 *.zip
 *.xpi
 .DS_Store
+
+# store/ intermediates; only store/screenshots is committed
+store/.raw/
+store/.profile/
+store/.frame.html

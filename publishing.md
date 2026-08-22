@@ -43,4 +43,6 @@ Chrome privacy-practices answers (which must give the same answer the Firefox
 manifest already gives: no data collected — see [README § Data
 collection](README.md#data-collection)), the AMO source-code build
 instructions, and listing assets. All of it is drafted there ready to paste.
-[`PRIVACY.md`](PRIVACY.md) is the privacy policy a listing can link to.
+[`PRIVACY.md`](PRIVACY.md) is the privacy policy a listing can link to. The
+listing screenshots live in `store/`, regenerated from the real extension by
+two scripts — see [`store/README.md`](store/README.md).
