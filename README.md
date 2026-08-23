@@ -13,36 +13,23 @@ knowing that in advance is what changes how you use tabs.
 
 This is the whole product. Read it before you install it.
 
-1. **At each cutoff, every tab in every normal window closes.** Regardless of
-   focus, audio, tab group, or whether the tab was discarded by the browser's
-   memory saver.
-2. **Nothing about those tabs is stored.** Not the URL, not the title, not the
-   favicon, not the group. The extension keeps aggregates only: when the last
-   sweep ran, how many tabs it closed, whether they were bookmarked first, and
-   how many it has closed since install.
-3. **There is no way to get them back from this extension.** No undo, no
-   archive view, no export. Bookmarks are the only way to keep a page — and
-   that escape hatch is a button: "Bookmark all" in the popup, or the opt-in
-   "bookmark everything first" setting, write the at-risk tabs to a dated
-   `zero-tabbox` folder in *your browser's* bookmarks. The extension keeps no
-   reference to them and never reads them back.
-4. **There is no way to soften it.** No pause toggle, no "skip today", no
-   snooze, no per-tab protection. The only exemption that exists is a global
-   "keep pinned tabs" setting, off by default. Turning the extension off
-   requires the browser's own extension management page.
-5. **You get one clean window.** The browser is left running with exactly one
-   normal window holding a single new-tab page, so you see an empty desk rather
-   than a quit application.
-6. **The cutoff cannot be dodged by closing the browser.** If a cutoff passed
-   while the browser was shut, asleep, or crashed, the sweep runs at the next
-   start — before your restored session is usable — plus one follow-up pass
-   about 60 seconds later to catch tabs that session restore materialises late.
-7. **Nothing above is armed until you accept this contract.** Until you press
-   accept — on the page that opens at install, or on the settings page — no
-   sweep runs and no alarm is set. Accepting arms the schedule from that
-   moment; cutoffs that passed before you accepted are not swept afterwards.
-   "End day now" is the one thing that works beforehand, because clicking it is
-   its own consent.
+At each cutoff, every tab in every normal window closes — regardless of focus,
+audio, or tab group — and the browser is left with one clean window holding a
+single new-tab page. Nothing about the closed tabs is stored, beyond
+aggregates: when the last sweep ran, how many tabs it closed, whether they
+were bookmarked first. The only way to keep a page is bookmarking it first,
+via "Bookmark all" in the popup or the opt-in "bookmark everything first"
+setting, which write the at-risk tabs to a dated `zero-tabbox` folder in
+*your browser's* bookmarks — the extension keeps no reference to them and
+never reads them back. There's no undo, archive, pause, snooze, or per-tab
+protection; the only exemption is a global "keep pinned tabs" setting, off by
+default.
+
+A cutoff missed while the browser was shut, asleep, or crashed still sweeps at
+the next start, plus a follow-up pass about 60 seconds later for tabs session
+restore materialises late — and nothing above is armed until you accept the
+contract, on the page that opens at install or on the settings page. "End day
+now" works even before you accept, because clicking it is its own consent.
 
 Defaults: one cutoff at `18:00` local time, 10 minutes of notice, system
 notification on, keep-pinned off.
@@ -58,26 +45,6 @@ stop. The notification has no buttons. Setting N to 0 disables both.
 
 After a sweep the badge shows the number of tabs closed for up to 60 seconds,
 then clears. Nothing else announces it.
-
-## Language
-
-The interface is available in English and Ukrainian. By default it follows your
-browser's UI language — Ukrainian if that starts with `uk`, English otherwise —
-and the settings page has a **Language** row (`Auto` / English / Українська)
-to override it.
-
-The override covers the extension's own surfaces: popup, settings, first-install
-page, badge and notification. It does not cover the name and description on
-`chrome://extensions` / `about:addons` or the "End day now" entry in the
-browser's shortcut list, because the browser localizes the manifest from *its*
-language before the extension runs and no extension can override that per user.
-An English browser set to Ukrainian therefore shows a Ukrainian popup beside an
-English listing. That is the platform, not a bug (design.md D14).
-
-Translations live in `_locales/<lang>/messages.json`, the standard WebExtension
-catalog format; the same files serve the manifest and, inlined at build time,
-the UI. Adding a locale is a directory there plus its id in the `Locale` type
-(`src/types.ts`), the catalog map in `src/i18n.ts`, and the settings dropdown.
 
 ## Known backdoors
 
@@ -144,38 +111,8 @@ Requires Firefox 140 or newer. A temporary add-on is removed when Firefox
 closes, which makes it useful for trying the extension out and useless for
 actually living with it — for that you need a signed build.
 
-### Firefox (signed, permanent)
-
-Firefox will not permanently install an unsigned extension. Mozilla signs
-self-distributed builds without a public listing, through the "unlisted"
-channel:
-
-1. Generate a JWT issuer and secret at
-   <https://addons.mozilla.org/developers/addon/api/key/>.
-2. Sign the build:
-
-   ```bash
-   bunx web-ext sign \
-     --channel unlisted \
-     --api-key "$AMO_JWT_ISSUER" \
-     --api-secret "$AMO_JWT_SECRET" \
-     --source-dir dist/firefox \
-     --artifacts-dir artifacts
-   ```
-
-   A first-ever submission additionally needs `--amo-metadata <file.json>`.
-3. Install the resulting `.xpi` from `about:addons` → gear icon → **Install
-   Add-on From File…**.
-
-The add-on id (`zero-tabbox@lavrov.dev`) is fixed in the manifest, which AMO
-requires for Manifest V3 submissions and which keeps updates on the same id.
-
-To let it sweep private windows, open `about:addons` → the extension → **Run in
-Private Windows: Allow**.
-
-Store listings (Chrome Web Store, AMO public) are an optional follow-up. If the
-extension is ever listed, the Chrome Web Store privacy-practices form must give
-the same answer the Firefox manifest already gives: no data collected.
+For a permanent Firefox install, or to publish either store listing, see
+[`publishing.md`](publishing.md).
 
 ## Data collection
 
@@ -201,24 +138,13 @@ Nothing per-tab, ever. That fixed list is what makes the contract auditable.
 
 ## Development
 
-```bash
-bun install
-bun run typecheck    # tsc --noEmit
-bun run test         # bun test, one process per file, unit tests only
-bun run build        # both browsers into dist/
-bun run build:chrome # one browser
-bun run watch        # rebuild on change (in place; never unlinks dist/)
-bun run lint:firefox # addons-linter, warnings treated as errors
-bun run package      # zip both dist/ trees into artifacts/
-bun run verify       # typecheck + test + build + lint, in that order
-bun run icons        # regenerate icons/ from the generator script
-```
-
-Requires Bun 1.3 or newer. The exact version CI runs is pinned in
-`.bun-version` (read by `oven-sh/setup-bun`), so bumping Bun is a one-line
-commit that CI verifies. `bun run watch` uses recursive `fs.watch`, which is
-well supported on macOS and Windows but historically patchy on Linux — if a save
-does not trigger a rebuild there, re-run `bun run build`.
+Requires Bun 1.3 or newer. See `package.json` for the full script list;
+`bun run verify` runs typecheck, test, build, and lint in that order. The
+exact version CI runs is pinned in `.bun-version` (read by
+`oven-sh/setup-bun`), so bumping Bun is a one-line commit that CI verifies.
+`bun run watch` uses recursive `fs.watch`, which is well supported on macOS
+and Windows but historically patchy on Linux — if a save does not trigger a
+rebuild there, re-run `bun run build`.
 
 TypeScript, bundled with Bun.build. No framework, no Tailwind, no React — the UI
 is one button, six inputs and three stat lines, and the stylesheet is ~150 lines
@@ -230,22 +156,6 @@ by hand — the cutoff arithmetic (including DST transitions and midnight wrap),
 storage validation, the idempotency rules, and the badge. Anything that needs a
 real browser is in the manual matrices in `tasks.md` (4.3 and 7.1) and has to be
 walked through by a person.
-
-### Layout
-
-| File | What it owns |
-| --- | --- |
-| `src/background.ts` | Listener registration only. Every listener is top-level and synchronous, or the background is never woken for it. |
-| `src/reconcile.ts` | The schedule. Alarms are wake-up hints; correctness comes from re-deriving everything from the clock and storage on every wake. |
-| `src/sweep.ts` | One sweep: which tabs close, which window survives. |
-| `src/bookmarks.ts` | The escape hatch: writes at-risk tabs to a dated bookmarks folder. |
-| `src/cutoff.ts` | Local-time cutoff arithmetic. Pure functions. |
-| `src/storage.ts` | The only module that touches `storage.local`. |
-| `src/platform.ts` | The only module that knows which browser it is on. |
-| `src/badge.ts` | Badge text and the pre-cutoff notification. Never rejects. |
-| `src/i18n.ts` | The UI translation layer: resolves the `locale` setting, `t()`, and the `data-i18n` DOM pass. |
-| `src/ui/` | Popup, options page, first-install page, the one stylesheet, and the bundled fonts. |
-| `build.mjs` | Bun.build + the per-browser manifest overlay. |
 
 ### Specs
 
