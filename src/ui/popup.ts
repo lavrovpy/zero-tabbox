@@ -226,16 +226,11 @@ async function showLive(): Promise<void> {
     ]);
     const count = atRisk.length;
     const saveableCount = saveable.length;
-    // Plural groups: an `=== 1` ternary here would silently strip Ukrainian's
-    // third form.
     atRiskLine.textContent = t('popupTabsAtRisk', { count });
     bookmarkAllLabel.textContent = t('popupBookmarkAll', { count: saveableCount });
     bookmarkAll.hidden = bookmarkedThisSession;
     bookmarkAll.disabled = saveableCount === 0;
   } catch {
-    // No count survived the failure, so neither string may come from a plural
-    // group: these two keys are the count-less siblings, worded to read
-    // correctly with an unknown quantity.
     atRiskLine.textContent = t('popupTabsCloseAt');
     bookmarkAllLabel.textContent = t('popupBookmarkAllTabs');
     bookmarkAll.hidden = bookmarkedThisSession;
@@ -249,9 +244,8 @@ function showSwept(closed: number, bookmarked: boolean, nextHhmm: string | null)
   if (etaTimer !== undefined) clearInterval(etaTimer);
 
   sweptCount.textContent = String(closed);
-  // The numeral is its own span, so the unit carries no `$COUNT$` — the count
-  // is passed only to select the form. It must still be passed: 0 is reachable
-  // and takes Ukrainian's `many`.
+  // `count` looks unused — the numeral is a separate span — but it selects the
+  // plural form.
   sweptUnit.textContent = t('popupSweptUnit', { count: closed });
   sweptNote.textContent = bookmarked
     ? t('popupSweptNoteBookmarked')
