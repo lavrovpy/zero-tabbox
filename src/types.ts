@@ -13,11 +13,8 @@
 /**
  * `en` and `uk` are the two shipped catalogs (`_locales/<lang>/messages.json`).
  *
- * Defined here rather than in `i18n.ts` to keep the dependency arrow pointing
- * one way: `i18n.ts` reads settings through `storage.ts`, which imports this
- * module, so defining the type there and importing it here would close a
- * cycle. `i18n.ts` re-exports both names for callers who think of them as i18n
- * concepts.
+ * Defined here, not in `i18n.ts`, so the dependency arrow points one way:
+ * `i18n.ts` → `storage.ts` → `types.ts`.
  */
 export type Locale = 'en' | 'uk';
 
@@ -53,10 +50,8 @@ export interface Settings {
    * browser's UI language (anything starting `uk` gets Ukrainian, everything
    * else English); `'en'` and `'uk'` pin it regardless of the browser.
    *
-   * A setting rather than a plain `chrome.i18n` lookup because that API reads
-   * the browser UI language and cannot be overridden per call — see the header
-   * of `i18n.ts` and design.md D14. Note it governs the UI only: the manifest's
-   * description and command label always follow the browser.
+   * Governs the UI only — the manifest's description and command label always
+   * follow the browser (design.md D14).
    */
   locale: LocaleSetting;
 }

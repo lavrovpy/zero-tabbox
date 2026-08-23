@@ -32,26 +32,13 @@ import type { Locale, LocaleSetting } from './types';
 import enMessages from '../_locales/en/messages.json';
 import ukMessages from '../_locales/uk/messages.json';
 
-/**
- * `Locale` and `LocaleSetting` are DEFINED in `types.ts`, not here, and only
- * re-exported for callers who think of them as i18n concepts. The direction
- * matters: this module imports `getSettings` from `storage.ts` at runtime and
- * `storage.ts` imports `types.ts`, so defining the types here and importing
- * them into `types.ts` would close a module cycle. `types.ts` depends on
- * nothing, which is what keeps it the single source of truth for stored shapes.
- */
+/** Re-exported for i18n callers; defined in `types.ts`, which depends on nothing. */
 export type { Locale, LocaleSetting } from './types';
 
 /**
- * One entry of a WebExtension `messages.json`. `placeholders` exists in the
- * files so the catalogs stay standard-compliant and pass addons-linter, but
- * nothing here reads it: substitution is ours, see {@link substitute}.
- *
- * The optional `description` the format allows is deliberately absent from
- * both catalogs. It is translator context, and the catalogs are inlined into
- * all four bundles — carrying it cost ~61 KB of prose per bundle that the
- * service worker re-parsed on every alarm wake. The context lives in the key
- * names instead (design.md D14).
+ * One entry of a WebExtension `messages.json`. The format's `placeholders` and
+ * `description` are absent by design (design.md D14); substitution is ours,
+ * see {@link substitute}.
  */
 interface CatalogEntry {
   readonly message?: string;
@@ -123,11 +110,9 @@ export function activeLocale(): Locale {
 }
 
 /**
- * The BCP-47 tag for `Intl` and `toLocaleString`.
- *
- * A seam, not a formality: our locale ids happen to be valid tags today, so
- * this is the identity function, but a future `pt-BR` would not be — and every
- * number- and date-formatting call site already goes through here.
+ * The BCP-47 tag for `Intl` and `toLocaleString`. Identity today, but every
+ * formatting call site goes through it, so a locale id that is not a valid tag
+ * has one place to be mapped.
  */
 export function localeTag(locale: Locale): string {
   return locale;
@@ -136,16 +121,10 @@ export function localeTag(locale: Locale): string {
 /**
  * The plural-form keys to try, in order, for a given count.
  *
- * Plural groups are underscore-suffixed sibling keys (`foo_one`, `foo_few`,
- * `foo_many`, `foo_other`) because `messages.json` names are restricted to
- * `A-Za-z0-9_@` — a dot would be rejected by the browser and by addons-linter.
- *
- * `Intl.PluralRules` picks the form. Over integers `uk` produces exactly
- * `one`/`few`/`many` (0 → many, 21 → one, 22 → few) and `en` exactly
- * `one`/`other`, so the selected key normally exists. The extra candidates
- * cover the cases where it does not: a non-integer count (`uk` then answers
- * `other`, which the Ukrainian catalog has no reason to carry), and the
- * fallback into the English catalog, which has no `few`/`many` at all.
+ * `Intl.PluralRules` picks the form; the extra candidates cover the two cases
+ * where `${key}_${form}` is absent — a non-integer count (`uk` answers `other`,
+ * which the Ukrainian catalog has no reason to carry) and the fallback into the
+ * English catalog, which has no `few`/`many` at all. Key layout is D14.
  */
 function pluralCandidates(key: string, count: number, locale: Locale): string[] {
   let form = 'other';

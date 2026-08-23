@@ -106,10 +106,8 @@ export async function showNoticeNotification(
   try {
     await initI18n();
   } catch (error) {
-    // `initI18n` is already total, but rule 1 above admits no exceptions — and
-    // this is caught separately from the notification so that a locale we could
-    // not resolve costs the user a translation, never the notice itself. `t()`
-    // then falls back to whichever locale is still active.
+    // Caught separately from the notification below: an unresolvable locale
+    // costs the user a translation, never the notice itself.
     console.warn('[zero-tabbox] could not resolve the notice locale', error);
   }
   try {

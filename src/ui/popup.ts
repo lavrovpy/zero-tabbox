@@ -140,11 +140,9 @@ export function soonestCutoff(now: Date, cutoffs: readonly string[]): NextCutoff
  * so it agrees with the badge countdown (sweep-controls.spec "Badge countdown"
  * counts minutes).
  *
- * Each of the four shapes is its own message rather than a preposition glued to
- * a formatted duration: English leads with "in", Ukrainian with «за», and the
- * hour/minute abbreviations are not the same word in either. Deliberately not a
- * plural group — the units are invariant abbreviations in both catalogs, so the
- * branch is on the shape of the duration, not on grammatical number.
+ * Each of the four shapes is its own message, not a preposition glued to a
+ * formatted duration: English leads with "in", Ukrainian with «за». Not a
+ * plural group — the branch is on the shape of the duration, not on number.
  *
  * @param minutes minutes until the cutoff; negatives are clamped to 0
  */
@@ -163,10 +161,8 @@ export function formatEta(minutes: number): string {
  * The per-second countdown shown once the notice window has started, when the
  * remaining time deserves urgency rather than an estimate.
  *
- * The clock is built here and handed to the message as `$TIME$`; the word that
- * frames it is never appended. English says "04:37 left" and Ukrainian
- * «залишилося 04:37» — a suffix concatenated after the numerals would be
- * untranslatable into the second of those two.
+ * The framing word is never appended: "04:37 left" but «залишилося 04:37», so
+ * the clock goes in as `$TIME$` and the message owns the word order.
  *
  * MM:SS itself stays zero-padded ASCII digits in every locale: it re-renders
  * once a second, so a locale-formatted number that changed width as it ticked

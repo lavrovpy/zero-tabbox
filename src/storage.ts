@@ -170,10 +170,8 @@ function mergeSettings(stored: unknown): Settings {
       typeof raw.autoBookmark === 'boolean' ? raw.autoBookmark : DEFAULT_SETTINGS.autoBookmark,
     keepPinned:
       typeof raw.keepPinned === 'boolean' ? raw.keepPinned : DEFAULT_SETTINGS.keepPinned,
-    // Absent for everyone who installed before the language picker existed, and
-    // that is the whole migration: the field-wise merge hands them the default
-    // `'auto'`, which resolves to the language their browser is already in. No
-    // migration step, no STORAGE_VERSION bump.
+    // Absent for anyone who installed before the picker existed; the field-wise
+    // merge hands them `'auto'`. That is the whole migration — no version bump.
     locale: isLocaleSetting(raw.locale) ? raw.locale : DEFAULT_SETTINGS.locale,
   };
 }
