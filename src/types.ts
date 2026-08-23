@@ -114,7 +114,7 @@ export interface StorageShape {
 /** Current storage schema version. Bump only alongside a migration. */
 export const STORAGE_VERSION = 1;
 
-/** Defaults per tasks.md 2.1 / sweep-schedule.spec "Default schedule". */
+/** Defaults per sweep-schedule.spec "Default schedule". */
 export const DEFAULT_SETTINGS: Settings = {
   cutoffs: ['18:00'],
   noticeMinutes: 10,

@@ -147,22 +147,23 @@ and Windows but historically patchy on Linux — if a save does not trigger a
 rebuild there, re-run `bun run build`.
 
 TypeScript, bundled with Bun.build. No framework, no Tailwind, no React — the UI
-is one button, six inputs and three stat lines, and the stylesheet is ~150 lines
-of hand-written CSS using shadcn's OKLCH token names. Light and dark follow the
-OS via `prefers-color-scheme`; there is deliberately no theme setting.
+is three small pages (popup, options, onboarding) sharing one hand-written
+stylesheet, `src/ui/theme.css`, in which every color is a design token. Light
+and dark follow the OS via `prefers-color-scheme`; there is deliberately no
+theme setting.
 
 The tests cover the parts that are pure logic and would be miserable to verify
 by hand — the cutoff arithmetic (including DST transitions and midnight wrap),
 storage validation, the idempotency rules, and the badge. Anything that needs a
-real browser is in the manual matrices in `tasks.md` (4.3 and 7.1) and has to be
-walked through by a person.
+real browser — the sweep across several windows, pinned-tab consolidation,
+private windows, the startup catch-up with session restore, theming — has to
+be walked through by a person against the scenarios in the spec files.
 
 ### Specs
 
-The behaviour is specified before it is implemented. `proposal.md` and
-`design.md` hold the motivation and the architecture decisions;
-`tab-sweep.spec.md`, `sweep-schedule.spec.md` and `sweep-controls.spec.md` hold
-the requirements the code is answerable to; `tasks.md` tracks the work. If a
+The behaviour is specified before it is implemented. `design.md` holds the
+architecture decisions; `tab-sweep.spec.md`, `sweep-schedule.spec.md` and
+`sweep-controls.spec.md` hold the requirements the code is answerable to. If a
 change contradicts a spec, the spec is what gets changed first.
 
 ## License

@@ -1,6 +1,6 @@
 /**
- * Toolbar badge and the pre-cutoff notification (tasks.md section 5,
- * sweep-controls.spec "Pre-cutoff notice" / "Post-sweep feedback is minimal").
+ * Toolbar badge and the pre-cutoff notification (sweep-controls.spec
+ * "Pre-cutoff notice" / "Post-sweep feedback is minimal").
  *
  * The badge is the whole pre-cutoff UI; there is no snooze, postpone or cancel
  * anywhere in this module by design.
@@ -15,8 +15,9 @@
  *  2. **No colors are set.** `action.setBadgeBackgroundColor` /
  *     `setBadgeTextColor` are deliberately not called: the browser's own default
  *     badge colors already follow its theme, and calling them would put color
- *     literals outside `ui/theme.css` (tasks.md 7.2a). The badge carries a
- *     number, and the number is the whole message.
+ *     literals outside `ui/theme.css` (sweep-controls.spec "Tokens are the only
+ *     source of color"). The badge carries a number, and the number is the
+ *     whole message.
  */
 import { initI18n, t } from './i18n';
 import { api } from './platform';

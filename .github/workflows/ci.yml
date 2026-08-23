@@ -21,22 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # The repo is docs-only until task 1.1 (project setup) lands. Until then
-      # there is nothing to install or run, and this job reports success with a
-      # notice rather than failing on a missing package.json. The guard becomes
-      # a no-op the moment 1.1 adds package.json — no cleanup needed.
-      - name: Detect project scaffolding
-        id: probe
-        run: |
-          if [ -f package.json ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Nothing to build yet::No package.json found. Build, typecheck, tests and extension lint start running once task 1.1 (project setup) lands."
-          fi
-
       - uses: oven-sh/setup-bun@v2
-        if: steps.probe.outputs.ready == 'true'
         with:
           # Version lives in .bun-version so CI and contributors read one file.
           # Pinned, not `latest`: the build and tests lean on version-specific
@@ -46,37 +31,32 @@ jobs:
           bun-version-file: .bun-version
 
       - name: Install
-        if: steps.probe.outputs.ready == 'true'
         run: bun install --frozen-lockfile
 
       - name: Typecheck
-        if: steps.probe.outputs.ready == 'true'
         run: bun run typecheck
 
       - name: Unit tests
-        if: steps.probe.outputs.ready == 'true'
         run: bun run test
 
       - name: Build both browser targets
-        if: steps.probe.outputs.ready == 'true'
         run: bun run build
 
       # addons-linter (what web-ext lint wraps) validates against Firefox rules:
       # it rejects background.service_worker with MANIFEST_FIELD_UNSUPPORTED, so
       # it can only ever run against the Firefox build, never the Chrome one.
-      # This is the gate that has to pass before AMO will sign anything (7.4).
+      # This is the gate that has to pass before AMO will sign anything
+      # (publishing.md).
       # --self-hosted matches our distribution route and drops listing-only
       # messages; warnings are fatal because a correct manifest lints to zero
       # findings, so any warning here is a real regression.
       - name: Lint the Firefox build (addons-linter)
-        if: steps.probe.outputs.ready == 'true'
         run: bunx web-ext lint --source-dir dist/firefox --self-hosted --warnings-as-errors
 
       # Chrome has no official manifest linter, so assert the invariants that
       # matter for our build instead: valid JSON, MV3, and the Chrome-only
       # background key that addons-linter would have rejected above.
       - name: Sanity-check the Chrome manifest
-        if: steps.probe.outputs.ready == 'true'
         run: |
           bun -e '
             const fs = require("fs");
@@ -90,7 +70,6 @@ jobs:
           '
 
       - name: Upload built extensions
-        if: steps.probe.outputs.ready == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: dist-${{ github.sha }}

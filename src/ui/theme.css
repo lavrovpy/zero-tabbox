@@ -1,11 +1,11 @@
 /*
- * zero-tabbox design tokens and component styles (design.md D10, tasks.md 6.0).
+ * zero-tabbox design tokens and component styles (design.md D10).
  *
  * The tokens are the "ab" design system's, imported from the Zero Tabbox
  * Redesign canvas (the design is the source of truth): warm stone neutrals, a
  * single ember-orange accent, Geist for UI text and JetBrains Mono for
  * numerals and labels. Two rules the spec checks by reading this file
- * (tasks.md 7.2a):
+ * (sweep-controls.spec "Tokens are the only source of color"):
  *
  *   1. Color values appear ONLY inside the token blocks below (the ramps, the
  *      semantic aliases, and their dark-mode overrides). Every other rule
@@ -785,7 +785,7 @@ button {
  * .switch: dropping the native appearance also drops the disclosure chevron,
  * and drawing our own means an inline SVG data URI carrying a hard-coded
  * stroke colour — precisely the colour literal outside the token block that
- * tasks.md 7.2a forbids, and one that could not follow the dark-mode overrides
+ * the spec forbids, and one that could not follow the dark-mode overrides
  * anyway.
  */
 .select {
