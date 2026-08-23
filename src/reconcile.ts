@@ -1,5 +1,5 @@
 /**
- * The schedule engine (design.md D2, D3, D5, D8; tasks.md 3.2–3.5, 5.1–5.2).
+ * The schedule engine (design.md D2, D3, D5, D8).
  *
  * `background.ts` is only the listener layer; everything it dispatches to lives
  * here. Two properties are load-bearing and worth stating up front:

@@ -1,5 +1,5 @@
 /**
- * Options page (tasks.md 6.2).
+ * Options page (design.md D10, sweep-controls.spec "Settings surface").
  *
  * Contract: this page persists changes through `storage.ts` only. Writing
  * `settings` is what makes the background reschedule via `storage.onChanged`

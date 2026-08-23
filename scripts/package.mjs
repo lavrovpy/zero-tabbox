@@ -1,5 +1,5 @@
 /**
- * Packages the built extensions into distributable zips (tasks.md 7.4).
+ * Packages the built extensions into distributable zips.
  *
  *   bun scripts/package.mjs [--browser=chrome] [--browser=firefox]
  *

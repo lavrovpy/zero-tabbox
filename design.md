@@ -1,6 +1,6 @@
 ## Context
 
-Greenfield WebExtension. See proposal.md for motivation. Platform constraints that shape the design (verified against current docs, Aug 2026):
+Greenfield WebExtension. The README states the product contract and motivation. Platform constraints that shape the design (verified against current docs, Aug 2026):
 
 - MV3 background is non-persistent on both targets — a service worker on Chrome, an event page on Firefox — terminated when idle (~30 s) and re-created on events. Global state and `setTimeout` do not survive; only `chrome.alarms` + `chrome.storage` do. Event listeners must be registered synchronously at the top level or the background will not be woken for them.
 - `chrome.alarms`: minimum granularity 30 s (Chrome 120+), firing may be delayed arbitrarily, does not fire while the browser is closed. Chrome persists alarms across restarts (`persistAcrossSessions`, explicit flag from Chrome 150); Firefox and Safari do not — alarms must be recreated on `runtime.onStartup` / `runtime.onInstalled` for portability.
@@ -78,7 +78,7 @@ Private/incognito windows: `windows.getAll` returns them only when the user has 
 A second alarm `notice:HH:MM` at `cutoff − N minutes` fires the notification (if enabled) and starts a 1-minute repeating `badge` alarm that updates the badge text until the sweep. Badge is cleared by the sweep. Alternative: `setInterval` in the worker — dies with the worker.
 
 ### D6. Storage layout
-`chrome.storage.local` only (no `sync`: schedule sync across devices is a non-goal and `sync` has quota/latency quirks). Keys: `settings` `{cutoffs: string[], noticeMinutes, notify, autoBookmark, keepPinned}`, `lastAutoCutoffId: string`, `lastSweep` `{reason, at, closed, bookmarked}`, `stats` `{lifetimeClosed}`, `accepted: true`. Nothing else, ever — this is what makes the "no archive" spec checkable by reading storage. `lastSweep.bookmarked` is an aggregate boolean ("were the closed tabs written to bookmarks first"), never a list; the bookmark writes themselves go to the browser's own bookmarks (D12), not to extension storage.
+`chrome.storage.local` only (no `sync`: schedule sync across devices is a non-goal and `sync` has quota/latency quirks). Keys: `settings` `{cutoffs: string[], noticeMinutes, notify, autoBookmark, keepPinned, locale}`, `lastAutoCutoffId: string`, `lastSweep` `{reason, at, closed, bookmarked}`, `stats` `{lifetimeClosed}`, `accepted: true`, `version: number` (schema version, for future migrations). Nothing else, ever — this is what makes the "no archive" spec checkable by reading storage. `lastSweep.bookmarked` is an aggregate boolean ("were the closed tabs written to bookmarks first"), never a list; the bookmark writes themselves go to the browser's own bookmarks (D12), not to extension storage.
 
 The manifest's `data_collection_permissions: {required: ["none"]}` (D1's Firefox overlay) is the outward-facing half of this decision: D6 makes "no archive" checkable by reading storage after the fact, the declaration makes it checkable in the install prompt beforehand. The two have to be kept in step — anything added to this key list that is not an aggregate counter invalidates the declaration, not just the spec.
 
@@ -108,7 +108,7 @@ stateDiagram-v2
 ### D10. Visual style: the "ab" design-system tokens, hand-written CSS
 Chosen: adopt the token system of the Zero Tabbox Redesign canvas (the "ab" design system — the design is the source of truth): warm stone neutrals plus a single ember-orange accent, Geist for UI text and JetBrains Mono for numerals/labels, a 4/6/8/12px radius scale, warm-tinted shadows, and an ember focus ring. Implemented as hand-written CSS in one shared `ui/theme.css`, with no Tailwind, no Radix, no React — the same trade already rejected in D1. This supersedes the earlier shadcn/OKLCH token set.
 
-Structure of the stylesheet, and the two properties the spec checks by reading it (tasks.md 7.2a):
+Structure of the stylesheet, and the two properties the spec checks by reading it (sweep-controls.spec "Tokens are the only source of color"):
 
 - Tokens are CSS custom properties on `:root` (color ramps `--color-stone-*` / `--color-ember-*`, then semantic aliases `--color-bg/-subtle/-muted`, `--color-surface`, `--color-border/-strong`, `--color-fg/-2/-3`, `--color-accent/-hover/-active/-fg/-soft`, `--color-success/-danger`), redefined once under `@media (prefers-color-scheme: dark)`. Every other rule references tokens only, never literal colors, so "does it work in dark mode" is checkable by reading one file.
 - The canvas's light/dark switch is a canvas control, not a product control: theming follows the OS/browser automatically via `prefers-color-scheme`, and `color-scheme: light dark` is declared so the browser paints the popup backdrop, form controls and scrollbars to match, avoiding a white flash before paint in a dark-themed browser. **No theme setting is added** — the OS preference is already the right answer, and the settings surface stays fixed.
@@ -188,5 +188,4 @@ Greenfield; no migration. Rollback = remove extension. Storage schema carries a 
 
 ## Open Questions
 
-- Should the pre-cutoff badge count minutes or show a static glyph? Cosmetic; can be settled during implementation.
-- Whether to publish on the Chrome Web Store at all or keep it as a personal unpacked/self-hosted extension. Does not change specs or tasks.
+- Whether to publish on the Chrome Web Store at all or keep it as a personal unpacked/self-hosted extension. Does not change the specs; see publishing.md.

@@ -2,7 +2,7 @@
  * One sweep: the thing the whole extension exists to do (design.md D4,
  * tab-sweep.spec).
  *
- * Owned by tasks.md section 4. Nothing in here persists anything about the
+ * Nothing in here persists anything about the
  * tabs it closes — only counts, via `storage.ts`.
  */
 import { clearBadge, setClosedBadge } from './badge';

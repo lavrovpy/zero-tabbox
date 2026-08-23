@@ -1,5 +1,5 @@
 /**
- * Toolbar popup (tasks.md 6.1).
+ * Toolbar popup (design.md D10, sweep-controls.spec "Popup contents").
  *
  * Contract: the popup owns no sweep logic and no schedule logic. It reads
  * settings through `storage.ts`, derives the next cutoff with the pure helpers

@@ -2,7 +2,7 @@
  * Cutoff arithmetic: pure, local-time, no extension APIs and no I/O.
  *
  * Everything here is deliberately side-effect free so the DST / midnight-wrap /
- * multi-cutoff cases can be unit-tested against a fake `now` (tasks.md 3.1).
+ * multi-cutoff cases can be unit-tested against a fake `now`.
  * All computation uses the host's *current* local timezone via the `Date`
  * constructor, which is what makes "18:00 means 18:00 wall clock after a DST
  * shift" true (sweep-schedule.spec "Cutoffs follow local wall-clock time").
