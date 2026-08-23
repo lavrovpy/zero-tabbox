@@ -43,10 +43,15 @@ import ukMessages from '../_locales/uk/messages.json';
 export type { Locale, LocaleSetting } from './types';
 
 /**
- * One entry of a WebExtension `messages.json`. `description` and
- * `placeholders` exist in the files (translator context, and so the catalogs
- * stay standard-compliant and pass addons-linter) but nothing here reads them:
- * substitution is ours, see {@link substitute}.
+ * One entry of a WebExtension `messages.json`. `placeholders` exists in the
+ * files so the catalogs stay standard-compliant and pass addons-linter, but
+ * nothing here reads it: substitution is ours, see {@link substitute}.
+ *
+ * The optional `description` the format allows is deliberately absent from
+ * both catalogs. It is translator context, and the catalogs are inlined into
+ * all four bundles — carrying it cost ~61 KB of prose per bundle that the
+ * service worker re-parsed on every alarm wake. The context lives in the key
+ * names instead (design.md D14).
  */
 interface CatalogEntry {
   readonly message?: string;

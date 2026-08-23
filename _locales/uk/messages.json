@@ -1,15 +1,12 @@
 {
   "popupChecking": {
-    "message": "Перевірка розкладу…",
-    "description": "Popup, live view. Initial text of the #at-risk line (popup.html), visible for the moment before storage resolves and the real at-risk count replaces it. Never re-set from TS, so it must read as a transient status, not as an error. Keep the ellipsis as the single U+2026 character. One line in the 320px popup header, sharing the row with the settings icon (~250px usable); must not wrap. Ukrainian: verbal noun rather than a finite verb — shorter than «Перевіряємо розклад…» and neutral about who is acting."
+    "message": "Перевірка розкладу…"
   },
   "popupSettings": {
-    "message": "Налаштування",
-    "description": "Popup, live view. Both the aria-label and the title of the gear icon-link (#open-options) that opens the options page; one key drives both attributes. Screen-reader name and hover tooltip — there is no visible text."
+    "message": "Налаштування"
   },
   "popupTabsAtRisk_one": {
     "message": "$COUNT$ вкладка закриється о",
-    "description": "Popup, live view. Plural group with popupTabsAtRisk_few and popupTabsAtRisk_many; uk has no _other form over integers, so the group is three keys, not two. The #at-risk line, which precedes the big cutoff time on the NEXT line — an unfinished sentence that the HH:MM completes, so the translation must still lead into a time. Counts the tabs the next sweep would close (private tabs included), which can legitimately differ from the bookmark button's count below. One line in the 320px popup header beside the settings icon (~250px usable); must not wrap. Ukrainian: this form also covers 21, 31, 101 — it must therefore carry $COUNT$ and cannot be worded as a bare «одна вкладка». Ends in «о» per D14: always «о» before a time, never «об», even at 11:00.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -19,7 +16,6 @@
   },
   "popupTabsAtRisk_few": {
     "message": "$COUNT$ вкладки закриються о",
-    "description": "The 'few' form of the popupTabsAtRisk group: 2-4, 22-24, and so on. Nominative plural after the numeral, so the verb is plural («закриються»), unlike the 'many' form. Still an unfinished sentence completed by the cutoff time on the next line.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -29,7 +25,6 @@
   },
   "popupTabsAtRisk_many": {
     "message": "$COUNT$ вкладок закриється о",
-    "description": "The 'many' form of the popupTabsAtRisk group: 0, 5-20, 25-30, and so on. $COUNT$ can be 0 — «0 вкладок закриється о» is reachable when only pinned tabs remain and Keep pinned tabs is on, and it reads correctly. Genitive plural after the numeral takes a neuter singular verb («закриється»), which is why this form differs from the 'few' form by more than the noun ending. One line in the 320px popup header; must not wrap, including at three-digit counts (~24 characters at 13px, well inside the ~250px budget).",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -38,24 +33,19 @@
     }
   },
   "popupTabsCloseAt": {
-    "message": "Вкладки закриються о",
-    "description": "Popup, live view, degraded state. Written to the #at-risk line when counting the tabs fails; the schedule is still rendered, so this is the same lead-in as popupTabsAtRisk with the number dropped. Deliberately NOT part of the plural group — no count exists. Must still read as an unfinished sentence completed by the cutoff time on the next line. One line in the 320px popup header, beside the settings icon."
+    "message": "Вкладки закриються о"
   },
   "popupScheduleUnavailable": {
-    "message": "Розклад недоступний",
-    "description": "Popup, live view, degraded state. Written to the #at-risk line when reading settings from storage throws; the cutoff time stays at the '--:--' default and no ETA is shown. Reports that the popup could not read the schedule, without claiming that no sweep will happen. One line in the 320px popup header, beside the settings icon."
+    "message": "Розклад недоступний"
   },
   "popupNoCutoff": {
-    "message": "Закриття не налаштовано",
-    "description": "Popup, live view. Written to the #at-risk line when settings loaded fine but the schedule is empty or every entry is invalid; the time shows '--:--' and the ETA is blank. A real state, not a failure — nothing will be closed until a cutoff is added. Ukrainian: «закриття» is the settled domain term and is deliberately kept — dropping it to a bare «Час» leaves the line asking «which time?», where the English names the thing precisely. Also keeps the popup consistent with popupNextCutoff and optionsCutoffAriaLabel. ~23 characters at 13px (~150px) against the ~255px usable on the at-risk row, so it still holds one line."
+    "message": "Закриття не налаштовано"
   },
   "popupEtaLessThanMinute": {
-    "message": "менш ніж за хвилину",
-    "description": "Popup, live view. formatEta(0), written into #next-cutoff-eta beside the big cutoff time; shown when fewer than 30 seconds' worth of rounding remains and the notice window is not active. Reads as a time-until phrase attached to the time next to it. Shares one baseline row with the 26px HH:MM headline in the 320px popup — the longest of the four ETA strings and the tightest fit (~19 characters at 14px against a ~157px budget)."
+    "message": "менш ніж за хвилину"
   },
   "popupEtaMinutes": {
-    "message": "за $MINUTES$\u00a0хв",
-    "description": "Popup, live view. formatEta for a total under 60 minutes, written into #next-cutoff-eta. $MINUTES$ is a whole number 1-59. «хв» is an abbreviated unit, deliberately abbreviated to fit; it is invariant in Ukrainian too, so this is not a plural group. «за» + accusative is the standard time-until preposition and carries the whole 'in …' sense on its own. The gap before «хв» is a non-breaking space (U+00A0), written as the \\u00a0 escape so an invisible character cannot be lost in an edit — Ukrainian typography never breaks a numeral from its unit abbreviation. Shares one baseline row with the HH:MM headline in the 320px popup.",
+    "message": "за $MINUTES$ хв",
     "placeholders": {
       "minutes": {
         "content": "$1",
@@ -64,8 +54,7 @@
     }
   },
   "popupEtaHours": {
-    "message": "за $HOURS$\u00a0год",
-    "description": "Popup, live view. formatEta for a whole number of hours, written into #next-cutoff-eta. $HOURS$ is a whole number >= 1. Abbreviated unit, not pluralized, matching popupEtaMinutes. «год» takes no period — it is the standard Ukrainian abbreviation. Non-breaking space (U+00A0, written \\u00a0) between numeral and unit, as in popupEtaMinutes. Shares one baseline row with the HH:MM headline in the 320px popup.",
+    "message": "за $HOURS$ год",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -74,8 +63,7 @@
     }
   },
   "popupEtaHoursMinutes": {
-    "message": "за $HOURS$\u00a0год $MINUTES$\u00a0хв",
-    "description": "Popup, live view. formatEta for hours plus a remainder, written into #next-cutoff-eta. Two whole-number placeholders; $MINUTES$ is 1-59. The two unit abbreviations must match popupEtaHours and popupEtaMinutes exactly so the four ETA strings read as one family — including the non-breaking space (U+00A0, written \\u00a0) that ties each numeral to its unit; the space between «год» and $MINUTES$ is an ordinary one, since that is the only place the pair may break. The longest ETA form, sharing one baseline row with the HH:MM headline in the 320px popup — both units must stay abbreviated or the row wraps.",
+    "message": "за $HOURS$ год $MINUTES$ хв",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -89,7 +77,6 @@
   },
   "popupCountdownLeft": {
     "message": "залишилося $TIME$",
-    "description": "Popup, live view. formatCountdown, written into #next-cutoff-eta once a second while the notice window is active. $TIME$ is a pre-formatted zero-padded MM:SS string built in TS — do not reformat or re-order the digits. Ukrainian puts the word BEFORE the value, which is exactly why this stays one key with a placeholder rather than a suffix concatenated after the clock. The impersonal neuter «залишилося» conveys urgency rather than an estimate and agrees with an MM:SS span regardless of the digits. Re-renders every second on the baseline row of the 26px headline; the leading word is fixed-width and the digits are tabular, so the row never reflows.",
     "placeholders": {
       "time": {
         "content": "$1",
@@ -98,12 +85,10 @@
     }
   },
   "popupBookmarkAllTabs": {
-    "message": "Додати всі вкладки в закладки",
-    "description": "Popup, live view. The countless form of the bookmark button label. Used in two places and therefore NOT part of the plural group: as the visible default markup before the tab count is known, and as the degraded fallback written when tab enumeration fails. Because no number is available, the wording must work with an unknown quantity. Full-width button label next to a 15px bookmark icon in the 320px popup (~237px of text room at 13px, roughly 35 characters). Ukrainian: «додати в закладки» is the platform-standard phrasing for bookmarking, so the button names the action the way the browser itself does."
+    "message": "Додати всі вкладки в закладки"
   },
   "popupBookmarkAll_one": {
     "message": "Додати $COUNT$ вкладку в закладки",
-    "description": "Popup, live view. Plural group with popupBookmarkAll_few and popupBookmarkAll_many. The bookmark button label when the count selects the 'one' form. Ukrainian: unlike the English 'one' form, this one MUST carry $COUNT$ and a placeholders block — Intl.PluralRules('uk') selects 'one' for 21, 31 and 101 as well as for 1, so a numberless «вкладку» would silently mislabel those counts. Counts bookmarkable tabs, which excludes private-window tabs and can therefore be lower than the at-risk count on the line above. Bookmarking is the only escape hatch (design.md D12), so the label must name the action plainly.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -113,7 +98,6 @@
   },
   "popupBookmarkAll_few": {
     "message": "Додати $COUNT$ вкладки в закладки",
-    "description": "The 'few' form of the popupBookmarkAll group: 2-4, 22-24, and so on. Nominative plural «вкладки» after the numeral.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -123,7 +107,6 @@
   },
   "popupBookmarkAll_many": {
     "message": "Додати $COUNT$ вкладок у закладки",
-    "description": "The 'many' form of the popupBookmarkAll group: 0, 5-20, 25-30, and so on. $COUNT$ can be 0, in which case this label is shown with the button disabled — «Додати 0 вкладок у закладки» is odd but not nonsense, matching the English. Ukrainian: «у закладки», not «в закладки», because the preceding word «вкладок» ends in a consonant — euphonic alternation, so this form deliberately differs from its two siblings by one letter. The longest button string in the surface at three-digit counts (~33 characters at 13px, inside the ~237px budget).",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -132,68 +115,52 @@
     }
   },
   "popupSavedTo": {
-    "message": "Збережено в",
-    "description": "Popup, live view. Confirmation row shown after the bookmark action succeeds. A sentence fragment: the bookmark folder path is rendered immediately after it in a mono label on the same line, so it is a lead-in that can be followed by a path, not a complete sentence. Shares one 320px row with a checkmark icon and a path that can itself be long (e.g. 'zero-tabbox/2026-08-22'); kept to two words."
+    "message": "Збережено в"
   },
   "popupEndDayNow": {
-    "message": "Завершити день зараз",
-    "description": "Popup, live view. The accent button (#end-day-now) that triggers an immediate sweep with no confirmation dialog. This is the destructive primary action; the copy is deliberately blunt and must stay blunt — no softening, no question form, nothing that reads like «підбити підсумки». Ukrainian keeps the English 'now' as «зараз», and it is load-bearing: it separates this immediate sweep from the scheduled one, and without it the label can be read as a settings action ('finish the day') rather than as the button that closes every tab on the spot. Room is not the constraint — the accent button is 14px with no icon and ~260px of label space, against ~146px here. Same action as the keyboard command described by commandEndDayNow, and the two agree in wording."
+    "message": "Завершити день зараз"
   },
   "popupDayEnded": {
-    "message": "День завершено",
-    "description": "Popup, swept view. The label above the count of closed tabs, shown for the 60 s after a sweep. A flat statement of fact reported after the event — not a celebration and not an apology. The impersonal «завершено» reports the result without naming an actor, which is the register the English has."
+    "message": "День завершено"
   },
   "popupSweptUnit_one": {
-    "message": "вкладку закрито",
-    "description": "Popup, swept view. Plural group with popupSweptUnit_few and popupSweptUnit_many. The unit that follows the big number in #swept-count on the same baseline row — the number is rendered as a separate span and is NOT interpolated into this string, so the message is the bare unit phrase with no placeholder. Selected against the closed-tab count. Ukrainian: the impersonal passive «закрито» governs the accusative, so the three forms differ only in the noun's ending («вкладку» / «вкладки» / «вкладок») and the phrase stays two words on one 320px baseline row beside a 40px numeral, exactly like the English."
+    "message": "вкладку закрито"
   },
   "popupSweptUnit_few": {
-    "message": "вкладки закрито",
-    "description": "The 'few' form of the popupSweptUnit group: 2-4, 22-24, and so on. Accusative plural after the numeral. Bare unit phrase, no number token."
+    "message": "вкладки закрито"
   },
   "popupSweptUnit_many": {
-    "message": "вкладок закрито",
-    "description": "The 'many' form of the popupSweptUnit group: 0, 5-20, 25-30, and so on; also the visible default markup in popup.html. Note 0 selects this form and is reachable — a sweep that closed nothing still shows this view, and «0 вкладок закрито» reads correctly. Distinct from optionsStatTabsClosed, which is a stat-card caption on another surface."
+    "message": "вкладок закрито"
   },
   "popupSweptNoteBookmarked": {
-    "message": "Усі спершу збережено в закладки. Залишилося одне чисте вікно.",
-    "description": "Popup, swept view. The branch of #swept-note shown when the sweep bookmarked the tabs before closing them. «Усі» refers back to the count rendered directly above, so the sentence still reads as a follow-on to that number. The second sentence is shared verbatim with popupSweptNoteUnsaved and is translated identically in both. It uses the full «Залишилося», not the short «Залишилось», to match popupCountdownLeft and the noticeMessage group — the notification and this note are seen within seconds of each other, so the catalog holds one form throughout. The longest string in the popup; wraps to 3 lines at 320px — kept to the same length as the English."
+    "message": "Усі спершу збережено в закладки. Залишилося одне чисте вікно."
   },
   "popupSweptNoteUnsaved": {
-    "message": "Нічого не збережено. Залишилося одне чисте вікно.",
-    "description": "Popup, swept view. The branch of #swept-note for a sweep that ran without bookmarking; also the visible default in popup.html. Two short sentences: the first states the loss plainly, the second states what remains. The bluntness of the first sentence is load-bearing — the product destroyed the tabs and says so; «Нічого не збережено» is the flat impersonal, with no hedge and no apology. Wraps to 2-3 lines at 320px."
+    "message": "Нічого не збережено. Залишилося одне чисте вікно."
   },
   "popupNextCutoff": {
-    "message": "Наступне закриття",
-    "description": "Popup, swept view. Left half of the row under the divider; the HH:MM of the next scheduled cutoff (or '--:--') is rendered right-aligned on the same row. A label, not a sentence. «закриття» is the settled domain term for 'cutoff' and matches the options page. Shares one 320px row with the 15px time on the right; ~17 characters at 13px, so the two never collide."
+    "message": "Наступне закриття"
   },
   "popupBackToDay": {
-    "message": "Назад у день",
-    "description": "Popup, swept view. The quiet button that dismisses the «День завершено» state and returns the popup to the live view. It only changes what the popup shows — it restores nothing and undoes nothing. «Назад» is purely navigational in Ukrainian UI (the browser's own Back button), so the label cannot be read as recovery, resuming, or going back in time; «Повернути» was rejected precisely because it can mean 'give back'. «у день», not the calque «до дня»: «до дня» reads as motion toward a calendar day, while «у день» carries the English's directional sense of stepping back into the live view."
+    "message": "Назад у день"
   },
   "optionsPageTitle": {
-    "message": "Налаштування zero-tabbox",
-    "description": "Browser tab title of the settings page, also written to document.title at runtime. The brand token 'zero-tabbox' is NOT translated and appears verbatim; only the word 'settings' is localized."
+    "message": "Налаштування zero-tabbox"
   },
   "optionsIntro": {
-    "message": "Під час кожного закриття зникають усі вкладки. Нічого не зберігається. Збережіть важливе в закладки до закриття.",
-    "description": "Standing contract sentence in the options page header, directly under the wordmark. Three blunt statements; the three-sentence rhythm and the force are preserved — this is the warning that the product destroys work, not a friendly blurb. Ukrainian: the first sentence uses «зникають» ('disappear') rather than a second «закриваються», because «Кожне закриття закриває…» reads as a tautology; «зникають» is at least as final as the English 'closes' and avoids softening. «до закриття» repeats the domain term at the end exactly as the English repeats 'cutoff'."
+    "message": "Під час кожного закриття зникають усі вкладки. Нічого не зберігається. Збережіть важливе в закладки до закриття."
   },
   "optionsAcceptNote": {
-    "message": "Поки що нічого не закривається — розклад вимкнено, доки ви не погодитеся.",
-    "description": "Accept banner, shown only until the contract is accepted (design.md D7). Reassures that the schedule is inert and states the precondition. Sits directly above the accept button. Keep the em dash (U+2014). Formal «ви» with the full verb form «погодитеся» (not the clipped «погодитесь»), matching the register used across the surface."
+    "message": "Поки що нічого не закривається — розклад вимкнено, доки ви не погодитеся."
   },
   "optionsCutoffsTitle": {
-    "message": "Час закриття",
-    "description": "Section heading (h2) above the row of cutoff-time chips. «закриття» is the settled domain term for 'cutoff' and matches the popup. Ukrainian keeps the head noun singular where English pluralizes ('Cutoff times'): «Час закриття» reads as a category label above the chips, while «Часи закриття» reads as a stiff enumeration."
+    "message": "Час закриття"
   },
   "optionsAddCutoff": {
-    "message": "Додати час",
-    "description": "Dashed button at the end of the chip row that appends another cutoff time. The text sits next to a small + icon inside a 36px-high inline button that shares one wrapping row with up to four time chips inside the 620px column, so it is held to two short words — the same length as the English. «закриття» is left implicit here because the section heading directly above already supplies it."
+    "message": "Додати час"
   },
   "optionsCutoffAriaLabel": {
     "message": "Закриття $INDEX$",
-    "description": "aria-label on each chip's time input, set in renderCutoffs(). $INDEX$ is the 1-based position of the chip in the row, not a quantity — it distinguishes otherwise identical time fields for assistive tech, so it is not pluralized. Screen-reader only; never visible.",
     "placeholders": {
       "index": {
         "content": "$1",
@@ -203,7 +170,6 @@
   },
   "optionsRemoveCutoffAriaLabel": {
     "message": "Видалити час закриття: $TIME$",
-    "description": "aria-label AND title of the per-chip × button. The visible affordance is only an ×, so this string carries the whole story to assistive tech and to the hover tooltip alike (design.md D10). $TIME$ is the chip's HH:MM value, or the localized optionsCutoffNotSet when the field is blank. Ukrainian: the colon is deliberate — it lets the slot hold either a clock time or the phrase «не вказано» without forcing case agreement on either.",
     "placeholders": {
       "time": {
         "content": "$1",
@@ -212,12 +178,10 @@
     }
   },
   "optionsCutoffNotSet": {
-    "message": "не вказано",
-    "description": "Substituted for $TIME$ in optionsRemoveCutoffAriaLabel when the chip's time input is still empty. A lower-case fragment used mid-phrase; it is never shown on its own."
+    "message": "не вказано"
   },
   "optionsErrorTooFew_one": {
     "message": "Залиште щонайменше $COUNT$ час закриття.",
-    "description": "Validation error in #cutoff-error for the 'too-few' branch of cutoffErrorMessage(). Plural group with optionsErrorTooFew_few and optionsErrorTooFew_many. $COUNT$ is LIMITS.minCutoffs from src/types.ts (currently 1) — never bake the digit into the message. It is passed as the `count` param, so it both selects the plural form and substitutes the token; that is why the placeholder is COUNT rather than MIN.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -227,7 +191,6 @@
   },
   "optionsErrorTooFew_few": {
     "message": "Залиште щонайменше $COUNT$ часи закриття.",
-    "description": "The 'few' form of the optionsErrorTooFew group (2-4, 22-24, …). Unreachable while LIMITS.minCutoffs is 1, but required so the group is complete if the limit ever rises.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -237,7 +200,6 @@
   },
   "optionsErrorTooFew_many": {
     "message": "Залиште щонайменше $COUNT$ часів закриття.",
-    "description": "The 'many' form of the optionsErrorTooFew group (0, 5-20, 25-30, …). Unreachable while LIMITS.minCutoffs is 1, but required so the group is complete if the limit ever rises.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -247,7 +209,6 @@
   },
   "optionsErrorTooFewRemove_one": {
     "message": "Залиште щонайменше $COUNT$ час закриття. Розклад не може бути порожнім.",
-    "description": "Longer variant of optionsErrorTooFew, shown when the user tries to remove the last chip. Deliberately adds the reason; both sentences are kept. $COUNT$ is LIMITS.minCutoffs, passed as `count`.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -257,7 +218,6 @@
   },
   "optionsErrorTooFewRemove_few": {
     "message": "Залиште щонайменше $COUNT$ часи закриття. Розклад не може бути порожнім.",
-    "description": "The 'few' form of the optionsErrorTooFewRemove group. Unreachable while LIMITS.minCutoffs is 1, but required so the group is complete.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -267,7 +227,6 @@
   },
   "optionsErrorTooFewRemove_many": {
     "message": "Залиште щонайменше $COUNT$ часів закриття. Розклад не може бути порожнім.",
-    "description": "The 'many' form of the optionsErrorTooFewRemove group. Unreachable while LIMITS.minCutoffs is 1, but required so the group is complete.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -277,7 +236,6 @@
   },
   "optionsErrorTooMany_one": {
     "message": "Можна мати щонайбільше $COUNT$ час закриття.",
-    "description": "The 'one' form of the optionsErrorTooMany group. Unreachable while LIMITS.maxCutoffs is 4, but required so the group is complete if the limit ever drops to 1 (or rises to 21, which also selects 'one' in Ukrainian).",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -287,7 +245,6 @@
   },
   "optionsErrorTooMany_few": {
     "message": "Можна мати щонайбільше $COUNT$ часи закриття.",
-    "description": "Limit error shown from two call sites: the 'too-many' branch of cutoffErrorMessage() and addCutoff()'s pre-check when a fifth cutoff is attempted. One key serves both. $COUNT$ is LIMITS.maxCutoffs from src/types.ts (currently 4), passed as `count` so the noun agrees — 4 selects this 'few' form, so this is the form users actually see today. «Можна мати», not the impersonal «Дозволено»: the English addresses the user ('You can have…') and the sibling errors are imperatives («Залиште…»), so the whole error family keeps the user in the sentence.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -297,7 +254,6 @@
   },
   "optionsErrorTooMany_many": {
     "message": "Можна мати щонайбільше $COUNT$ часів закриття.",
-    "description": "The 'many' form of the optionsErrorTooMany group (0, 5-20, 25-30, …). Unreachable while LIMITS.maxCutoffs is 4, but required so the group is complete if the limit ever rises.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -307,7 +263,6 @@
   },
   "optionsErrorDuplicate": {
     "message": "$VALUE$ вже є у списку.",
-    "description": "The 'duplicate' branch of cutoffErrorMessage(). $VALUE$ is the offending HH:MM time, or the localized optionsErrorDuplicateFallback when storage did not report one. The placeholder is the grammatical subject at the head of the sentence and stays in subject position in Ukrainian too.",
     "placeholders": {
       "value": {
         "content": "$1",
@@ -316,12 +271,10 @@
     }
   },
   "optionsErrorDuplicateFallback": {
-    "message": "Цей час",
-    "description": "Substituted for $VALUE$ in optionsErrorDuplicate when InvalidCutoffsError carries no value. A capitalized sentence-initial noun phrase in the nominative, not a sentence — it must read correctly as the subject of that message («Цей час вже є у списку.»)."
+    "message": "Цей час"
   },
   "optionsErrorFormat": {
     "message": "$VALUE$ — некоректний час. Використовуйте ГГ:ХХ.",
-    "description": "The 'format' branch of cutoffErrorMessage(). $VALUE$ is the rejected input, or the localized optionsErrorFormatFallback when none was reported. Ukrainian: the format hint is localized to «ГГ:ХХ» (години:хвилини), which is the conventional Ukrainian mask; the colon and the two-field shape are unchanged. The dash is the copula Ukrainian requires between two nominatives — keep it as an em dash (U+2014) with spaces. The placeholder is the sentence-initial subject.",
     "placeholders": {
       "value": {
         "content": "$1",
@@ -330,16 +283,13 @@
     }
   },
   "optionsErrorFormatFallback": {
-    "message": "Це значення",
-    "description": "Substituted for $VALUE$ in optionsErrorFormat when InvalidCutoffsError carries no value. A capitalized sentence-initial noun phrase in the nominative, not a sentence."
+    "message": "Це значення"
   },
   "optionsErrorEmptyCutoff": {
-    "message": "Кожне закриття потребує часу.",
-    "description": "Shown by readForm() in #cutoff-error when a chip's time input is blank — the one failure the markup cannot express, so it is checked in the page rather than in storage.ts."
+    "message": "Кожне закриття потребує часу."
   },
   "optionsErrorNoticeRange": {
-    "message": "Попередження має бути від $MIN$ до $MAX$\u00a0хвилин.",
-    "description": "Shown by persist() when setSettings throws a RangeError for noticeMinutes. $MIN$ is LIMITS.minNoticeMinutes (0) and $MAX$ is LIMITS.maxNoticeMinutes (60) from src/types.ts — never bake the digits in. Not plural-selected (two numbers, one noun); the noun agrees with the upper bound, so it is the genitive plural «хвилин» (60 selects 'many'). Non-breaking space (U+00A0, written \\u00a0) between $MAX$ and the noun.",
+    "message": "Попередження має бути від $MIN$ до $MAX$ хвилин.",
     "placeholders": {
       "min": {
         "content": "$1",
@@ -352,24 +302,19 @@
     }
   },
   "optionsErrorSaveFailed": {
-    "message": "Не вдалося зберегти налаштування.",
-    "description": "Generic write failure in persist(), for any error that is not a validation or range failure. Nothing changed on disk. Plain and non-apologetic — no «на жаль», no «вибачте»."
+    "message": "Не вдалося зберегти налаштування."
   },
   "optionsErrorAcceptFailed": {
-    "message": "Не вдалося зберегти згоду. Спробуйте ще раз.",
-    "description": "Shown in #cutoff-error when markAccepted() throws, so the consent gate stays closed and the banner remains visible. The second sentence is an instruction; both sentences are kept."
+    "message": "Не вдалося зберегти згоду. Спробуйте ще раз."
   },
   "optionsNoticeLabel": {
-    "message": "Відлік на значку",
-    "description": "Label for the segmented minutes picker (0/5/10/20/30/60) that sets how long before a cutoff the badge starts counting down. Sits on the left of a space-between row whose right side holds the summary (optionsNoticeSummary / optionsNoticeSummaryOff); both must fit on a single line. Ukrainian: the English verb 'starts' is moved out of the label and into the summary, because «за 10 хв» on its own would be read as 'in 10 minutes' rather than '10 minutes before'. The label therefore names the setting and the summary carries the full adverbial — the row still reads as one phrase and stays well inside the 620px column."
+    "message": "Відлік на значку"
   },
   "optionsNoticeSummaryOff": {
-    "message": "без попередження",
-    "description": "Visible summary to the right of the «Відлік на значку» label when noticeMinutes is 0 — no countdown and no notification. A lower-case fragment, not a sentence. Shares one baseline row with optionsNoticeLabel inside the 620px column."
+    "message": "без попередження"
   },
   "optionsNoticeSummary": {
-    "message": "за $MINUTES$\u00a0хв до закриття",
-    "description": "Visible summary to the right of the «Відлік на значку» label for any non-zero value. $MINUTES$ is the stored noticeMinutes. «хв» is the abbreviated unit and stays invariant, so this is deliberately NOT plural-selected. «до закриття» is required, not padding: «за 10 хв» alone means 'in 10 minutes' in Ukrainian, the opposite of what the setting does. Non-breaking space (U+00A0, written \\u00a0) between $MINUTES$ and «хв», as in the popup ETA strings. Label plus summary is ~43 characters on a 620px row, so both still fit one line.",
+    "message": "за $MINUTES$ хв до закриття",
     "placeholders": {
       "minutes": {
         "content": "$1",
@@ -378,12 +323,10 @@
     }
   },
   "optionsNoticeOptionOffAriaLabel": {
-    "message": "Без попередження",
-    "description": "aria-label of the '0' button in the segmented notice picker; the button's visible text is the bare numeral 0, which says nothing on its own. Screen-reader only; sentence-initial capital, no period. Note the lower-case optionsNoticeSummaryOff is a different, visible string with the same words."
+    "message": "Без попередження"
   },
   "optionsNoticeOptionAriaLabel_one": {
     "message": "за $COUNT$ хвилину до закриття",
-    "description": "Plural group with optionsNoticeOptionAriaLabel_few and _many: the aria-label of each non-zero button in the segmented notice picker, whose visible text is only the numeral. $COUNT$ is the button's minute value, passed as `count` so the noun agrees. «за» + accusative («хвилину») is the Ukrainian time-before construction. Screen-reader only, no period. The current stops are 5/10/20/30/60, so this form is unreachable today — the picker's stops are data, not a guarantee, so the group must still be complete.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -393,7 +336,6 @@
   },
   "optionsNoticeOptionAriaLabel_few": {
     "message": "за $COUNT$ хвилини до закриття",
-    "description": "The 'few' form of the optionsNoticeOptionAriaLabel group (2-4, 22-24, …). Unreachable with the current stops, but required for completeness. Screen-reader only, no period.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -403,7 +345,6 @@
   },
   "optionsNoticeOptionAriaLabel_many": {
     "message": "за $COUNT$ хвилин до закриття",
-    "description": "The 'many' form of the optionsNoticeOptionAriaLabel group; the form every current stop (5, 10, 20, 30, 60) selects. Screen-reader only, no period.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -412,60 +353,46 @@
     }
   },
   "optionsNotifyLabel": {
-    "message": "Системне сповіщення",
-    "description": "Label of the toggle row that enables the OS-level pre-cutoff notification. Bound to the switch via <label for=\"notify\">."
+    "message": "Системне сповіщення"
   },
   "optionsNotifyHint": {
-    "message": "Одне сповіщення, коли починається відлік. Без відкладання.",
-    "description": "Hint under the System notification label. «Без відкладання» is the deliberate refusal statement standing in for 'No snooze' — the product offers no softening controls; it stays a flat, final verbless sentence rather than becoming «відкласти не можна»."
+    "message": "Одне сповіщення, коли починається відлік. Без відкладання."
   },
   "optionsAutoBookmarkLabel": {
-    "message": "Спершу все в закладки",
-    "description": "Label of the toggle row that bookmarks all open tabs before each sweep. Bookmarks are the only escape hatch in this product. Verbless, matching the terse register of the other toggle labels."
+    "message": "Спершу все в закладки"
   },
   "optionsAutoBookmarkHint": {
-    "message": "Записує кожну відкриту вкладку в датовану папку закладок, потім усе закриває.",
-    "description": "Hint under «Спершу все в закладки». Describes the browser-bookmarks write (design.md D12). The folder name itself (zero-tabbox) is never localized and is not part of this string. 'then sweeps' becomes «потім усе закриває» because Ukrainian has no one-word equivalent of the codebase's 'sweep' that a user would recognize."
+    "message": "Записує кожну відкриту вкладку в датовану папку закладок, потім усе закриває."
   },
   "optionsKeepPinnedLabel": {
-    "message": "Залишати закріплені вкладки",
-    "description": "Label of the toggle row that exempts pinned tabs from the sweep."
+    "message": "Залишати закріплені вкладки"
   },
   "optionsKeepPinnedHint": {
-    "message": "Закріплені вкладки переживають кожне закриття.",
-    "description": "Hint under «Залишати закріплені вкладки». Pinning is the only exemption that exists; the statement stays absolute, and «переживають» keeps the survival metaphor of the English 'survive' rather than flattening it to «не закриваються»."
+    "message": "Закріплені вкладки переживають кожне закриття."
   },
   "optionsStatsTitle": {
-    "message": "Від встановлення",
-    "description": "Section heading (h2) above the two read-only stat cards."
+    "message": "Від встановлення"
   },
   "optionsStatTabsClosed": {
-    "message": "вкладок закрито",
-    "description": "Caption under the lifetime counter in the left stat card. A lower-case caption, not a sentence; it follows a large number rendered above it, so it reads as a standalone label and must NOT be pluralized against that number — this is why it is a separate key from the popupSweptUnit plural group. Ukrainian fixes the genitive plural «вкладок», the form that is correct for the overwhelming majority of lifetime totals and idiomatic as a standalone caption. Word order matches popupSweptUnit_many verbatim — both are captions under a big number rendering the same English source, so they must not read as two different phrases. A lifetime total of exactly 1 therefore renders «1 / вкладок закрито»; the English has the same mismatch ('1 tabs closed'), and fixing it means having the stat card reuse the popupSweptUnit plural group, which is a code change, not a copy one. The stat card is half of the 620px column (~270px) at 12px; 15 characters, one line."
+    "message": "вкладок закрито"
   },
   "optionsStatLastSweep": {
-    "message": "останнє закриття",
-    "description": "Caption under the right stat card, whose value is the number of tabs closed by the most recent sweep (or an em dash when none has run). A lower-case caption, same shape as optionsStatTabsClosed. 16 characters, one line."
+    "message": "останнє закриття"
   },
   "optionsLanguageLabel": {
-    "message": "Мова",
-    "description": "Label of the sixth settings row: the UI language picker (the `locale` setting: auto / en / uk). Same visual shape as the other field labels."
+    "message": "Мова"
   },
   "optionsLanguageAuto": {
-    "message": "Авто",
-    "description": "First option of the language picker: follow the browser UI language. Unlike the two language names beside it, this label IS translated in every catalog."
+    "message": "Авто"
   },
   "optionsLanguageEnglish": {
-    "message": "English",
-    "description": "Second option of the language picker. A language endonym: it stays the literal string 'English' in EVERY catalog, including this one — do NOT translate it to «Англійська». Present here so the option set is complete and the picker renders from one source."
+    "message": "English"
   },
   "optionsLanguageUkrainian": {
-    "message": "Українська",
-    "description": "Third option of the language picker. A language endonym: it stays the literal string «Українська» in EVERY catalog, including en — the English catalog therefore holds a Cyrillic value, which is intentional."
+    "message": "Українська"
   },
   "onboardingHeadline": {
     "message": "Кожна вкладка закриється о $TIME$.",
-    "description": "Onboarding, the H1 — the biggest thing on the first-install screen and the sentence the whole contract hangs on. A flat statement of fact, not a warning and not an offer: every tab, no qualifier. $TIME$ is the first cutoff in HH:MM 24-hour form (18:00 on a fresh install). «о» before the time per design.md D14 — never «об», not even when the cutoff is 11:00. Implementation note: the markup keeps the English sentence with a <span id=\"cutoff-time\"> as the visible default, but the localized render must write the whole <h1> from TS, because a textContent replacement would destroy that span.",
     "placeholders": {
       "time": {
         "content": "$1",
@@ -474,24 +401,19 @@
     }
   },
   "onboardingLede": {
-    "message": "Закладки — єдиний спосіб зберегти сторінку. Прочитайте умови, перш ніж вирішите залишити розширення.",
-    "description": "Onboarding, the paragraph under the headline. Two sentences doing two jobs: the first names the ONLY escape hatch (there is no archive and no undo — bookmarks, nothing else), the second tells the user to read before consenting. Both sentences and «єдиний» are kept. «залишити розширення» deliberately implies that the alternative is to uninstall it, which is what the decline button below actually does. «перш ніж вирішите залишити» rather than «перш ніж залишити»: bare «залишити» carries both 'keep' and 'leave behind', so without «вирішите» the consent instruction can be read as 'before you abandon the extension' — the opposite of what it asks. This is a full-width page, so the extra word costs nothing."
+    "message": "Закладки — єдиний спосіб зберегти сторінку. Прочитайте умови, перш ніж вирішите залишити розширення."
   },
   "onboardingTerm1": {
-    "message": "Закривається кожна вкладка в кожному звичайному вікні — без скасування, без відкладання, без винятків для окремих вкладок.",
-    "description": "Onboarding, first numbered contract term. LOAD-BEARING CONSENT COPY — the bluntness IS the product. Not softened into politeness, not hedged with «зазвичай» / «як правило» / «за замовчуванням», and the three negations are not collapsed into one. The doubled «кожна … кожному» and the three-item denial list exist so the user cannot later claim they were not told; a translation that reads as gentle or reassuring is a mistranslation. «звичайне вікно» is the technical scope (i.e. not popup/app windows) and stays a scope statement, not a value judgement. Keep the em dash (U+2014)."
+    "message": "Закривається кожна вкладка в кожному звичайному вікні — без скасування, без відкладання, без винятків для окремих вкладок."
   },
   "onboardingTerm2": {
-    "message": "Вихід із браузера не допоможе ухилитися. Пропущене закриття спрацює під час наступного запуску.",
-    "description": "Onboarding, second numbered contract term. LOAD-BEARING CONSENT COPY — the force is preserved. It closes the loophole the user is already imagining, so the first sentence lands as a flat refusal, not as an FYI. «ухилитися» carries the adversarial edge of the English 'dodge' — it names the user's evasion attempt out loud, and must not be neutralised into «не завадить» or «не вплине». The second sentence states the mechanism: a cutoff missed while the browser was closed fires at the next browser start. Two short sentences."
+    "message": "Вихід із браузера не допоможе ухилитися. Пропущене закриття спрацює під час наступного запуску."
   },
   "onboardingTerm3": {
-    "message": "Жодні дані не збираються — усе залишається на вашому пристрої.",
-    "description": "Onboarding, third numbered contract term. The one term that is reassurance rather than warning, and it earns its place by being just as absolute as the other two: no telemetry, no accounts, no sync, nothing leaves the machine. Categorical — «Жодні дані не збираються», not «збираємо мінімум даних» — and not padded with marketing, or the list stops reading as a contract. Keep the em dash (U+2014)."
+    "message": "Жодні дані не збираються — усе залишається на вашому пристрої."
   },
   "onboardingAccept": {
     "message": "Я розумію. Почати о $TIME$.",
-    "description": "SHARED BY TWO SURFACES — one key, deliberately: the onboarding accept button and the options page's accept-banner button (renderAcceptLabel(), rewritten whenever the schedule changes so it always names the earliest cutoff). Both are the same consent gate and must read identically. This click IS the consent — it writes the accepted flag and is the moment the extension is allowed to start destroying tabs. $TIME$ is the first cutoff, HH:MM 24-hour, preceded by «о» per design.md D14. First person on purpose: the user is the one making the statement, so it stays the user's own words, not an imperative aimed at them. Two short sentences; the second restates the commitment so the button is never a bare «OK». It sits inside the primary accent button, which is not fixed-width but looks broken when it wraps — this is two characters shorter than the English.",
     "placeholders": {
       "time": {
         "content": "$1",
@@ -500,16 +422,13 @@
     }
   },
   "onboardingPickTime": {
-    "message": "Обрати інший час",
-    "description": "Onboarding, the secondary button under accept. Navigates to the options page in the same tab; it is NOT an acceptance, so the label stays neutral about consent — it offers a different cutoff, not a way out. An infinitive addressed to the user, unlike the first-person onboardingAccept. «час» here means the cutoff time. Implementation note: the button holds an aria-hidden clock SVG followed by the text, so the text needs its own <span> — a textContent write on the button would delete the icon."
+    "message": "Обрати інший час"
   },
   "onboardingDecline": {
-    "message": "Я цього не хочу — видалити розширення",
-    "description": "Onboarding, the plain-text decline under the two buttons. Hands off to the browser's own uninstall confirmation. First person like the accept label, so the two choices read as the same person speaking. Deliberately unhedged: the refusal and its consequence are one sentence, because declining this contract means removing the extension — there is no 'maybe later' state. Not softened into «Ні, дякую»; «видалити розширення» must stay visible in the label so nobody clicks it expecting a dismissal. Keep the em dash (U+2014)."
+    "message": "Я цього не хочу — видалити розширення"
   },
   "noticeTitle": {
     "message": "Усі вкладки закриються о $TIME$",
-    "description": "Pre-cutoff system notification, title line (src/badge.ts). Shown once before a cutoff when settings.notify is on; the notification has no buttons and does nothing on click, so the title plus message are the entire message. $TIME$ is the cutoff in HH:MM 24-hour form, preceded by «о» per design.md D14. No period — it is a title. States the fact, not a request: «закриються», never a hedged «будуть закриті найближчим часом». Chrome and Firefox truncate the title to roughly one line (~40-50 characters); this is ~31 with a two-digit time.",
     "placeholders": {
       "time": {
         "content": "$1",
@@ -518,8 +437,7 @@
     }
   },
   "noticeMessage_one": {
-    "message": "Залишилася $COUNT$\u00a0хвилина. Додайте потрібне в закладки — нічого не зберігається.",
-    "description": "Pre-cutoff notification body, plural group with noticeMessage_few and noticeMessage_many, 'one' form (1, 21, 31, …). The WHOLE sentence is one message with $COUNT$ inline — it must never be split into a separate lead and tail, because Ukrainian inflects both the noun and the verb that precedes it («Залишилася … хвилина» here, «Залишилися … хвилини» and «Залишилося … хвилин» in the siblings). This is the last moment bookmarking is possible, so the second sentence keeps both halves — the instruction AND the reason («нічого не зберігається»). The reason is not dropped to save room and not softened to «нічого не зберігається автоматично». «Додайте … в закладки» rather than «Збережіть» avoids colliding with «зберігається» two words later. The body gets about two lines before truncation on both platforms. Keep the em dash (U+2014), and keep the non-breaking space (U+00A0, written \\u00a0) between $COUNT$ and the noun in all three forms — an OS notification wraps at a width we do not control, and a countdown that breaks into «Залишилося 15» / «хвилин.» is exactly where a split would be noticed.",
+    "message": "Залишилася $COUNT$ хвилина. Додайте потрібне в закладки — нічого не зберігається.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -528,8 +446,7 @@
     }
   },
   "noticeMessage_few": {
-    "message": "Залишилися $COUNT$\u00a0хвилини. Додайте потрібне в закладки — нічого не зберігається.",
-    "description": "The 'few' form of the noticeMessage group (2-4, 22-24, …). Nominative plural «хвилини» after the numeral, which takes a PLURAL predicate — «Залишилися», not the neuter singular «Залишилося» of the 'one' and 'many' forms. Same 2-4 agreement rule that makes popupTabsAtRisk_few «закриються» while popupTabsAtRisk_many stays «закриється». Non-breaking space (U+00A0, written \\u00a0) after $COUNT$, as in the sibling forms. Same register and same two-line budget as the other forms; the em-dash clause is the contract restated at the last possible second and must not be softened or dropped.",
+    "message": "Залишилися $COUNT$ хвилини. Додайте потрібне в закладки — нічого не зберігається.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -538,8 +455,7 @@
     }
   },
   "noticeMessage_many": {
-    "message": "Залишилося $COUNT$\u00a0хвилин. Додайте потрібне в закладки — нічого не зберігається.",
-    "description": "The 'many' form of the noticeMessage group (0, 5-20, 25-30, …) — the form every current notice stop except 1 selects. $COUNT$ is Math.max(0, Math.round(minutesAhead)), so 0 is reachable and selects this form: «Залишилося 0 хвилин.» reads correctly. Genitive plural «хвилин» after the numeral takes the neuter singular «Залишилося», unlike the 'few' form. Non-breaking space (U+00A0, written \\u00a0) after $COUNT$, as in the sibling forms. Preserve the register: a flat countdown followed by a blunt instruction and the reason for it.",
+    "message": "Залишилося $COUNT$ хвилин. Додайте потрібне в закладки — нічого не зберігається.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -548,11 +464,9 @@
     }
   },
   "extDescription": {
-    "message": "Закриває кожну вкладку у ваш щоденний час закриття. Без архіву, без скасування.",
-    "description": "Manifest `description` (src/manifest.base.json), referenced as __MSG_extDescription__. One of exactly two manifest strings that get localized, and it follows the BROWSER UI language via default_locale, not the extension's own locale setting — so on a Ukrainian browser it shows Ukrainian even when the UI setting is English (design.md D14). This is the first thing a prospective user reads and it must warn as much as it describes: sentence one is the behaviour, sentence two is the two things the product refuses to do. Both denials are kept — «Без архіву, без скасування» is honest disclosure, not a feature list. Ukrainian folds 'daily' into the noun phrase as «щоденний час закриття» rather than stranding «щодня» between the verb and the time phrase. Store listing blurb: 79 characters, inside the ~132 limit."
+    "message": "Закриває кожну вкладку у ваш щоденний час закриття. Без архіву, без скасування."
   },
   "commandEndDayNow": {
-    "message": "Завершити день зараз: закрити всі вкладки",
-    "description": "Manifest commands['end-day-now'].description (src/manifest.base.json), referenced as __MSG_commandEndDayNow__. The label for the Alt+Shift+E shortcut in the browser's own shortcuts UI, and like extDescription it follows the BROWSER UI language rather than the extension's locale setting. Two halves separated by a colon: the command's name (identical to popupEndDayNow), then plainly what it does — this row sits next to other extensions' shortcuts with no other context and pressing the key is instantly destructive. The colon structure and «всі» are kept; the second half is the warning. Not a polite invitation — it is a trigger label. Shown in a narrow, truncating column."
+    "message": "Завершити день зараз: закрити всі вкладки"
   }
 }

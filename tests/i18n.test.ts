@@ -34,7 +34,6 @@ import ukMessages from '../_locales/uk/messages.json';
  */
 interface CatalogEntry {
   readonly message: string;
-  readonly description?: string;
   readonly placeholders?: Readonly<Record<string, { readonly content: string }>>;
 }
 type Catalog = Readonly<Record<string, CatalogEntry | undefined>>;
