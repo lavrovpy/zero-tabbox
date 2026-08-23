@@ -32,6 +32,12 @@ the listing's whole claim is that the extension records nothing.
 imitates no browser chrome and redraws no UI. Nothing about the extension's
 appearance is enhanced for the store.
 
+The captures pin `settings.locale` to `en` so a rerun is deterministic whatever
+language the capturing machine is in. For a Ukrainian listing, flip that to
+`'uk'` in `capture.mjs`, translate the captions below, and regenerate — the
+extension is localized, but store listing copy lives in each dashboard and is
+not covered by `_locales` (see `store-compliance.md`, finding L1).
+
 ## Specs
 
 Both stores are satisfied by one set at **1280×800**.
@@ -59,7 +65,7 @@ and at the top of the listing.
 | --- | --- | --- | --- |
 | 1 | `01-popup-live.png` | The popup: how many tabs are at risk, the next cutoff, the countdown, both actions | What is at stake, and how long you have. |
 | 2 | `02-onboarding.png` | The install-time contract | Nothing is scheduled until you accept these terms. |
-| 3 | `03-options.png` | Every setting there is | Up to four cutoffs. No pause, no snooze, no restore. |
+| 3 | `03-options.png` | Every setting there is, including the interface language | Up to four cutoffs. No pause, no snooze, no restore. |
 | 4 | `04-popup-swept.png` | The "Day ended" state | The day ends at zero. Nothing is saved. |
 | 5 | `05-theme.png` | The popup in light and dark | Follows the system theme. |
 

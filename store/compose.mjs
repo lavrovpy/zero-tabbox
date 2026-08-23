@@ -43,7 +43,7 @@ const FRAMES = [
   {
     name: '03-options',
     headline: 'Up to four cutoffs<br>a day.',
-    sub: 'A countdown, one notification, keep-pinned and bookmark-first. No pause, no snooze, no restore.',
+    sub: 'A countdown, one notification, keep-pinned, bookmark-first and the interface language. No pause, no snooze, no restore.',
     body: `<img class="shot tall" src="${RAW}/options.png">`,
   },
   {

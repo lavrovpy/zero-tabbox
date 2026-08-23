@@ -1,8 +1,9 @@
 # Store compliance audit
 
 Audit of `zero-tabbox` against the **Chrome Web Store program policies** and the
-**Mozilla add-on policies (AMO)**, run against commit `HEAD` of
-`claude/extension-store-guidelines-781cr3` on 2026-08-22.
+**Mozilla add-on policies (AMO)**, re-run on 2026-08-23 against
+`claude/extension-store-guidelines-781cr3` rebased onto `main` at `1884ff8` —
+i.e. after localization (`_locales/en`, `_locales/uk`, `src/i18n.ts`) landed.
 
 **Verdict: nothing in the code, the manifests or the build output violates
 either store's policies.** Both packages are publishable as they stand. What is
@@ -11,7 +12,7 @@ practices answers, AMO source-code build instructions and listing screenshots �
 none of which is a code change. Sections 4 and 5 supply the paperwork verbatim.
 
 Evidence for every ✅ below was produced by running the project's own gates:
-`bun run typecheck`, `bun run test` (6 files, all pass), `bun run build`,
+`bun run typecheck`, `bun run test` (7 files, all pass), `bun run build`,
 `bunx web-ext lint --source-dir dist/firefox` in both `--self-hosted` and
 listed mode (0 errors, 0 warnings, 0 notices in each), plus a static sweep of
 `src/` for remote-code patterns and a full inventory of the extension APIs the
@@ -39,6 +40,13 @@ Used without needing a permission, correctly:
 - `action.setBadgeText` — authorised by the `action` manifest key.
 - `commands.onCommand` — authorised by the `commands` manifest key.
 - `runtime.*` — never permission-gated.
+- `i18n.getUILanguage()` (via `i18n.ts`'s `browserUiLanguage`) — the `i18n` API
+  has never required a permission on either platform. Note what `i18n.ts` does
+  *not* do: UI strings are resolved from catalogs **imported at build time**
+  (`import enMessages from '../_locales/en/messages.json'`), not fetched at
+  runtime and not routed through `chrome.i18n.getMessage()`. That is what keeps
+  the no-remote-code guarantee true after localization — there is no request to
+  load a catalog, because there is no request at all.
 - **`management.uninstallSelf`** (`ui/onboarding.ts`, the decline button) —
   `uninstallSelf()` and `getSelf()` are the two `management` methods that do
   **not** require the `management` permission, on Chrome and on Firefox alike,
@@ -63,9 +71,10 @@ asserts the absence of `host_permissions` on the Chrome manifest.
 | **Deceptive installation / unexpected behavior** | ✅ | The `accepted` gate in `reconcile.ts` means no alarm is armed and no automatic sweep runs until the user presses "I understand" on `ui/onboarding.html`, which states the whole contract including "no undo". Nothing destructive precedes consent. |
 | **User data — Limited Use** | ✅ | Nothing is transmitted anywhere. `storage.local` holds exactly six keys (`version`, `settings`, `lastAutoCutoffId`, `lastSweep`, `stats`, `accepted`); nothing per-tab is ever written. Bookmarks are written to *the browser's* bookmark tree on explicit user action and never read back. |
 | **Content Security Policy** | ✅ | No `content_security_policy` override; the default MV3 policy applies. No inline `<script>` or inline event handlers in any of the three HTML pages — each loads one external `.js`. No `innerHTML`/`outerHTML` anywhere. |
-| **Manifest field limits** | ✅ | `name` 11 chars (limit 75), `description` 59 chars (limit 132), `version` `0.1.0` is a valid 1–4 part dotted integer. |
+| **Manifest field limits** | ✅ | `name` 11 chars (limit 75); `version` `0.1.0` is a valid 1–4 part dotted integer. `description` is now the placeholder `__MSG_extDescription__`, which the browser substitutes — the limit applies to the *resolved* string, and both catalogs clear it: en 59 chars, uk 79 chars (limit 132). |
 | **Icons** | ✅ | 16/32/48/128 present and dimensionally correct; 128×128 is the store-required size. |
 | **Keyboard commands** | ✅ | One command; `Alt+Shift+E` is a legal combination. Note that a collision with another extension is silent — the README already documents `chrome://extensions/shortcuts`. |
+| **Localization** | ✅ | `default_locale: "en"` with `_locales/en` and `_locales/uk` shipped in both packages. The placeholders (`__MSG_extDescription__`, `__MSG_commandEndDayNow__`) resolve in both catalogs, so no locale renders a raw `__MSG_*` token. Plural categories differ correctly per language (en `one`/`other`, uk `one`/`few`/`many`), which is why the catalogs are not key-for-key identical. See L1 for the listing-side consequence. |
 | **Package hygiene** | ✅ | `scripts/package.mjs` zips from inside `dist/<browser>` so `manifest.json` sits at the archive root, strips extra file attributes (`-X`) and excludes `*.DS_Store`, `__MACOSX/*` and `*.map`. 512 KB per package, far under any limit. |
 | **Privacy policy URL** | ⚠️ Missing | The store requires a publicly reachable privacy policy linked from the dashboard. None existed; `PRIVACY.md` now supplies the text — it still has to be hosted and the URL pasted into the dashboard. |
 | **Privacy practices tab** | ⚠️ Not prepared | Every item must supply a single-purpose statement, a justification per permission, and the data-collection disclosure + limited-use certification before it can be published or updated. Answers are drafted in section 4. |
@@ -110,6 +119,19 @@ of its main setting rendered broken, and the underlying bug is worse than the
 screenshot. Fix, then re-run the two scripts. `store/README.md` has the detail
 and the two candidate fixes; the choice belongs in `sweep-controls.spec.md`
 first.
+
+**L1 — Shipping Ukrainian strings does not give you a Ukrainian listing.**
+`_locales/uk` localizes the *extension*: the install prompt, the manifest
+description on `chrome://extensions`, and the UI. It does not localize the
+*store listing* — the title, detailed description, screenshots and promo text
+a shopper reads. Both stores keep listing copy in the dashboard, separately
+from the package: Chrome under the listing's language tabs, AMO under its own
+per-locale listing fields. So a Ukrainian speaker currently finds an
+English-only listing that installs a Ukrainian extension. Not a policy breach —
+just value already paid for and not collected. If a Ukrainian listing is
+wanted, the copy in section 4 and the captions in `store/README.md` are what
+need translating, and `store/capture.mjs` can regenerate the screenshots
+against `locale: 'uk'` for a localized set.
 
 **C4 — Consider `1.0.0` for the first listing.** `0.1.0` is accepted by the
 store, but a 0.x version on a public listing reads as pre-release. Cosmetic.
@@ -183,7 +205,9 @@ Paste into the Privacy practices tab of the developer dashboard.
 > the extension's only function. It shows a countdown badge before each
 > scheduled time, offers to bookmark the open tabs first, and does nothing
 > else. No tab is closed until the user has accepted the terms on the page
-> shown at install.
+> shown at install. The interface is available in English and Ukrainian; the
+> language setting changes only which words are shown, never what closes or
+> when.
 
 **Permission justifications**
 
@@ -268,9 +292,11 @@ source archive of this repository (excluding `node_modules/`, `dist/` and
 5. Produce the 440×280 small promo tile, the detailed description, category and
    support contact. Screenshots themselves are done — `store/screenshots/`,
    specs and upload steps in `store/README.md`. *(Chrome listing)*
-6. Decide on `gecko_android`: verify on Firefox for Android, or drop it. *(F3)*
-7. Optional: bump to `1.0.0` for a first public listing. *(C4)*
+6. Decide whether the store listings get a Ukrainian translation, now that the
+   extension has one. *(L1)*
+7. Decide on `gecko_android`: verify on Firefox for Android, or drop it. *(F3)*
+8. Optional: bump to `1.0.0` for a first public listing. *(C4)*
 
-Items 1–3 and 5 are submission artifacts. Item 4 is a UI bug. Item 6 is the
+Items 1–3, 5 and 6 are submission artifacts. Item 4 is a UI bug. Item 7 is the
 only one that touches the manifest, and only if the decision is to drop the
 claim.

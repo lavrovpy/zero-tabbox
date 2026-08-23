@@ -60,6 +60,10 @@ const SETTINGS = {
   notify: true,
   keepPinned: false,
   autoBookmark: false,
+  // Pinned so the capture is deterministic whatever language the browser is
+  // in. This is the UI's own locale setting (design.md D14), not the
+  // manifest's `default_locale`.
+  locale: 'en',
 };
 
 const ctx = await chromium.launchPersistentContext(PROFILE, {
