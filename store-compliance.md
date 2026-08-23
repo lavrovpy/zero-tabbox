@@ -108,14 +108,14 @@ consent gate (nothing is armed until `accepted` is written) and with the fact
 that no data leaves the machine. This is a presentation risk, not a compliance
 defect.
 
-**C5 — A 12-hour browser UI language clips the cutoff chips, which blocks the
-settings screenshot.** `store/screenshots/03-options.png` shows this, because
-it is what the shipped UI actually does — it is not a capture artifact. Not a
-policy violation, but a listing cannot ship a screenshot of its main setting
-rendered broken, and the underlying bug is worse than the screenshot.
-`store/README.md` — "Known issue blocking shot 3" has the mechanism and the two
-candidate fixes; the choice belongs in `sweep-controls.spec.md` first, and then
-the two scripts have to be re-run.
+**C5 — Fixed in code; the settings screenshot is now stale.** A 12-hour browser
+UI language used to clip the cutoff chips, and `store/screenshots/03-options.png`
+still shows that. `.chip-time` no longer carries a fixed width, so the control
+sizes itself to whatever string its host renders — `sweep-controls.spec.md`
+carries the requirement and `store/README.md` — "Shot 3 is stale, not blocked"
+has the detail. Never a policy violation, but the shot depicts a defect the
+extension no longer has, so the two scripts have to be re-run before it goes on
+a listing.
 
 **L1 — Shipping Ukrainian strings does not give you a Ukrainian listing.**
 `_locales/uk` localizes the *extension*: the install prompt, the manifest
@@ -284,11 +284,11 @@ source archive of this repository (excluding `node_modules/`, `dist/` and
    tidier) and link it in both dashboards. *(C1)*
 2. Fill the Chrome privacy practices tab with section 4. *(C1, C2)*
 3. Attach source + section 5's reviewer notes to the AMO submission. *(F1, F2)*
-4. Fix the cutoff-chip clipping and re-run `store/capture.mjs` +
-   `store/compose.mjs`, so shot 3 is usable. *(C5)*
+4. Re-run `store/capture.mjs` + `store/compose.mjs` so shot 3 shows the fixed
+   cutoff chips. The clipping itself is fixed. *(C5)*
 5. Produce the 440×280 small promo tile, the detailed description, category and
    support contact. Four of the five screenshots are ready in
-   `store/screenshots/`; shot 3 stays blocked until item 4 is done. Specs and
+   `store/screenshots/`; shot 3 needs the re-run in item 4 first. Specs and
    upload steps are in `store/README.md`. *(Chrome listing)*
 6. Decide whether the store listings get a Ukrainian translation, now that the
    extension has one. *(L1)*

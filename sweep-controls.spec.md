@@ -60,6 +60,21 @@ The options page SHALL expose exactly: cutoff times (1–4, as removable chips w
 - **WHEN** the user selects the `20` stop
 - **THEN** the setting is persisted as 20 minutes, the summary reads "20 min before", and no separate Save step is needed
 
+### Requirement: The cutoff time is legible in any browser UI language
+Each cutoff chip renders its time with the browser's own `<input type="time">`. Chromium picks that control's format from the **browser's UI language**, not from `navigator.language` and not from the extension's own interface-language setting, so the same cutoff reads `18:00` on a 24-hour UI language and `06:00 PM` on a 12-hour one. The control SHALL size itself to whatever string its host renders and SHALL NOT carry a fixed width, which can only be correct for one of the two formats.
+
+#### Scenario: 12-hour browser UI language
+- **WHEN** the settings page is opened in a browser whose UI language is 12-hour (en-US, say) with a cutoff of 18:00
+- **THEN** the chip shows the whole of `06:00 PM`, with nothing clipped
+
+#### Scenario: 24-hour browser UI language
+- **WHEN** the settings page is opened in a browser whose UI language is 24-hour (en-GB, say) with the same cutoff
+- **THEN** the chip shows `18:00` and takes only the width that string needs
+
+#### Scenario: The interface-language setting does not decide the format
+- **WHEN** the interface language is set to Українська while the browser's UI language stays 12-hour
+- **THEN** the chip still renders the 12-hour string its host produces, still unclipped
+
 ### Requirement: Bookmark escape hatch
 The popup SHALL offer a "Bookmark all N tabs" action, where N is the number of at-risk tabs (the tabs the next sweep would close, honouring the keep-pinned setting). It SHALL write those tabs' titles and URLs to the browser's own bookmarks under a `zero-tabbox / YYYY-MM-DD` folder (dated with the local calendar day, appended to if it already exists) and then show a confirmation naming the folder. The options page SHALL offer a "bookmark everything first" setting (default off) that makes every sweep perform the same write before closing tabs; a failed write SHALL be logged and SHALL NOT prevent the sweep. The extension SHALL keep no reference to the created bookmarks beyond an aggregate "bookmarked first" flag on the last-sweep record, and SHALL NOT offer any UI that reads bookmarks back or reopens swept tabs.
 

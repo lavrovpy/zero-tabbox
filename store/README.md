@@ -83,24 +83,18 @@ Both are browser and OS chrome, which a page screenshot cannot capture — a
 headless capture only ever sees page content. Getting those honestly needs a
 real desktop screen capture with the extension installed. Do not mock them.
 
-## Known issue blocking shot 3
+## Shot 3 is stale, not blocked
 
-`03-options.png` currently shows the cutoff chips as `01:00 P` and `06:00 P`.
-That is not a capture artifact — it is the shipped UI. `.chip-time` in
-`src/ui/theme.css` is `width: 4.2em`, sized for a `HH:MM` field, but Chromium
-renders `<input type="time">` from its **UI language**, and a 12-hour UI
-language (en-US, the Chrome Web Store's largest audience) renders
-`06:00 PM` — which clips to `06:00 P`.
+`03-options.png` still shows the cutoff chips as `01:00 P` and `06:00 P`. That
+was never a capture artifact — it was the shipped UI, and it is now fixed.
+`.chip-time` carried `width: 4.2em`, sized for a `HH:MM` field, while Chromium
+formats `<input type="time">` from its **UI language**, so a 12-hour UI
+language rendered `06:00 PM` and clipped it. The control no longer has a width
+and sizes itself to whatever its host renders; `sweep-controls.spec.md` carries
+the requirement.
 
-It reproduces at every JS locale, because `navigator.language` is not what
-decides the widget format; only the browser UI language is. So the setting that
-matters most on that page is unreadable for a large share of users.
-
-Fix it before this shot goes on a listing, then re-run the two scripts. The
-options are to let the field size itself (drop the fixed width, accept slightly
-wider chips at 24-hour locales) or to widen `4.2em` to fit `HH:MM AM`. Which
-one is a design call, and `sweep-controls.spec.md` is where it should be
-settled first.
+Re-run the two scripts to replace this shot. Until then it depicts a bug the
+extension no longer has, so it must not go on a listing.
 
 ## Where these get uploaded
 
