@@ -226,11 +226,8 @@ async function showLive(): Promise<void> {
     ]);
     const count = atRisk.length;
     const saveableCount = saveable.length;
-    // Both are plural groups, so the count is handed to `t()` rather than
-    // branched on here: `Intl.PluralRules` picks the form and the same number
-    // fills `$COUNT$`. An `=== 1` ternary would be untranslatable — Ukrainian
-    // needs three forms over these counts (1, 2-4, 5+ and 0), and picking
-    // between two of them in TS would silently strip the third.
+    // Plural groups: an `=== 1` ternary here would silently strip Ukrainian's
+    // third form.
     atRiskLine.textContent = t('popupTabsAtRisk', { count });
     bookmarkAllLabel.textContent = t('popupBookmarkAll', { count: saveableCount });
     bookmarkAll.hidden = bookmarkedThisSession;
@@ -252,10 +249,9 @@ function showSwept(closed: number, bookmarked: boolean, nextHhmm: string | null)
   if (etaTimer !== undefined) clearInterval(etaTimer);
 
   sweptCount.textContent = String(closed);
-  // The numeral is its own span on the same baseline row, so the unit carries
-  // no `$COUNT$`: the count is passed only to select the plural form. It still
-  // has to be passed — 0 is reachable (a sweep that closed nothing) and takes
-  // the `many` form in Ukrainian, which no `closed === 1` test could reach.
+  // The numeral is its own span, so the unit carries no `$COUNT$` — the count
+  // is passed only to select the form. It must still be passed: 0 is reachable
+  // and takes Ukrainian's `many`.
   sweptUnit.textContent = t('popupSweptUnit', { count: closed });
   sweptNote.textContent = bookmarked
     ? t('popupSweptNoteBookmarked')
@@ -286,11 +282,8 @@ async function initialState(): Promise<{
 }
 
 async function render(): Promise<void> {
-  // The reads are started BEFORE `localize()` is awaited so the storage round
-  // trips overlap, the way `onboarding.ts` does it. Nothing may paint until
-  // `localize()` resolves — it is what un-hides the body (`data-i18n-pending`),
-  // and every string either view shows is written from TS by `t()`, so a body
-  // revealed before the locale is known would flash the English markup.
+  // Reads start before `localize()` is awaited so the round trips overlap, as
+  // in `onboarding.ts`.
   const state = initialState();
   await localize();
   const resolved = await state;

@@ -444,13 +444,9 @@ async function initAccept(): Promise<void> {
 
 async function renderStats(): Promise<void> {
   const [stats, lastSweep] = await Promise.all([getStats(), getLastSweep()]);
-  // Grouped for the chosen interface language, not for the browser's: each
-  // counter sits directly against its localized caption, and `12,345 вкладок`
-  // mixes two conventions inside one card — Ukrainian groups thousands with a
-  // non-breaking space (U+00A0), `12 345`. Routing the tag through localeTag()
-  // rather than passing the locale id straight in is what keeps a future
-  // locale whose id is not a valid BCP-47 tag from breaking this (design.md
-  // D14).
+  // Grouped for the chosen interface language, not the browser's: each counter
+  // sits against its localized caption, and `12,345 вкладок` mixes two
+  // conventions in one card — Ukrainian groups with U+00A0, `12 345`.
   const tag = localeTag(activeLocale());
   statLifetime.textContent = stats.lifetimeClosed.toLocaleString(tag);
   statLast.textContent = lastSweep ? lastSweep.closed.toLocaleString(tag) : '—';
@@ -485,12 +481,8 @@ async function init(): Promise<void> {
     });
   }
 
-  // Two things can change underneath an open settings page. A sweep can land,
-  // which moves the stats; and a SECOND options page (or a later build with
-  // another language surface) can change `settings.locale`, which would
-  // otherwise leave this copy of the page speaking the old language until it
-  // is reloaded. Nothing else is re-read: re-applying a schedule the user may
-  // be part-way through editing would fight them.
+  // Only the stats and the locale are re-read. Re-applying a schedule the user
+  // may be part-way through editing would fight them.
   api.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== 'local') return;
     if ('stats' in changes || 'lastSweep' in changes) void renderStats().catch(() => undefined);
