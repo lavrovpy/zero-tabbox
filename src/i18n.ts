@@ -239,8 +239,7 @@ export async function initI18n(): Promise<Locale> {
   try {
     setting = (await getSettings()).locale;
   } catch {
-    // getSettings is already total; this is belt and braces for the one call
-    // that must not be able to reject.
+    // Fall through to 'auto': this call must not be able to reject.
   }
   active = resolveLocale(setting);
   try {

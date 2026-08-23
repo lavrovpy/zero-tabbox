@@ -17,15 +17,7 @@ import { getSettings, markAccepted } from '../storage';
 import { DEFAULT_SETTINGS } from '../types';
 import { el } from './dom';
 
-/**
- * The cutoff the markup's static English already names, and the fallback for
- * both strings written below.
- *
- * `DEFAULT_SETTINGS.cutoffs` is never empty, so the `??` is `noUncheckedIndexedAccess`
- * paying its way rather than a real branch — but deriving the value keeps the
- * literal `18:00` in `onboarding.html` and the default in `types.ts` from
- * drifting apart silently.
- */
+/** Derived, not written, so the `18:00` in onboarding.html cannot drift from the default. */
 const DEFAULT_CUTOFF = DEFAULT_SETTINGS.cutoffs[0] ?? '18:00';
 
 const accept = el<HTMLButtonElement>('accept');
@@ -75,8 +67,7 @@ decline.addEventListener('click', () => {
 /**
  * The first cutoff — the time both the headline and the accept label name.
  *
- * `getSettings()` is total, so the catch is belt and braces; either way the
- * answer is a real HH:MM, because a page that cannot read storage must still
+ * Always answers a real HH:MM: a page that cannot read storage must still
  * state the contract rather than a blank.
  */
 async function firstCutoff(): Promise<string> {

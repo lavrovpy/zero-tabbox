@@ -123,11 +123,8 @@ function cutoffValues(): string[] {
 /**
  * The language picked in the `<select>`, narrowed to {@link LocaleSetting}.
  *
- * The three `<option>` values are ours (ui/options.html), so the fallback is
- * TypeScript's price for reading a `string` off the DOM rather than a branch
- * that can fire — and `setSettings` sanitises the field again on the way to
- * disk regardless. Falling back to the stored value, not to `'auto'`, keeps an
- * impossible read from silently retuning the user's language.
+ * The fallback is the stored value rather than `'auto'`, so an unreadable
+ * `<select>` cannot silently retune the user's language.
  */
 function selectedLocale(): LocaleSetting {
   const value = localeSelect.value;
@@ -462,11 +459,9 @@ async function renderStats(): Promise<void> {
 // --------------------------------------------------------------------- init
 
 async function init(): Promise<void> {
-  // The settings read is started BEFORE `localize()` is awaited so the two
-  // storage round trips overlap: `localize()` is what un-hides the body, and
-  // nothing below paints until it resolves, so serialising them would just add
-  // a beat of blank page. `getSettings()` is total, so the catch is belt and
-  // braces — but a page that cannot read storage must still render controls.
+  // Started before `localize()` is awaited so the two storage round trips
+  // overlap; `localize()` is what un-hides the body, so serialising them would
+  // just add a beat of blank page.
   const settings = getSettings().catch(() => freshSettings());
   await localize();
   saved = await settings;
