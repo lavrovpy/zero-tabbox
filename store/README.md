@@ -83,18 +83,22 @@ Both are browser and OS chrome, which a page screenshot cannot capture — a
 headless capture only ever sees page content. Getting those honestly needs a
 real desktop screen capture with the extension installed. Do not mock them.
 
-## Shot 3 is stale, not blocked
+## Why shot 3 depends on the capturing machine's language
 
-`03-options.png` still shows the cutoff chips as `01:00 P` and `06:00 P`. That
-was never a capture artifact — it was the shipped UI, and it is now fixed.
-`.chip-time` carried `width: 4.2em`, sized for a `HH:MM` field, while Chromium
-formats `<input type="time">` from its **UI language**, so a 12-hour UI
-language rendered `06:00 PM` and clipped it. The control no longer has a width
-and sizes itself to whatever its host renders; `sweep-controls.spec.md` carries
-the requirement.
+`.chip-time` used to carry `width: 4.2em`, sized for a `HH:MM` field, while
+Chromium formats `<input type="time">` from its **UI language** — not from
+`navigator.language`, and not from the extension's own interface-language
+setting. So a 12-hour host rendered `06:00 PM` into a five-character box and
+clipped it to `06:00 P`, and earlier versions of this shot showed exactly that.
 
-Re-run the two scripts to replace this shot. Until then it depicts a bug the
-extension no longer has, so it must not go on a listing.
+The control no longer has a width and sizes itself to whatever its host
+renders; `sweep-controls.spec.md` carries the requirement. The committed shot
+was regenerated on a 12-hour host — the case the fix exists for — and shows
+`01:00 PM` / `06:00 PM` in full.
+
+That is worth knowing before you regenerate: the times in this shot will read
+`13:00` / `18:00` on a 24-hour machine and `01:00 PM` / `06:00 PM` on a
+12-hour one. Both are correct. Neither clips.
 
 ## Where these get uploaded
 
