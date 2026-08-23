@@ -15,6 +15,8 @@
     "watch": "bun ./build.mjs --browser=chrome --browser=firefox --watch",
     "icons": "bun scripts/make-icons.mjs",
     "package": "bun scripts/package.mjs",
+    "store:capture": "bun store/capture.mjs",
+    "store:compose": "bun store/compose.mjs",
     "test": "bun scripts/run-tests.mjs",
     "typecheck": "tsc --noEmit",
     "lint:firefox": "addons-linter --warnings-as-errors dist/firefox",

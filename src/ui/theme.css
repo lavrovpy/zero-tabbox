@@ -595,7 +595,12 @@ button {
   background: var(--color-surface);
 }
 
-/* The chip's time is an <input type="time"> dressed as the design's numeral. */
+/*
+ * The chip's time is an <input type="time"> dressed as the design's numeral.
+ * It has no width on purpose — Chromium formats the control from the browser's
+ * UI language, so any fixed width clips one of the two formats
+ * (sweep-controls.spec.md).
+ */
 .chip-time {
   border: 0;
   padding: 0;
@@ -605,7 +610,6 @@ button {
   font-weight: 500;
   font-size: 14px;
   font-feature-settings: 'tnum' 1, 'zero' 1;
-  width: 4.2em;
 }
 
 .chip-time::-webkit-calendar-picker-indicator {

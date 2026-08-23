@@ -36,7 +36,14 @@ Private Windows: Allow**.
 ## Store listings
 
 Chrome Web Store and AMO public listings are an optional follow-up — neither
-exists yet. If the extension is ever listed, the Chrome Web Store
-privacy-practices form must give the same answer the Firefox manifest already
-gives: no data collected (see [README § Data
-collection](README.md#data-collection)).
+exists yet. [`store-compliance.md`](store-compliance.md) audits both builds
+against the Chrome Web Store program policies and the Mozilla add-on policies —
+the code and both manifests pass, and what is left is submission paperwork: the
+Chrome privacy-practices answers (which must give the same answer the Firefox
+manifest already gives: no data collected — see [README § Data
+collection](README.md#data-collection)), the AMO source-code build
+instructions, and the listing copy. The paperwork is drafted there ready to
+paste; the 440×280 promo tile is the one asset still to produce.
+[`PRIVACY.md`](PRIVACY.md) is the privacy policy a listing can link to. The
+listing screenshots live in `store/`, regenerated from the real extension by
+two scripts — see [`store/README.md`](store/README.md).

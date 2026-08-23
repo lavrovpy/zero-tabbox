@@ -136,6 +136,8 @@ Everything it stores lives in `storage.local` under exactly six keys:
 `settings`, `lastAutoCutoffId`, `lastSweep`, `stats`, `accepted`, `version`.
 Nothing per-tab, ever. That fixed list is what makes the contract auditable.
 
+`PRIVACY.md` says the same thing in the form a store listing can link to.
+
 ## Development
 
 Requires Bun 1.3 or newer. See `package.json` for the full script list;
@@ -165,6 +167,9 @@ The behaviour is specified before it is implemented. `design.md` holds the
 architecture decisions; `tab-sweep.spec.md`, `sweep-schedule.spec.md` and
 `sweep-controls.spec.md` hold the requirements the code is answerable to. If a
 change contradicts a spec, the spec is what gets changed first.
+`store-compliance.md` is the standing audit against both stores' policies, and
+should be re-run whenever a permission, a manifest key or the build pipeline
+changes.
 
 ## License
 
