@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-i18n-pending>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,17 +22,22 @@
           <img src="../icons/icon48.png" width="28" height="28" alt="" />
           <span>zero-tabbox</span>
         </div>
-        <h1 class="onboarding-headline">
+        <!-- Neither this headline nor #accept-label below is annotated:
+             onboarding.ts writes both with the cutoff interpolated, so a
+             `data-i18n` here would render a literal `$TIME$`. -->
+        <h1 id="headline" class="onboarding-headline">
           Every tab closes at <span id="cutoff-time">18:00</span>.
         </h1>
-        <p class="onboarding-lede">
+        <p class="onboarding-lede" data-i18n="onboardingLede">
           Bookmarks are the only way to keep a page. Read the terms before you
           keep the extension.
         </p>
+        <!-- One key per term, not one for the list: three separate promises a
+             translator has to be able to weigh one at a time. -->
         <ol class="terms">
-          <li>Every tab in every normal window is included — no undo, no snooze, no per-tab exceptions.</li>
-          <li>Quitting the browser doesn't dodge it. A missed cutoff runs at the next start.</li>
-          <li>No data is collected — everything stays on your device.</li>
+          <li data-i18n="onboardingTerm1">Every tab in every normal window is included — no undo, no snooze, no per-tab exceptions.</li>
+          <li data-i18n="onboardingTerm2">Quitting the browser doesn't dodge it. A missed cutoff runs at the next start.</li>
+          <li data-i18n="onboardingTerm3">No data is collected — everything stays on your device.</li>
         </ol>
       </div>
       <div class="onboarding-actions">
@@ -47,10 +52,10 @@
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v6l4 2" />
             </svg>
-            Pick a different time
+            <span data-i18n="onboardingPickTime">Pick a different time</span>
           </button>
         </div>
-        <button id="decline" class="btn-plain" type="button">
+        <button id="decline" class="btn-plain" type="button" data-i18n="onboardingDecline">
           I don't want this — uninstall the extension
         </button>
       </div>

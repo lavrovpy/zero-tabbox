@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-i18n-pending>
   <head>
     <meta charset="utf-8" />
     <title>zero-tabbox</title>
@@ -19,13 +19,14 @@
     <main id="view-live" class="stack" hidden>
       <header class="row-between">
         <div class="stack-tight" aria-live="polite">
-          <p id="at-risk" class="at-risk">Checking the schedule…</p>
+          <p id="at-risk" class="at-risk" data-i18n="popupChecking">Checking the schedule…</p>
           <p class="row-baseline">
             <span id="next-cutoff-time" class="numeral headline headline-sm">--:--</span>
             <span id="next-cutoff-eta" class="numeral eta"></span>
           </p>
         </div>
-        <a id="open-options" class="icon-link" href="#" aria-label="Settings" title="Settings">
+        <a id="open-options" class="icon-link" href="#" aria-label="Settings" title="Settings"
+           data-i18n-attr="aria-label:popupSettings;title:popupSettings">
           <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />
@@ -42,7 +43,7 @@
                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
           </svg>
-          <span id="bookmark-all-label">Bookmark all tabs</span>
+          <span id="bookmark-all-label" data-i18n="popupBookmarkAllTabs">Bookmark all tabs</span>
         </button>
         <p id="bookmark-saved" class="saved-row" hidden>
           <svg class="icon-success" viewBox="0 0 24 24" width="15" height="15" fill="none"
@@ -50,31 +51,36 @@
                stroke-linejoin="round" aria-hidden="true">
             <path d="M20 6 9 17l-5-5" />
           </svg>
-          <span>Saved to</span>
+          <span data-i18n="popupSavedTo">Saved to</span>
           <span id="bookmark-folder" class="mono-label"></span>
         </p>
-        <button id="end-day-now" class="btn btn-accent" type="button">End day now</button>
+        <button id="end-day-now" class="btn btn-accent" type="button"
+                data-i18n="popupEndDayNow">End day now</button>
       </div>
     </main>
 
     <main id="view-swept" class="stack" hidden>
       <div class="stack-tight">
-        <p class="swept-label">Day ended</p>
+        <p class="swept-label" data-i18n="popupDayEnded">Day ended</p>
         <p class="row-baseline">
           <span id="swept-count" class="numeral headline">0</span>
+          <!-- Never annotate this one: `data-i18n` looks up without a count, and
+               Ukrainian has no `_other` form to find, so the walk would quietly
+               leave it English. showSwept() writes it with t(key, {count}). -->
           <span id="swept-unit" class="swept-unit">tabs closed</span>
         </p>
-        <p id="swept-note" class="swept-note">Nothing was saved. One clean window is left.</p>
+        <p id="swept-note" class="swept-note" data-i18n="popupSweptNoteUnsaved">Nothing was saved. One clean window is left.</p>
       </div>
 
       <hr class="divider" />
 
       <p class="next-cutoff-row">
-        <span>Next cutoff</span>
+        <span data-i18n="popupNextCutoff">Next cutoff</span>
         <span id="swept-next-cutoff" class="numeral">--:--</span>
       </p>
 
-      <button id="back-to-day" class="btn btn-quiet" type="button">Back to the day</button>
+      <button id="back-to-day" class="btn btn-quiet" type="button"
+              data-i18n="popupBackToDay">Back to the day</button>
     </main>
     <script src="popup.js"></script>
   </body>

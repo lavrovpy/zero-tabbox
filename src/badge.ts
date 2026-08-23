@@ -18,6 +18,7 @@
  *     literals outside `ui/theme.css` (tasks.md 7.2a). The badge carries a
  *     number, and the number is the whole message.
  */
+import { initI18n, t } from './i18n';
 import { api } from './platform';
 
 /** Id of the pre-cutoff notification, fixed so a second notice replaces the first. */
@@ -81,8 +82,15 @@ export async function clearBadge(): Promise<void> {
  * `type`/`title`/`message`/`iconUrl`, so the options must stay within those
  * four; `iconUrl` is a packaged extension icon.
  *
- * The copy states the cutoff time and restates the contract, because this is
- * the last moment at which bookmarking anything is still possible.
+ * The copy (`noticeTitle`, and the `noticeMessage` plural group) states the
+ * cutoff time and restates the contract, because this is the last moment at
+ * which bookmarking anything is still possible. The body stays ONE message with
+ * `$COUNT$` inline; never re-split it into a count and a fixed tail, which
+ * Ukrainian cannot translate as independent halves (design.md D14).
+ *
+ * No DOM here, so the locale comes from {@link initI18n}, not `localize()`, and
+ * per notice rather than once: the background is torn down between the alarm
+ * being set and it firing, and a woken worker starts on `'en'`.
  *
  * @param cutoffHhMm the cutoff the notice is for, `HH:MM`, named in the message
  * @param minutesAhead how far ahead of the cutoff the notice is firing
@@ -92,13 +100,19 @@ export async function showNoticeNotification(
   minutesAhead: number,
 ): Promise<void> {
   const minutes = Math.max(0, Math.round(minutesAhead));
-  const lead = minutes === 1 ? '1 minute' : `${minutes} minutes`;
+  try {
+    await initI18n();
+  } catch (error) {
+    // Caught separately from the notification below: an unresolvable locale
+    // costs the user a translation, never the notice itself.
+    console.warn('[zero-tabbox] could not resolve the notice locale', error);
+  }
   try {
     await api.notifications.create(NOTICE_ID, {
       type: 'basic',
       iconUrl: api.runtime.getURL(NOTICE_ICON),
-      title: `All tabs close at ${cutoffHhMm}`,
-      message: `${lead} left. Bookmark anything you need — nothing is saved.`,
+      title: t('noticeTitle', { time: cutoffHhMm }),
+      message: t('noticeMessage', { count: minutes }),
     });
   } catch (error) {
     // A notification the browser refused (permission revoked, focus assist,

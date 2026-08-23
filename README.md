@@ -59,6 +59,26 @@ stop. The notification has no buttons. Setting N to 0 disables both.
 After a sweep the badge shows the number of tabs closed for up to 60 seconds,
 then clears. Nothing else announces it.
 
+## Language
+
+The interface is available in English and Ukrainian. By default it follows your
+browser's UI language — Ukrainian if that starts with `uk`, English otherwise —
+and the settings page has a **Language** row (`Auto` / English / Українська)
+to override it.
+
+The override covers the extension's own surfaces: popup, settings, first-install
+page, badge and notification. It does not cover the name and description on
+`chrome://extensions` / `about:addons` or the "End day now" entry in the
+browser's shortcut list, because the browser localizes the manifest from *its*
+language before the extension runs and no extension can override that per user.
+An English browser set to Ukrainian therefore shows a Ukrainian popup beside an
+English listing. That is the platform, not a bug (design.md D14).
+
+Translations live in `_locales/<lang>/messages.json`, the standard WebExtension
+catalog format; the same files serve the manifest and, inlined at build time,
+the UI. Adding a locale is a directory there plus its id in the `Locale` type
+(`src/types.ts`), the catalog map in `src/i18n.ts`, and the settings dropdown.
+
 ## Known backdoors
 
 These are real and documented rather than fixed, because the extension APIs do
@@ -223,6 +243,7 @@ walked through by a person.
 | `src/storage.ts` | The only module that touches `storage.local`. |
 | `src/platform.ts` | The only module that knows which browser it is on. |
 | `src/badge.ts` | Badge text and the pre-cutoff notification. Never rejects. |
+| `src/i18n.ts` | The UI translation layer: resolves the `locale` setting, `t()`, and the `data-i18n` DOM pass. |
 | `src/ui/` | Popup, options page, first-install page, the one stylesheet, and the bundled fonts. |
 | `build.mjs` | Bun.build + the per-browser manifest overlay. |
 

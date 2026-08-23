@@ -1,5 +1,9 @@
 <!doctype html>
-<html lang="en">
+<!--
+  `data-i18n-title` sits on <html>, not on <title>: the DOM walk in i18n.ts
+  only sweeps the body, and a data attribute buried in <head> is easy to lose.
+-->
+<html lang="en" data-i18n-pending data-i18n-title="optionsPageTitle">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,8 +17,14 @@
       toggle, bookmark-everything-first toggle, keep-pinned toggle. Autosave;
       no Save button, no theme selector, no pause/skip/snooze/restore
       (sweep-controls.spec "Settings surface" / "No softening controls").
+      The sixth row, the language picker, is not a sixth sweep control: it
+      changes what the UI says, never what the sweep does (design.md D14).
       The contract sentence is always rendered; first-install onboarding is
       its own page (ui/onboarding.html, design.md D7).
+
+      The English text is the visible default and the fail-open copy;
+      `localizePage()` in src/i18n.ts owns the annotation contract, including
+      what may not be annotated.
     -->
     <main class="page">
       <header class="stack-loose">
@@ -22,7 +32,7 @@
           <img src="../icons/icon48.png" width="24" height="24" alt="" />
           <h1>zero-tabbox</h1>
         </div>
-        <p class="intro">
+        <p class="intro" data-i18n="optionsIntro">
           At each cutoff every tab closes. Nothing is saved. Bookmark what matters before
           the cutoff.
         </p>
@@ -35,7 +45,7 @@
         here or on the onboarding page.
       -->
       <section id="accept-banner" class="accept-banner" hidden>
-        <p class="accept-note">
+        <p class="accept-note" data-i18n="optionsAcceptNote">
           Nothing closes yet — the schedule stays off until you accept.
         </p>
         <button id="accept" class="btn btn-accent" type="button">
@@ -44,7 +54,9 @@
       </section>
 
       <section class="stack-loose" aria-labelledby="schedule-title">
-        <h2 id="schedule-title" class="section-title">Cutoff times</h2>
+        <h2 id="schedule-title" class="section-title" data-i18n="optionsCutoffsTitle">
+          Cutoff times
+        </h2>
         <div id="cutoff-list" class="chip-row" role="group" aria-labelledby="schedule-title">
           <!-- Chips are rendered here; the add button stays last in the row. -->
           <button id="add-cutoff" class="chip-add" type="button">
@@ -52,7 +64,7 @@
                  stroke-width="2" stroke-linecap="round" aria-hidden="true">
               <path d="M12 5v14M5 12h14" />
             </svg>
-            Add cutoff
+            <span data-i18n="optionsAddCutoff">Add cutoff</span>
           </button>
         </div>
         <p id="cutoff-error" class="alert" role="alert"></p>
@@ -61,7 +73,9 @@
       <section class="stack-loose" aria-labelledby="notice-title">
         <div class="notice-block">
           <div class="notice-head">
-            <span id="notice-title" class="label">Badge countdown starts</span>
+            <span id="notice-title" class="label" data-i18n="optionsNoticeLabel">
+              Badge countdown starts
+            </span>
             <span id="notice-summary" class="field-summary"></span>
           </div>
           <div
@@ -76,8 +90,12 @@
 
         <div class="field">
           <span class="field-text">
-            <label class="label" for="notify">System notification</label>
-            <span class="hint">One notification when the countdown starts. No snooze.</span>
+            <label class="label" for="notify" data-i18n="optionsNotifyLabel">
+              System notification
+            </label>
+            <span class="hint" data-i18n="optionsNotifyHint">
+              One notification when the countdown starts. No snooze.
+            </span>
           </span>
           <input id="notify" class="switch" type="checkbox" role="switch" />
         </div>
@@ -86,8 +104,10 @@
 
         <div class="field">
           <span class="field-text">
-            <label class="label" for="auto-bookmark">Bookmark everything first</label>
-            <span class="hint hint-wide">
+            <label class="label" for="auto-bookmark" data-i18n="optionsAutoBookmarkLabel">
+              Bookmark everything first
+            </label>
+            <span class="hint hint-wide" data-i18n="optionsAutoBookmarkHint">
               Writes every open tab to a dated bookmarks folder, then sweeps.
             </span>
           </span>
@@ -98,23 +118,47 @@
 
         <div class="field">
           <span class="field-text">
-            <label class="label" for="keep-pinned">Keep pinned tabs</label>
-            <span class="hint">Pinned tabs survive every sweep.</span>
+            <label class="label" for="keep-pinned" data-i18n="optionsKeepPinnedLabel">
+              Keep pinned tabs
+            </label>
+            <span class="hint" data-i18n="optionsKeepPinnedHint">
+              Pinned tabs survive every sweep.
+            </span>
           </span>
           <input id="keep-pinned" class="switch" type="checkbox" role="switch" />
+        </div>
+
+        <hr class="divider" />
+
+        <!--
+          The language row (design.md D14): it sets `locale`, which only this UI
+          reads — chrome://extensions keeps following the browser's own UI
+          language, and nothing here can change that. The two language names are
+          endonyms, so their keys hold the same string in both catalogs; an
+          English speaker hunting for Ukrainian looks for «Українська».
+        -->
+        <div class="field">
+          <span class="field-text">
+            <label class="label" for="locale" data-i18n="optionsLanguageLabel">Language</label>
+          </span>
+          <select id="locale" class="select">
+            <option value="auto" data-i18n="optionsLanguageAuto">Auto</option>
+            <option value="en" data-i18n="optionsLanguageEnglish">English</option>
+            <option value="uk" data-i18n="optionsLanguageUkrainian">Українська</option>
+          </select>
         </div>
       </section>
 
       <section class="stack-loose" aria-labelledby="stats-title">
-        <h2 id="stats-title" class="section-title">Since install</h2>
+        <h2 id="stats-title" class="section-title" data-i18n="optionsStatsTitle">Since install</h2>
         <div class="stat-row">
           <div class="stat-card">
             <span id="stat-lifetime" class="stat-value">0</span>
-            <span class="hint">tabs closed</span>
+            <span class="hint" data-i18n="optionsStatTabsClosed">tabs closed</span>
           </div>
           <div class="stat-card">
             <span id="stat-last" class="stat-value">—</span>
-            <span class="hint">last sweep</span>
+            <span class="hint" data-i18n="optionsStatLastSweep">last sweep</span>
           </div>
         </div>
       </section>

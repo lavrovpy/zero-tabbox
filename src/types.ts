@@ -10,7 +10,22 @@
  * declaration at the same time.
  */
 
-/** User-editable settings. Exactly the five controls sweep-controls.spec allows. */
+/**
+ * The two shipped catalogs (`_locales/<lang>/messages.json`).
+ *
+ * Defined here, not in `i18n.ts`, so the dependency arrow points one way:
+ * `i18n.ts` → `storage.ts` → `types.ts`.
+ */
+export type Locale = 'en' | 'uk';
+
+/** The stored `locale` setting: a fixed locale, or follow the browser. */
+export type LocaleSetting = 'auto' | Locale;
+
+/**
+ * User-editable settings: the five sweep controls sweep-controls.spec allows,
+ * plus `locale`, which is not a sixth one — it changes nothing about what
+ * closes or when (design.md D14).
+ */
 export interface Settings {
   /**
    * Daily cutoff times as `HH:MM` in local wall-clock time.
@@ -30,6 +45,8 @@ export interface Settings {
   autoBookmark: boolean;
   /** Whether pinned tabs survive a sweep. The only exemption that exists. */
   keepPinned: boolean;
+  /** Which language the UI renders in. Never the manifest — the browser owns that. */
+  locale: LocaleSetting;
 }
 
 /** Why a sweep ran. Only `auto` advances the idempotency marker (design.md D3). */
@@ -104,6 +121,7 @@ export const DEFAULT_SETTINGS: Settings = {
   notify: true,
   autoBookmark: false,
   keepPinned: false,
+  locale: 'auto',
 };
 
 /**

@@ -5,7 +5,8 @@
  *
  * For each requested browser it:
  *   1. bundles the four TypeScript entry points with Bun.build into dist/<browser>/,
- *   2. copies the static assets (ui/*.html, ui/*.css, ui/fonts/*, icons/*),
+ *   2. copies the static assets (ui/*.html, ui/*.css, ui/fonts/*, icons/*,
+ *      _locales/*),
  *   3. writes dist/<browser>/manifest.json from src/manifest.base.json plus the
  *      per-browser overlay below (design.md D1).
  *
@@ -15,6 +16,7 @@
  *   dist/<browser>/ui/theme.css
  *   dist/<browser>/ui/fonts/*.woff2
  *   dist/<browser>/icons/icon{16,32,48,128}.png
+ *   dist/<browser>/_locales/{en,uk}/messages.json
  *   dist/<browser>/manifest.json
  */
 import { cpSync, mkdirSync, readFileSync, rmSync, watch as fsWatch, writeFileSync } from 'node:fs';
@@ -110,6 +112,13 @@ const STATIC_ASSETS = [
   // (tab-sweep.spec) would forbid it anyway.
   [join(SRC, 'ui', 'fonts'), 'ui/fonts'],
   [join(ROOT, 'icons'), 'icons'],
+  // One catalog, two delivery paths, and neither can be dropped. The manifest's
+  // `__MSG_*` placeholders are resolved by the browser out of these files on
+  // disk, against the BROWSER UI language — addons-linter fails an AMO
+  // submission whose manifest references messages missing from _locales. The UI
+  // never reads these copies: it imports the same catalogs, which Bun inlines
+  // into the bundles (design.md D14), and follows the user's own locale setting.
+  [join(ROOT, '_locales'), '_locales'],
 ];
 
 function parseArgs(argv) {
@@ -218,7 +227,8 @@ function watch(browsers) {
     timer = setTimeout(rebuild, 50);
   };
 
-  for (const dir of [SRC, join(ROOT, 'icons')]) {
+  // Editing a message must rebuild the bundles that inlined it, not just the copies.
+  for (const dir of [SRC, join(ROOT, 'icons'), join(ROOT, '_locales')]) {
     fsWatch(dir, { recursive: true }, schedule);
   }
   console.log(`watching ${browsers.map((b) => `dist/${b}`).join(', ')}`);

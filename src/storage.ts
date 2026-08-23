@@ -15,7 +15,7 @@
 import { isValidHhMm } from './cutoff';
 import { api } from './platform';
 import { DEFAULT_SETTINGS, LIMITS, STORAGE_VERSION } from './types';
-import type { LastSweep, Settings, Stats, StorageShape } from './types';
+import type { LastSweep, LocaleSetting, Settings, Stats, StorageShape } from './types';
 
 /**
  * Every key this extension may write, ever. Adding one means re-checking
@@ -170,7 +170,15 @@ function mergeSettings(stored: unknown): Settings {
       typeof raw.autoBookmark === 'boolean' ? raw.autoBookmark : DEFAULT_SETTINGS.autoBookmark,
     keepPinned:
       typeof raw.keepPinned === 'boolean' ? raw.keepPinned : DEFAULT_SETTINGS.keepPinned,
+    // Absent for anyone who installed before the picker existed — the
+    // field-wise merge is the whole migration, so no version bump.
+    locale: isLocaleSetting(raw.locale) ? raw.locale : DEFAULT_SETTINGS.locale,
   };
+}
+
+/** Whether `value` is one of the three locale settings (design.md D14). */
+function isLocaleSetting(value: unknown): value is LocaleSetting {
+  return value === 'auto' || value === 'en' || value === 'uk';
 }
 
 /** Whether `value` is a whole number of minutes inside the allowed notice range. */
@@ -214,12 +222,17 @@ export async function setSettings(settings: Settings): Promise<void> {
         `${LIMITS.maxNoticeMinutes}; got ${String(settings.noticeMinutes)}.`,
     );
   }
+  // An explicit whitelist, not a spread, so a caller cannot smuggle an extra
+  // field into storage — which also makes it the easiest place to forget a new
+  // setting. Omitting one fails silently: the control appears to work, then the
+  // next unrelated save writes the object without it and it reverts.
   const next: Settings = {
     cutoffs,
     noticeMinutes: settings.noticeMinutes,
     notify: Boolean(settings.notify),
     autoBookmark: Boolean(settings.autoBookmark),
     keepPinned: Boolean(settings.keepPinned),
+    locale: isLocaleSetting(settings.locale) ? settings.locale : DEFAULT_SETTINGS.locale,
   };
   await write({ settings: next });
 }

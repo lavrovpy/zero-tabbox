@@ -1,0 +1,472 @@
+{
+  "popupChecking": {
+    "message": "Перевірка розкладу…"
+  },
+  "popupSettings": {
+    "message": "Налаштування"
+  },
+  "popupTabsAtRisk_one": {
+    "message": "$COUNT$ вкладка закриється о",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "popupTabsAtRisk_few": {
+    "message": "$COUNT$ вкладки закриються о",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popupTabsAtRisk_many": {
+    "message": "$COUNT$ вкладок закриється о",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "popupTabsCloseAt": {
+    "message": "Вкладки закриються о"
+  },
+  "popupScheduleUnavailable": {
+    "message": "Розклад недоступний"
+  },
+  "popupNoCutoff": {
+    "message": "Закриття не налаштовано"
+  },
+  "popupEtaLessThanMinute": {
+    "message": "менш ніж за хвилину"
+  },
+  "popupEtaMinutes": {
+    "message": "за $MINUTES$ хв",
+    "placeholders": {
+      "minutes": {
+        "content": "$1",
+        "example": "25"
+      }
+    }
+  },
+  "popupEtaHours": {
+    "message": "за $HOURS$ год",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popupEtaHoursMinutes": {
+    "message": "за $HOURS$ год $MINUTES$ хв",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "3"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "25"
+      }
+    }
+  },
+  "popupCountdownLeft": {
+    "message": "залишилося $TIME$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "04:37"
+      }
+    }
+  },
+  "popupBookmarkAllTabs": {
+    "message": "Додати всі вкладки в закладки"
+  },
+  "popupBookmarkAll_one": {
+    "message": "Додати $COUNT$ вкладку в закладки",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "popupBookmarkAll_few": {
+    "message": "Додати $COUNT$ вкладки в закладки",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popupBookmarkAll_many": {
+    "message": "Додати $COUNT$ вкладок у закладки",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "popupSavedTo": {
+    "message": "Збережено в"
+  },
+  "popupEndDayNow": {
+    "message": "Завершити день зараз"
+  },
+  "popupDayEnded": {
+    "message": "День завершено"
+  },
+  "popupSweptUnit_one": {
+    "message": "вкладку закрито"
+  },
+  "popupSweptUnit_few": {
+    "message": "вкладки закрито"
+  },
+  "popupSweptUnit_many": {
+    "message": "вкладок закрито"
+  },
+  "popupSweptNoteBookmarked": {
+    "message": "Усі спершу збережено в закладки. Залишилося одне чисте вікно."
+  },
+  "popupSweptNoteUnsaved": {
+    "message": "Нічого не збережено. Залишилося одне чисте вікно."
+  },
+  "popupNextCutoff": {
+    "message": "Наступне закриття"
+  },
+  "popupBackToDay": {
+    "message": "Назад у день"
+  },
+  "optionsPageTitle": {
+    "message": "Налаштування zero-tabbox"
+  },
+  "optionsIntro": {
+    "message": "Під час кожного закриття зникають усі вкладки. Нічого не зберігається. Збережіть важливе в закладки до закриття."
+  },
+  "optionsAcceptNote": {
+    "message": "Поки що нічого не закривається — розклад вимкнено, доки ви не погодитеся."
+  },
+  "optionsCutoffsTitle": {
+    "message": "Час закриття"
+  },
+  "optionsAddCutoff": {
+    "message": "Додати час"
+  },
+  "optionsCutoffAriaLabel": {
+    "message": "Закриття $INDEX$",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsRemoveCutoffAriaLabel": {
+    "message": "Видалити час закриття: $TIME$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "optionsCutoffNotSet": {
+    "message": "не вказано"
+  },
+  "optionsErrorTooFew_one": {
+    "message": "Залиште щонайменше $COUNT$ час закриття.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsErrorTooFew_few": {
+    "message": "Залиште щонайменше $COUNT$ часи закриття.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsErrorTooFew_many": {
+    "message": "Залиште щонайменше $COUNT$ часів закриття.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "optionsErrorTooFewRemove_one": {
+    "message": "Залиште щонайменше $COUNT$ час закриття. Розклад не може бути порожнім.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsErrorTooFewRemove_few": {
+    "message": "Залиште щонайменше $COUNT$ часи закриття. Розклад не може бути порожнім.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsErrorTooFewRemove_many": {
+    "message": "Залиште щонайменше $COUNT$ часів закриття. Розклад не може бути порожнім.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "optionsErrorTooMany_one": {
+    "message": "Можна мати щонайбільше $COUNT$ час закриття.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsErrorTooMany_few": {
+    "message": "Можна мати щонайбільше $COUNT$ часи закриття.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "4"
+      }
+    }
+  },
+  "optionsErrorTooMany_many": {
+    "message": "Можна мати щонайбільше $COUNT$ часів закриття.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "6"
+      }
+    }
+  },
+  "optionsErrorDuplicate": {
+    "message": "$VALUE$ вже є у списку.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "optionsErrorDuplicateFallback": {
+    "message": "Цей час"
+  },
+  "optionsErrorFormat": {
+    "message": "$VALUE$ — некоректний час. Використовуйте ГГ:ХХ.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "25:00"
+      }
+    }
+  },
+  "optionsErrorFormatFallback": {
+    "message": "Це значення"
+  },
+  "optionsErrorEmptyCutoff": {
+    "message": "Кожне закриття потребує часу."
+  },
+  "optionsErrorNoticeRange": {
+    "message": "Попередження має бути від $MIN$ до $MAX$ хвилин.",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "0"
+      },
+      "max": {
+        "content": "$2",
+        "example": "60"
+      }
+    }
+  },
+  "optionsErrorSaveFailed": {
+    "message": "Не вдалося зберегти налаштування."
+  },
+  "optionsErrorAcceptFailed": {
+    "message": "Не вдалося зберегти згоду. Спробуйте ще раз."
+  },
+  "optionsNoticeLabel": {
+    "message": "Відлік на значку"
+  },
+  "optionsNoticeSummaryOff": {
+    "message": "без попередження"
+  },
+  "optionsNoticeSummary": {
+    "message": "за $MINUTES$ хв до закриття",
+    "placeholders": {
+      "minutes": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "optionsNoticeOptionOffAriaLabel": {
+    "message": "Без попередження"
+  },
+  "optionsNoticeOptionAriaLabel_one": {
+    "message": "за $COUNT$ хвилину до закриття",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsNoticeOptionAriaLabel_few": {
+    "message": "за $COUNT$ хвилини до закриття",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "optionsNoticeOptionAriaLabel_many": {
+    "message": "за $COUNT$ хвилин до закриття",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "optionsNotifyLabel": {
+    "message": "Системне сповіщення"
+  },
+  "optionsNotifyHint": {
+    "message": "Одне сповіщення, коли починається відлік. Без відкладання."
+  },
+  "optionsAutoBookmarkLabel": {
+    "message": "Спершу все в закладки"
+  },
+  "optionsAutoBookmarkHint": {
+    "message": "Записує кожну відкриту вкладку в датовану папку закладок, потім усе закриває."
+  },
+  "optionsKeepPinnedLabel": {
+    "message": "Залишати закріплені вкладки"
+  },
+  "optionsKeepPinnedHint": {
+    "message": "Закріплені вкладки переживають кожне закриття."
+  },
+  "optionsStatsTitle": {
+    "message": "Від встановлення"
+  },
+  "optionsStatTabsClosed": {
+    "message": "вкладок закрито"
+  },
+  "optionsStatLastSweep": {
+    "message": "останнє закриття"
+  },
+  "optionsLanguageLabel": {
+    "message": "Мова"
+  },
+  "optionsLanguageAuto": {
+    "message": "Авто"
+  },
+  "optionsLanguageEnglish": {
+    "message": "English"
+  },
+  "optionsLanguageUkrainian": {
+    "message": "Українська"
+  },
+  "onboardingHeadline": {
+    "message": "Кожна вкладка закриється о $TIME$.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "onboardingLede": {
+    "message": "Закладки — єдиний спосіб зберегти сторінку. Прочитайте умови, перш ніж вирішите залишити розширення."
+  },
+  "onboardingTerm1": {
+    "message": "Закривається кожна вкладка в кожному звичайному вікні — без скасування, без відкладання, без винятків для окремих вкладок."
+  },
+  "onboardingTerm2": {
+    "message": "Вихід із браузера не допоможе ухилитися. Пропущене закриття спрацює під час наступного запуску."
+  },
+  "onboardingTerm3": {
+    "message": "Жодні дані не збираються — усе залишається на вашому пристрої."
+  },
+  "onboardingAccept": {
+    "message": "Я розумію. Почати о $TIME$.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "onboardingPickTime": {
+    "message": "Обрати інший час"
+  },
+  "onboardingDecline": {
+    "message": "Я цього не хочу — видалити розширення"
+  },
+  "noticeTitle": {
+    "message": "Усі вкладки закриються о $TIME$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "noticeMessage_one": {
+    "message": "Залишилася $COUNT$ хвилина. Додайте потрібне в закладки — нічого не зберігається.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "noticeMessage_few": {
+    "message": "Залишилися $COUNT$ хвилини. Додайте потрібне в закладки — нічого не зберігається.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "noticeMessage_many": {
+    "message": "Залишилося $COUNT$ хвилин. Додайте потрібне в закладки — нічого не зберігається.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "extDescription": {
+    "message": "Закриває кожну вкладку у ваш щоденний час закриття. Без архіву, без скасування."
+  },
+  "commandEndDayNow": {
+    "message": "Завершити день зараз: закрити всі вкладки"
+  }
+}

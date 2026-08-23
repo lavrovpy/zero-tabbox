@@ -15,12 +15,17 @@
  * `Message` in types.ts is frozen to the single `end-day-now` case, and waking
  * a terminated service worker just to render a clock would be a worse trade
  * than recomputing two Date fields from the same storage the background reads.
+ *
+ * Every user-visible string comes from `i18n.ts` (design.md D14). Nothing here
+ * concatenates a translated fragment onto a number: word order differs between
+ * locales, so each sentence is one message with placeholders.
  */
 import { atRiskTabs, bookmarkAtRiskTabs, bookmarkableTabs } from '../bookmarks';
 import { nextOccurrence } from '../cutoff';
+import { localize, t } from '../i18n';
 import { api } from '../platform';
 import { getLastSweep, getSettings } from '../storage';
-import type { Message, Settings } from '../types';
+import type { LastSweep, Message, Settings } from '../types';
 import { el } from './dom';
 
 /** The next configured cutoff, resolved to a concrete upcoming instant. */
@@ -133,20 +138,29 @@ export function soonestCutoff(now: Date, cutoffs: readonly string[]): NextCutoff
  * so it agrees with the badge countdown (sweep-controls.spec "Badge countdown"
  * counts minutes).
  *
+ * Not a plural group: the branch is on the shape of the duration, not on a
+ * number.
+ *
  * @param minutes minutes until the cutoff; negatives are clamped to 0
  */
 export function formatEta(minutes: number): string {
   const total = Math.max(0, Math.round(minutes));
-  if (total === 0) return 'in less than a minute';
-  if (total < 60) return `in ${total} min`;
+  if (total === 0) return t('popupEtaLessThanMinute');
+  if (total < 60) return t('popupEtaMinutes', { minutes: total });
   const hours = Math.floor(total / 60);
   const rest = total % 60;
-  return rest === 0 ? `in ${hours} h` : `in ${hours} h ${rest} min`;
+  return rest === 0
+    ? t('popupEtaHours', { hours })
+    : t('popupEtaHoursMinutes', { hours, minutes: rest });
 }
 
 /**
- * `MM:SS left` — the per-second countdown shown once the notice window has
- * started, when the remaining time deserves urgency rather than an estimate.
+ * The per-second countdown shown once the notice window has started, when the
+ * remaining time deserves urgency rather than an estimate.
+ *
+ * MM:SS stays zero-padded ASCII digits in every locale: it re-renders once a
+ * second, so a locale-formatted number that changed width as it ticked down
+ * would make the row jitter.
  *
  * @param seconds seconds until the cutoff; negatives are clamped to 0
  */
@@ -154,7 +168,7 @@ export function formatCountdown(seconds: number): string {
   const total = Math.max(0, Math.floor(seconds));
   const mins = String(Math.floor(total / 60)).padStart(2, '0');
   const secs = String(total % 60).padStart(2, '0');
-  return `${mins}:${secs} left`;
+  return t('popupCountdownLeft', { time: `${mins}:${secs}` });
 }
 
 // --------------------------------------------------------------- rendering
@@ -179,13 +193,13 @@ async function showLive(): Promise<void> {
   try {
     settings = await getSettings();
   } catch {
-    atRiskLine.textContent = 'Schedule unavailable';
+    atRiskLine.textContent = t('popupScheduleUnavailable');
     return;
   }
 
   const next = soonestCutoff(new Date(), settings.cutoffs);
   if (next === null) {
-    atRiskLine.textContent = 'No cutoff configured';
+    atRiskLine.textContent = t('popupNoCutoff');
     cutoffTime.textContent = '--:--';
     cutoffEta.textContent = '';
   } else {
@@ -206,15 +220,13 @@ async function showLive(): Promise<void> {
     ]);
     const count = atRisk.length;
     const saveableCount = saveable.length;
-    atRiskLine.textContent =
-      count === 1 ? '1 tab closes at' : `${count} tabs close at`;
-    bookmarkAllLabel.textContent =
-      saveableCount === 1 ? 'Bookmark the tab' : `Bookmark all ${saveableCount} tabs`;
+    atRiskLine.textContent = t('popupTabsAtRisk', { count });
+    bookmarkAllLabel.textContent = t('popupBookmarkAll', { count: saveableCount });
     bookmarkAll.hidden = bookmarkedThisSession;
     bookmarkAll.disabled = saveableCount === 0;
   } catch {
-    atRiskLine.textContent = 'Tabs close at';
-    bookmarkAllLabel.textContent = 'Bookmark all tabs';
+    atRiskLine.textContent = t('popupTabsCloseAt');
+    bookmarkAllLabel.textContent = t('popupBookmarkAllTabs');
     bookmarkAll.hidden = bookmarkedThisSession;
   }
 }
@@ -226,24 +238,53 @@ function showSwept(closed: number, bookmarked: boolean, nextHhmm: string | null)
   if (etaTimer !== undefined) clearInterval(etaTimer);
 
   sweptCount.textContent = String(closed);
-  sweptUnit.textContent = closed === 1 ? 'tab closed' : 'tabs closed';
+  // `count` looks unused — the numeral is a separate span — but it selects the
+  // plural form.
+  sweptUnit.textContent = t('popupSweptUnit', { count: closed });
   sweptNote.textContent = bookmarked
-    ? 'All of them were bookmarked first. One clean window is left.'
-    : 'Nothing was saved. One clean window is left.';
+    ? t('popupSweptNoteBookmarked')
+    : t('popupSweptNoteUnsaved');
   sweptNextCutoff.textContent = nextHhmm ?? '--:--';
 }
 
-async function render(): Promise<void> {
+/**
+ * The two reads that decide which view opens, as one total call.
+ *
+ * Total on purpose: this promise is created BEFORE `localize()` is awaited, so
+ * a rejection would sit unhandled for a storage round trip and surface as an
+ * unhandled rejection.
+ *
+ * @returns both values, or `null` when either read failed — the live view then
+ *   renders its own degraded state and needs neither
+ */
+async function initialState(): Promise<{
+  settings: Settings;
+  lastSweep: LastSweep | undefined;
+} | null> {
   try {
     const [settings, lastSweep] = await Promise.all([getSettings(), getLastSweep()]);
+    return { settings, lastSweep };
+  } catch {
+    return null;
+  }
+}
+
+async function render(): Promise<void> {
+  // Reads start before `localize()` is awaited so the round trips overlap, as
+  // in `onboarding.ts`.
+  const state = initialState();
+  await localize();
+  const resolved = await state;
+
+  if (resolved !== null) {
+    const { settings, lastSweep } = resolved;
     if (lastSweep !== undefined && Date.now() - lastSweep.at <= SWEPT_VIEW_MS) {
       const next = soonestCutoff(new Date(), settings.cutoffs);
       showSwept(lastSweep.closed, lastSweep.bookmarked === true, next?.hhmm ?? null);
       return;
     }
-  } catch {
-    // Fall through: the live view has its own degraded rendering.
   }
+  // Fall through: the live view has its own degraded rendering.
   await showLive();
 }
 

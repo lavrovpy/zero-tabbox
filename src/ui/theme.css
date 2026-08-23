@@ -190,6 +190,22 @@
   display: none !important;
 }
 
+/*
+ * Anti-flicker for the translation layer (design.md D14): the locale is read
+ * from storage, so without this the English markup paints and then flips.
+ *
+ * Hiding BODY rather than <html> keeps the page's own background painted, so
+ * the wait reads as an empty window and not a white flash; `visibility` rather
+ * than `display` so the resolved layout does not reflow when the body appears.
+ *
+ * This rule can leave a page permanently blank, and only the `finally` in
+ * `localize()` (src/i18n.ts) stops it: never move that clear into the success
+ * path.
+ */
+[data-i18n-pending] body {
+  visibility: hidden;
+}
+
 body {
   margin: 0;
   background: var(--color-bg);
@@ -758,6 +774,47 @@ button {
 .switch:checked::after {
   left: 21px;
   background: var(--color-accent);
+}
+
+/* --------------------------------------------------------------- select */
+
+/*
+ * The language picker (design.md D14).
+ *
+ * Deliberately NOT `appearance: none`, which is where this parts company with
+ * .switch: dropping the native appearance also drops the disclosure chevron,
+ * and drawing our own means an inline SVG data URI carrying a hard-coded
+ * stroke colour — precisely the colour literal outside the token block that
+ * tasks.md 7.2a forbids, and one that could not follow the dark-mode overrides
+ * anyway.
+ */
+.select {
+  flex: none;
+  height: 36px;
+  max-width: 100%;
+  padding: 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.select:hover {
+  border-color: var(--color-border-strong);
+}
+
+/*
+ * The popup list is drawn by the OS and in several browsers inherits the
+ * <select>'s own colours rather than the page's, so without naming them here a
+ * dark-mode dropdown renders dark text on dark.
+ */
+.select option {
+  background: var(--color-surface);
+  color: var(--color-fg);
 }
 
 /* ---------------------------------------------------------------- stats */

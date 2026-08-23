@@ -1,0 +1,400 @@
+{
+  "popupChecking": {
+    "message": "Checking the schedule…"
+  },
+  "popupSettings": {
+    "message": "Settings"
+  },
+  "popupTabsAtRisk_one": {
+    "message": "$COUNT$ tab closes at",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "popupTabsAtRisk_other": {
+    "message": "$COUNT$ tabs close at",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "popupTabsCloseAt": {
+    "message": "Tabs close at"
+  },
+  "popupScheduleUnavailable": {
+    "message": "Schedule unavailable"
+  },
+  "popupNoCutoff": {
+    "message": "No cutoff configured"
+  },
+  "popupEtaLessThanMinute": {
+    "message": "in less than a minute"
+  },
+  "popupEtaMinutes": {
+    "message": "in $MINUTES$ min",
+    "placeholders": {
+      "minutes": {
+        "content": "$1",
+        "example": "25"
+      }
+    }
+  },
+  "popupEtaHours": {
+    "message": "in $HOURS$ h",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popupEtaHoursMinutes": {
+    "message": "in $HOURS$ h $MINUTES$ min",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "3"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "25"
+      }
+    }
+  },
+  "popupCountdownLeft": {
+    "message": "$TIME$ left",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "04:37"
+      }
+    }
+  },
+  "popupBookmarkAllTabs": {
+    "message": "Bookmark all tabs"
+  },
+  "popupBookmarkAll_one": {
+    "message": "Bookmark the tab"
+  },
+  "popupBookmarkAll_other": {
+    "message": "Bookmark all $COUNT$ tabs",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "popupSavedTo": {
+    "message": "Saved to"
+  },
+  "popupEndDayNow": {
+    "message": "End day now"
+  },
+  "popupDayEnded": {
+    "message": "Day ended"
+  },
+  "popupSweptUnit_one": {
+    "message": "tab closed"
+  },
+  "popupSweptUnit_other": {
+    "message": "tabs closed"
+  },
+  "popupSweptNoteBookmarked": {
+    "message": "All of them were bookmarked first. One clean window is left."
+  },
+  "popupSweptNoteUnsaved": {
+    "message": "Nothing was saved. One clean window is left."
+  },
+  "popupNextCutoff": {
+    "message": "Next cutoff"
+  },
+  "popupBackToDay": {
+    "message": "Back to the day"
+  },
+  "optionsPageTitle": {
+    "message": "zero-tabbox settings"
+  },
+  "optionsIntro": {
+    "message": "At each cutoff every tab closes. Nothing is saved. Bookmark what matters before the cutoff."
+  },
+  "optionsAcceptNote": {
+    "message": "Nothing closes yet — the schedule stays off until you accept."
+  },
+  "optionsCutoffsTitle": {
+    "message": "Cutoff times"
+  },
+  "optionsAddCutoff": {
+    "message": "Add cutoff"
+  },
+  "optionsCutoffAriaLabel": {
+    "message": "Cutoff $INDEX$",
+    "placeholders": {
+      "index": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsRemoveCutoffAriaLabel": {
+    "message": "Remove cutoff $TIME$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "optionsCutoffNotSet": {
+    "message": "not set"
+  },
+  "optionsErrorTooFew_one": {
+    "message": "Keep at least $COUNT$ cutoff time.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsErrorTooFew_other": {
+    "message": "Keep at least $COUNT$ cutoff times.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsErrorTooFewRemove_one": {
+    "message": "Keep at least $COUNT$ cutoff time. The schedule cannot be empty.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsErrorTooFewRemove_other": {
+    "message": "Keep at least $COUNT$ cutoff times. The schedule cannot be empty.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "optionsErrorTooMany_one": {
+    "message": "You can have at most $COUNT$ cutoff time.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsErrorTooMany_other": {
+    "message": "You can have at most $COUNT$ cutoff times.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "4"
+      }
+    }
+  },
+  "optionsErrorDuplicate": {
+    "message": "$VALUE$ is already in the list.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "optionsErrorDuplicateFallback": {
+    "message": "That time"
+  },
+  "optionsErrorFormat": {
+    "message": "$VALUE$ is not a valid time. Use HH:MM.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "25:00"
+      }
+    }
+  },
+  "optionsErrorFormatFallback": {
+    "message": "That value"
+  },
+  "optionsErrorEmptyCutoff": {
+    "message": "Every cutoff needs a time."
+  },
+  "optionsErrorNoticeRange": {
+    "message": "Notice must be between $MIN$ and $MAX$ minutes.",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "0"
+      },
+      "max": {
+        "content": "$2",
+        "example": "60"
+      }
+    }
+  },
+  "optionsErrorSaveFailed": {
+    "message": "Could not save your settings."
+  },
+  "optionsErrorAcceptFailed": {
+    "message": "Could not save your acceptance. Try again."
+  },
+  "optionsNoticeLabel": {
+    "message": "Badge countdown starts"
+  },
+  "optionsNoticeSummaryOff": {
+    "message": "no warning"
+  },
+  "optionsNoticeSummary": {
+    "message": "$MINUTES$ min before",
+    "placeholders": {
+      "minutes": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "optionsNoticeOptionOffAriaLabel": {
+    "message": "No warning"
+  },
+  "optionsNoticeOptionAriaLabel_one": {
+    "message": "$COUNT$ minute before the cutoff",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "optionsNoticeOptionAriaLabel_other": {
+    "message": "$COUNT$ minutes before the cutoff",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "optionsNotifyLabel": {
+    "message": "System notification"
+  },
+  "optionsNotifyHint": {
+    "message": "One notification when the countdown starts. No snooze."
+  },
+  "optionsAutoBookmarkLabel": {
+    "message": "Bookmark everything first"
+  },
+  "optionsAutoBookmarkHint": {
+    "message": "Writes every open tab to a dated bookmarks folder, then sweeps."
+  },
+  "optionsKeepPinnedLabel": {
+    "message": "Keep pinned tabs"
+  },
+  "optionsKeepPinnedHint": {
+    "message": "Pinned tabs survive every sweep."
+  },
+  "optionsStatsTitle": {
+    "message": "Since install"
+  },
+  "optionsStatTabsClosed": {
+    "message": "tabs closed"
+  },
+  "optionsStatLastSweep": {
+    "message": "last sweep"
+  },
+  "optionsLanguageLabel": {
+    "message": "Language"
+  },
+  "optionsLanguageAuto": {
+    "message": "Auto"
+  },
+  "optionsLanguageEnglish": {
+    "message": "English"
+  },
+  "optionsLanguageUkrainian": {
+    "message": "Українська"
+  },
+  "onboardingHeadline": {
+    "message": "Every tab closes at $TIME$.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "onboardingLede": {
+    "message": "Bookmarks are the only way to keep a page. Read the terms before you keep the extension."
+  },
+  "onboardingTerm1": {
+    "message": "Every tab in every normal window is included — no undo, no snooze, no per-tab exceptions."
+  },
+  "onboardingTerm2": {
+    "message": "Quitting the browser doesn't dodge it. A missed cutoff runs at the next start."
+  },
+  "onboardingTerm3": {
+    "message": "No data is collected — everything stays on your device."
+  },
+  "onboardingAccept": {
+    "message": "I understand. Start at $TIME$.",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "onboardingPickTime": {
+    "message": "Pick a different time"
+  },
+  "onboardingDecline": {
+    "message": "I don't want this — uninstall the extension"
+  },
+  "noticeTitle": {
+    "message": "All tabs close at $TIME$",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "18:00"
+      }
+    }
+  },
+  "noticeMessage_one": {
+    "message": "$COUNT$ minute left. Bookmark anything you need — nothing is saved.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "noticeMessage_other": {
+    "message": "$COUNT$ minutes left. Bookmark anything you need — nothing is saved.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "10"
+      }
+    }
+  },
+  "extDescription": {
+    "message": "Closes every tab at your daily cutoff. No archive, no undo."
+  },
+  "commandEndDayNow": {
+    "message": "End day now: close all tabs"
+  }
+}
