@@ -86,10 +86,34 @@ real desktop screen capture with the extension installed. Do not mock them.
 ## Shot 3's time format
 
 Chromium formats `<input type="time">` from the browser's UI language, which
-`capture.mjs` pins with `--lang` (`SHOT_LANG`, default `en-GB`) — so the
-committed shot reads `13:00` / `18:00`, and `SHOT_LANG=en-US` gives the
-12-hour render. Why the chip has to survive either is `sweep-controls.spec.md`
-§ "The cutoff time is legible in any browser UI language".
+`capture.mjs` pins via `SHOT_LANG` (default `en-GB`) — so the committed shot
+reads `13:00` / `18:00`, and `SHOT_LANG=en-US` gives the 12-hour render. Why
+the chip has to survive either is `sweep-controls.spec.md` § "The cutoff time
+is legible in any browser UI language".
+
+`--lang` alone does not pin it. That flag and Playwright's `locale` set
+`navigator.language` and `Intl`; this control reads neither. Measured against
+the built theme on a host whose own locale is 12-hour: with `--lang=en-GB` and
+`locale: 'en-GB'` the chip is still the 12-hour widget at 74px, and only
+`LANG=en_GB.UTF-8` in the browser process's environment brings it to 47px.
+`capture.mjs` therefore passes `LANG`/`LANGUAGE`/`LC_ALL` through `env` as
+well; without that the format is silently inherited from whatever shell the
+capture runs in, which is what made an earlier committed set unreproducible on
+another machine.
+
+## What "regenerate" does and does not guarantee
+
+Re-running the two scripts reproduces the *content* of the committed set. It
+does not reproduce the bytes, and cannot: text rasterization depends on the
+host's font stack, so the same commands on two machines give images that
+differ across most of the frame while showing the same thing. Measured: on one
+machine, a rerun is pixel-identical to that machine's previous run except where
+content actually changed, while the same shot rendered on a different machine
+differs over the whole canvas.
+
+So do not treat a diff in `store/screenshots/` as a regression, and do not
+re-commit a regenerated set just because the bytes moved — only when the
+content did. Otherwise the images churn once per contributor.
 
 ## Where these get uploaded
 

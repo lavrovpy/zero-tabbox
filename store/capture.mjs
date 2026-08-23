@@ -29,6 +29,21 @@ const PROFILE = join(HERE, '.profile');
  */
 const LANG = process.env.SHOT_LANG ?? 'en-GB';
 
+/**
+ * The widget's language comes from the browser process's own locale
+ * environment — NOT from `--lang`, and not from Playwright's `locale`. Both of
+ * those set `navigator.language` and `Intl`, and this control ignores both:
+ * measured on the built theme, `--lang=en-GB` alone still renders the 12-hour
+ * widget (74px) while `LANG=en_GB.UTF-8` renders the 24-hour one (47px).
+ *
+ * So `LANG` has to reach the child process, or the format is inherited from
+ * whatever shell the capture happens to run in and `SHOT_LANG` is decorative.
+ * That is what made the committed set unreproducible across machines. All
+ * three are still set: the other two are what `navigator.language` and `Intl`
+ * read, and the UI uses those for everything that is not this widget.
+ */
+const POSIX_LANG = `${LANG.replace('-', '_')}.UTF-8`;
+
 resetDir(OUT);
 removeDir(PROFILE);
 
@@ -76,6 +91,7 @@ const ctx = await chromium.launchPersistentContext(PROFILE, {
   executablePath,
   colorScheme: 'light',
   locale: LANG,
+  env: { ...process.env, LANG: POSIX_LANG, LANGUAGE: LANG.replace('-', '_'), LC_ALL: POSIX_LANG },
   deviceScaleFactor: 3, // 3x sources stay crisp once composited
   timezoneId: 'Asia/Kolkata', // puts local "now" at a natural mid-afternoon
   args: [`--lang=${LANG}`, `--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
