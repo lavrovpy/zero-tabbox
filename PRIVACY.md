@@ -28,7 +28,7 @@ Everything the extension stores lives in your browser's local extension storage
 
 | Key | What it holds |
 | --- | --- |
-| `settings` | Your cutoff times, how many minutes of notice you want, and three on/off switches. |
+| `settings` | Your cutoff times, how many minutes of notice you want, three on/off switches, and which interface language you picked. |
 | `accepted` | Whether you accepted the extension's terms. Nothing is scheduled until you have. |
 | `lastAutoCutoffId` | Which scheduled cutoff last ran, so it does not run twice. |
 | `lastSweep` | When the last close ran, how many tabs it closed, and whether they were bookmarked first. |

@@ -12,7 +12,7 @@ practices answers, AMO source-code build instructions and listing screenshots �
 none of which is a code change. Sections 4 and 5 supply the paperwork verbatim.
 
 Evidence for every ✅ below was produced by running the project's own gates:
-`bun run typecheck`, `bun run test` (7 files, all pass), `bun run build`,
+`bun run typecheck`, `bun run test` (8 files, all pass), `bun run build`,
 `bunx web-ext lint --source-dir dist/firefox` in both `--self-hosted` and
 listed mode (0 errors, 0 warnings, 0 notices in each), plus a static sweep of
 `src/` for remote-code patterns and a full inventory of the extension APIs the
@@ -68,7 +68,7 @@ asserts the absence of `host_permissions` on the Chrome manifest.
 | **Minimum permissions** | ✅ | Section 1. Five permissions, all exercised, none broad. |
 | **No remote code** (MV3 hard ban) | ✅ | Zero matches across `src/` for `eval(`, `new Function`, `document.write`, dynamic `import()`, `fetch`, `XMLHttpRequest`, `WebSocket`. No remote `<script>`, stylesheet or font — both typefaces ship as `.woff2` inside the package. Bundled with `minify: false`, `sourcemap: 'none'`. |
 | **No obfuscation** | ✅ | Bundler output is a plain unminified IIFE with original identifiers. |
-| **Deceptive installation / unexpected behavior** | ✅ | The `accepted` gate in `reconcile.ts` means no alarm is armed and no automatic sweep runs until the user presses "I understand" on `ui/onboarding.html`, which states the whole contract including "no undo". Nothing destructive precedes consent. |
+| **Deceptive installation / unexpected behavior** | ✅ | The `accepted` gate in `reconcile.ts` means no alarm is armed and no automatic sweep runs until the user presses "I understand" on `ui/onboarding.html`, which states the whole contract including "no undo". |
 | **User data — Limited Use** | ✅ | Nothing is transmitted anywhere. `storage.local` holds exactly six keys (`version`, `settings`, `lastAutoCutoffId`, `lastSweep`, `stats`, `accepted`); nothing per-tab is ever written. Bookmarks are written to *the browser's* bookmark tree on explicit user action and never read back. |
 | **Content Security Policy** | ✅ | No `content_security_policy` override; the default MV3 policy applies. No inline `<script>` or inline event handlers in any of the three HTML pages — each loads one external `.js`. No `innerHTML`/`outerHTML` anywhere. |
 | **Manifest field limits** | ✅ | `name` 11 chars (limit 75); `version` `0.1.0` is a valid 1–4 part dotted integer. `description` is now the placeholder `__MSG_extDescription__`, which the browser substitutes — the limit applies to the *resolved* string, and both catalogs clear it: en 59 chars, uk 79 chars (limit 132). |
@@ -108,17 +108,19 @@ consent gate (nothing is armed until `accepted` is written) and with the fact
 that no data leaves the machine. This is a presentation risk, not a compliance
 defect.
 
-**C5 — Fixed, and the settings screenshot now shows the fix.** A 12-hour
-browser UI language used to clip the cutoff chips to `06:00 P`. `.chip-time` no
-longer carries a fixed width, so the control sizes itself to whatever string
-its host renders; `sweep-controls.spec.md` carries the requirement and
-`store/README.md` has the mechanism. Never a policy violation, and now not a
-listing problem either: `store/screenshots/03-options.png` was regenerated and
-renders `01:00 PM` / `06:00 PM` in full.
+**C4 — Consider `1.0.0` for the first listing.** `0.1.0` is accepted by the
+store, but a 0.x version on a public listing reads as pre-release. Cosmetic.
+
+**C5 — Fixed.** A 12-hour browser UI language used to clip the cutoff chips to
+`06:00 P`. `.chip-time` no longer carries a fixed width, so the control sizes
+itself to whatever string its host renders; `sweep-controls.spec.md` carries
+the requirement and `store/README.md` has the mechanism. Never a policy
+violation, and not a listing problem either.
 
 Verified on a host that actually formats the control in 12-hour, which is the
 case the fix exists for: the chip measures 74px with `scrollWidth ==
-clientWidth`, i.e. nothing to clip.
+clientWidth`, i.e. nothing to clip. The committed `03-options.png` is the
+24-hour render, so the shot is not the evidence — the measurement is.
 
 **L1 — Shipping Ukrainian strings does not give you a Ukrainian listing.**
 `_locales/uk` localizes the *extension*: the install prompt, the manifest
@@ -133,16 +135,13 @@ wanted, the copy in section 4 and the captions in `store/README.md` are what
 need translating, and `store/capture.mjs` can regenerate the screenshots
 against `locale: 'uk'` for a localized set.
 
-**C4 — Consider `1.0.0` for the first listing.** `0.1.0` is accepted by the
-store, but a 0.x version on a public listing reads as pre-release. Cosmetic.
-
 ---
 
 ## 3. Mozilla AMO
 
 | Policy | Status | Evidence |
 | --- | --- | --- |
-| **addons-linter** | ✅ | 0 errors, 0 warnings, 0 notices — in `--self-hosted` mode *and* in listed mode. CI already runs this with `--warnings-as-errors`. |
+| **addons-linter** | ✅ | 0 errors, 0 warnings, 0 notices — in `--self-hosted` mode *and* in listed mode. CI runs the `--self-hosted` pass with `--warnings-as-errors`; the listed-mode run was manual. |
 | **Data collection consent** | ✅ | `browser_specific_settings.gecko.data_collection_permissions = {"required":["none"]}`. Mandatory for new extensions since 3 November 2025 and being extended to all extensions through 2026; `"none"` is exclusive and is correctly alone, and `has_previous_consent` is correctly absent. The declaration is accurate — see section 1. |
 | **No obfuscated code** | ✅ | Unminified, original identifiers. Obfuscation is a blockable offence on AMO whether listed or self-distributed; this is nowhere near it. |
 | **No remote code** | ✅ | Same sweep as Chrome. Fonts bundled. |
@@ -204,18 +203,19 @@ Paste into the Privacy practices tab of the developer dashboard.
 > zero-tabbox closes every open tab at times of day the user schedules. That is
 > the extension's only function. It shows a countdown badge before each
 > scheduled time, offers to bookmark the open tabs first, and does nothing
-> else. No tab is closed until the user has accepted the terms on the page
-> shown at install. The interface is available in English and Ukrainian; the
-> language setting changes only which words are shown, never what closes or
-> when.
+> else. No scheduled close runs until the user has accepted the terms on the
+> page shown at install; the manual "End day now" button closes tabs when
+> pressed, which is what pressing it asks for. The interface is available in
+> English and Ukrainian; the language setting changes only which words are
+> shown, never what closes or when.
 
 **Permission justifications**
 
 | Permission | Justification |
 | --- | --- |
 | `tabs` | Enumerating the open tabs and closing them is the extension's only function. Titles and URLs are read solely to write bookmarks when the user asks for them, and to display a count of tabs at risk. Neither is stored by the extension or sent anywhere. |
-| `alarms` | Waking the background at each scheduled cutoff, and one minute before it to start the countdown badge. |
-| `storage` | `storage.local` holds the user's settings (cutoff times, notice lead time, three toggles), the aggregate counters shown on the settings page, and the flag recording that the user accepted the terms. Six keys, nothing per-tab. |
+| `alarms` | Waking the background at each scheduled cutoff, and at the user's chosen notice lead time before it (0–60 minutes, 10 by default) to start the countdown badge, which then refreshes once a minute until the cutoff. |
+| `storage` | `storage.local` holds the user's settings (cutoff times, notice lead time, three toggles, interface language), the aggregate counters shown on the settings page, and the flag recording that the user accepted the terms. Six keys, nothing per-tab. |
 | `notifications` | One system notification before each scheduled close, so the user can bookmark anything they need. It has no buttons and no click action. |
 | `bookmarks` | The extension's only way to keep a page: "Bookmark all tabs" in the popup, and the opt-in "bookmark everything first" setting, write the open tabs to a dated folder in the user's own bookmarks. Bookmarks are only ever written, never read back, and only on explicit user action. |
 

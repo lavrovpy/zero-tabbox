@@ -597,11 +597,9 @@ button {
 
 /*
  * The chip's time is an <input type="time"> dressed as the design's numeral.
- *
- * It has no width on purpose: Chromium formats this control from the browser's
- * UI language, not from navigator.language or the interface-language setting,
- * so the string is `18:00` on one machine and `06:00 PM` on another. Any fixed
- * width fits one and clips the other (sweep-controls.spec.md).
+ * It has no width on purpose — Chromium formats the control from the browser's
+ * UI language, so any fixed width clips one of the two formats
+ * (sweep-controls.spec.md).
  */
 .chip-time {
   border: 0;

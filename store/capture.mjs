@@ -15,25 +15,22 @@
  * machine, instead of the one Playwright downloads.
  */
 import { chromium } from 'playwright';
-import { mkdirSync, rmSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { HERE, executablePath, removeDir, resetDir } from './shared.mjs';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
 const EXT = join(HERE, '..', 'dist', 'chrome');
 const OUT = join(HERE, '.raw');
 const PROFILE = join(HERE, '.profile');
 
 /**
- * Chromium formats `<input type="time">` from its own UI language, not from
- * the JS locale, so a 12-hour build renders the cutoff chips as `06:00 PM`.
- * See store/README.md — the chips clip at the current `.chip-time` width.
+ * Pinned like the timezone and colour scheme below: Chromium formats
+ * `<input type="time">` from the browser UI language, so this is what decides
+ * whether shot 3 reads `13:00` or `01:00 PM` (sweep-controls.spec.md).
  */
 const LANG = process.env.SHOT_LANG ?? 'en-GB';
 
-rmSync(OUT, { recursive: true, force: true });
-rmSync(PROFILE, { recursive: true, force: true });
-mkdirSync(OUT, { recursive: true });
+resetDir(OUT);
+removeDir(PROFILE);
 
 /** Plausible but obviously generic decoy tabs. Never real browsing. */
 const DECOYS = [
@@ -76,7 +73,7 @@ const SETTINGS = {
 
 const ctx = await chromium.launchPersistentContext(PROFILE, {
   headless: true,
-  executablePath: process.env.CHROMIUM_PATH || undefined,
+  executablePath,
   colorScheme: 'light',
   locale: LANG,
   deviceScaleFactor: 3, // 3x sources stay crisp once composited
@@ -142,5 +139,5 @@ await inExtension(async () => {
 await shot('popup-swept', 'ui/popup.html', 320, 240, { element: 'body' });
 
 await ctx.close();
-rmSync(PROFILE, { recursive: true, force: true });
+removeDir(PROFILE);
 console.log('captured to store/.raw');

@@ -6,22 +6,21 @@
  * real in these images" is the claim it must not break.
  */
 import { chromium } from 'playwright';
-import { mkdirSync, rmSync, writeFileSync, unlinkSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { writeFileSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { HERE, executablePath, resetDir } from './shared.mjs';
 
-const HERE = dirname(fileURLToPath(import.meta.url));
 const RAW = join(HERE, '.raw');
 const OUT = join(HERE, 'screenshots');
 const FONTS = join(HERE, '..', 'src', 'ui', 'fonts');
 
-rmSync(OUT, { recursive: true, force: true });
-mkdirSync(OUT, { recursive: true });
+resetDir(OUT);
 
 /**
  * Copied out of src/ui/theme.css by hand — nothing here reads that file, so a
- * colour changed there leaves the committed screenshots on the old palette with
- * no build or test that notices. Re-copy the values and re-run both scripts.
+ * colour changed there would leave the committed screenshots on the old
+ * palette. tests/palette.test.ts fails when these drift: re-copy the values
+ * and re-run both scripts.
  */
 const PALETTE = {
   bg: '#f4f2ee', border: '#e0ddd4',
@@ -104,7 +103,7 @@ p { margin-top: 20px; font-size: 18px; line-height: 1.5; color: ${PALETTE.fg3}; 
 `;
 
 const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH || undefined,
+  executablePath,
 });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
 

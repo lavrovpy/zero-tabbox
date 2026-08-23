@@ -83,22 +83,13 @@ Both are browser and OS chrome, which a page screenshot cannot capture — a
 headless capture only ever sees page content. Getting those honestly needs a
 real desktop screen capture with the extension installed. Do not mock them.
 
-## Why shot 3 depends on the capturing machine's language
+## Shot 3's time format
 
-`.chip-time` used to carry `width: 4.2em`, sized for a `HH:MM` field, while
-Chromium formats `<input type="time">` from its **UI language** — not from
-`navigator.language`, and not from the extension's own interface-language
-setting. So a 12-hour host rendered `06:00 PM` into a five-character box and
-clipped it to `06:00 P`, and earlier versions of this shot showed exactly that.
-
-The control no longer has a width and sizes itself to whatever its host
-renders; `sweep-controls.spec.md` carries the requirement. The committed shot
-was regenerated on a 12-hour host — the case the fix exists for — and shows
-`01:00 PM` / `06:00 PM` in full.
-
-That is worth knowing before you regenerate: the times in this shot will read
-`13:00` / `18:00` on a 24-hour machine and `01:00 PM` / `06:00 PM` on a
-12-hour one. Both are correct. Neither clips.
+Chromium formats `<input type="time">` from the browser's UI language, which
+`capture.mjs` pins with `--lang` (`SHOT_LANG`, default `en-GB`) — so the
+committed shot reads `13:00` / `18:00`, and `SHOT_LANG=en-US` gives the
+12-hour render. Why the chip has to survive either is `sweep-controls.spec.md`
+§ "The cutoff time is legible in any browser UI language".
 
 ## Where these get uploaded
 
