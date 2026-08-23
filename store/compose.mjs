@@ -6,15 +6,46 @@
  * real in these images" is the claim it must not break.
  */
 import { chromium } from 'playwright';
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { existsSync, readdirSync, renameSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { HERE, executablePath, resetDir } from './shared.mjs';
+import { HERE, executablePath, removeDir, resetDir } from './shared.mjs';
 
 const RAW = join(HERE, '.raw');
 const OUT = join(HERE, 'screenshots');
+const STAGE = join(HERE, '.stage');
 const FONTS = join(HERE, '..', 'src', 'ui', 'fonts');
 
-resetDir(OUT);
+/**
+ * Every capture a frame below embeds. Checked before OUT is touched, because
+ * OUT holds the committed listing images and `store:compose` is a script of
+ * its own: run alone on a clean checkout it would otherwise delete all five,
+ * then compose frames whose `<img>` sources do not exist. A missing image
+ * subresource fails nothing in a page load, so that run would log success and
+ * exit 0, having silently replaced the screenshots with art-less ones.
+ */
+const REQUIRED = [
+  'popup-live.png',
+  'popup-live-dark.png',
+  'onboarding.png',
+  'options.png',
+  'popup-swept.png',
+];
+
+const missing = REQUIRED.filter((name) => !existsSync(join(RAW, name)));
+if (missing.length > 0) {
+  throw new Error(
+    `store/.raw is missing ${missing.join(', ')} — run \`bun store/capture.mjs\` first.`,
+  );
+}
+
+/*
+ * Frames are rendered into STAGE and only moved over OUT once every one of
+ * them has succeeded, so no failure part-way through can leave the committed
+ * listing images deleted or half-replaced. The check above cannot cover a
+ * capture that exists but will not decode, and that is exactly a failure that
+ * happens after the first frame is already written.
+ */
+resetDir(STAGE);
 
 /**
  * Copied out of src/ui/theme.css by hand — nothing here reads that file, so a
@@ -118,9 +149,25 @@ for (const f of FRAMES) {
   await page.goto(`file://${file}`);
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(400);
-  await page.screenshot({ path: join(OUT, `${f.name}.png`) });
+
+  // The existence check above cannot see a capture that is present but not
+  // decodable, and a broken `<img>` still renders a frame the script would
+  // happily commit. Ask the document instead of the filesystem.
+  const undecoded = await page.evaluate(() =>
+    [...document.images].filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.src),
+  );
+  if (undecoded.length > 0) {
+    throw new Error(`${f.name}: capture(s) did not decode — ${undecoded.join(', ')}`);
+  }
+
+  await page.screenshot({ path: join(STAGE, `${f.name}.png`) });
   console.log('composed', f.name);
 }
 await browser.close();
 unlinkSync(join(HERE, '.frame.html'));
+
+// Every frame rendered: now, and only now, replace the committed set.
+resetDir(OUT);
+for (const name of readdirSync(STAGE)) renameSync(join(STAGE, name), join(OUT, name));
+removeDir(STAGE);
 console.log('composed to store/screenshots');
