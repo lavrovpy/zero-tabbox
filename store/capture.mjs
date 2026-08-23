@@ -3,19 +3,16 @@
  *
  *   bun store/capture.mjs        # writes store/.raw/*.png
  *
- * Everything it writes is the extension rendering itself: a real Chromium with
- * `dist/chrome` loaded unpacked, real `chrome.storage`, and a real tab strip —
- * the "N tabs close at" number is counted by the extension, never typed in
- * here. `compose.mjs` is the only step that adds anything, and it only adds a
- * backdrop around these images.
+ * What may appear in these captures is fixed by store/README.md — "What is
+ * real in these images". Nothing added here may fall outside it.
  *
- * Playwright is deliberately NOT a devDependency: it is heavy, it is needed
- * once per listing refresh, and AMO source review is easier with a short
- * dependency list. Install it ad hoc:
+ * Playwright is deliberately NOT a devDependency — store/README.md says why.
+ * Install it ad hoc:
  *
  *   bun add --dev playwright && bunx playwright install chromium
  *
- * Set CHROMIUM_PATH to use a Chromium that is already on the machine.
+ * Both scripts take CHROMIUM_PATH to use a Chromium that is already on the
+ * machine, instead of the one Playwright downloads.
  */
 import { chromium } from 'playwright';
 import { mkdirSync, rmSync } from 'node:fs';
@@ -49,9 +46,20 @@ const DECOYS = [
   'Tab hoarding, a study',
 ];
 
+const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * The document is escaped for HTML and then percent-encoded as a whole, in that
+ * order. Encoding only the title would put the escapes in the rendered tab name
+ * (`Design%20review`), and leaving the document raw would let a `#` in a title
+ * start a URL fragment and truncate the page.
+ */
 const decoy = (title) =>
-  `data:text/html,<!doctype html><html><head><meta charset=utf-8>` +
-  `<title>${encodeURIComponent(title)}</title></head><body></body></html>`;
+  'data:text/html;charset=utf-8,' +
+  encodeURIComponent(
+    `<!doctype html><html><head><title>${escapeHtml(title)}</title></head>` +
+      `<body></body></html>`,
+  );
 
 /** A believable established install, not a fresh profile. */
 const SETTINGS = {
@@ -103,30 +111,27 @@ for (const title of DECOYS) {
   await p.goto(decoy(title));
 }
 
-async function shot(name, url, width, height, colorScheme = 'light') {
+/** `element` is the selector of the container a page draws for itself. */
+async function shot(name, url, width, height, { element, colorScheme = 'light' } = {}) {
   const p = await ctx.newPage();
   await p.emulateMedia({ colorScheme });
   await p.setViewportSize({ width, height });
   await p.goto(`chrome-extension://${id}/${url}`);
   await p.waitForTimeout(1200); // fonts settle; the ETA ticks at least once
 
-  // The popup and the onboarding card each draw their own container, so they
-  // are captured as elements; the options page is captured as a full page.
-  const isBox = name.startsWith('popup') || name.startsWith('onboarding');
-  const target = name.startsWith('popup')
-    ? p.locator('body')
-    : name.startsWith('onboarding')
-      ? p.locator('.onboarding-card')
-      : p;
-  await target.screenshot({ path: join(OUT, `${name}.png`), ...(isBox ? {} : { fullPage: true }) });
+  const target = element ? p.locator(element) : p;
+  await target.screenshot({
+    path: join(OUT, `${name}.png`),
+    ...(element ? {} : { fullPage: true }),
+  });
   console.log(`${name}: ${(await p.evaluate(() => document.body.innerText)).split('\n')[0]}`);
   await p.close();
 }
 
-await shot('popup-live', 'ui/popup.html', 320, 240);
-await shot('popup-live-dark', 'ui/popup.html', 320, 240, 'dark');
+await shot('popup-live', 'ui/popup.html', 320, 240, { element: 'body' });
+await shot('popup-live-dark', 'ui/popup.html', 320, 240, { element: 'body', colorScheme: 'dark' });
 await shot('options', 'ui/options.html', 700, 400);
-await shot('onboarding', 'ui/onboarding.html', 700, 640);
+await shot('onboarding', 'ui/onboarding.html', 700, 640, { element: '.onboarding-card' });
 
 // The "Day ended" state only renders within 60 s of a sweep.
 await inExtension(async () => {
@@ -134,7 +139,7 @@ await inExtension(async () => {
     lastSweep: { reason: 'auto', at: Date.now(), closed: 23, bookmarked: false },
   });
 });
-await shot('popup-swept', 'ui/popup.html', 320, 240);
+await shot('popup-swept', 'ui/popup.html', 320, 240, { element: 'body' });
 
 await ctx.close();
 rmSync(PROFILE, { recursive: true, force: true });

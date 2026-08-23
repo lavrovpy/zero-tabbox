@@ -14,23 +14,28 @@ once per listing refresh, and `package.json` staying at five devDependencies is
 worth something during AMO source review. `store/.raw/` and `store/.profile/`
 are intermediates and are gitignored; only `store/screenshots/` is committed.
 
-Set `CHROMIUM_PATH` to reuse a Chromium already on the machine instead of the
-one Playwright downloads.
+`CHROMIUM_PATH` — see the header of `store/capture.mjs`.
 
 ## What is real in these images
 
 `capture.mjs` drives a real Chromium with `dist/chrome` loaded unpacked. Every
 pixel of UI inside every frame is the extension rendering its own HTML, CSS and
-fonts against its own `chrome.storage` and a real tab strip — including the
-counts. "24 tabs close at" is counted by `bookmarks.ts` from 24 tabs that are
-genuinely open; it is not typed into a mockup. The decoy tabs are invented
-placeholder titles, never real browsing: these images are public forever, and
-the listing's whole claim is that the extension records nothing.
+fonts against its own `chrome.storage`. "24 tabs close at" is counted live by
+`bookmarks.ts` from 24 tabs genuinely open in that profile — the tab strip is
+real, but no image shows it, because a page capture only ever sees page
+content. The historical numbers are not live: `capture.mjs` seeds the settings
+and the history — "4,187 tabs closed" and "31 last sweep" on the options page,
+"23 tabs closed" in the swept popup — into `chrome.storage`, because a capture
+profile has no past to show. The extension renders those from storage; nothing
+is typed into a mockup. The decoy tabs are invented placeholder titles, never
+real browsing: these images are public forever, and the listing's whole claim
+is that the extension records nothing.
 
-`compose.mjs` adds only a backdrop in the extension's own palette
-(`--color-stone-*` / `--color-ember-*` from `ui/theme.css`) and a caption. It
-imitates no browser chrome and redraws no UI. Nothing about the extension's
-appearance is enhanced for the store.
+`compose.mjs` frames each capture on a backdrop in the extension's own colours
+— copied out of `src/ui/theme.css` by hand, not read from it (see `PALETTE`) —
+under a headline and a caption. The frame rounds, borders and shadows the
+capture; inside it nothing is retouched, redrawn or enhanced, and no browser
+chrome is imitated.
 
 The captures pin `settings.locale` to `en` so a rerun is deterministic whatever
 language the capturing machine is in. For a Ukrainian listing, flip that to
@@ -82,7 +87,7 @@ real desktop screen capture with the extension installed. Do not mock them.
 
 `03-options.png` currently shows the cutoff chips as `01:00 P` and `06:00 P`.
 That is not a capture artifact — it is the shipped UI. `.chip-time` in
-`ui/theme.css` is `width: 4.2em`, sized for a `HH:MM` field, but Chromium
+`src/ui/theme.css` is `width: 4.2em`, sized for a `HH:MM` field, but Chromium
 renders `<input type="time">` from its **UI language**, and a 12-hour UI
 language (en-US, the Chrome Web Store's largest audience) renders
 `06:00 PM` — which clips to `06:00 P`.

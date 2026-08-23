@@ -109,16 +109,13 @@ that no data leaves the machine. This is a presentation risk, not a compliance
 defect.
 
 **C5 — A 12-hour browser UI language clips the cutoff chips, which blocks the
-settings screenshot.** `.chip-time` in `ui/theme.css` is `width: 4.2em`, sized
-for a `HH:MM` field. Chromium renders `<input type="time">` from its **UI
-language**, not from `navigator.language`, so on a 12-hour UI language — en-US,
-the store's largest audience — the field is `06:00 PM` and clips to `06:00 P`.
-`store/screenshots/03-options.png` shows this, because it is what the UI
-actually does. Not a policy violation, but a listing cannot ship a screenshot
-of its main setting rendered broken, and the underlying bug is worse than the
-screenshot. Fix, then re-run the two scripts. `store/README.md` has the detail
-and the two candidate fixes; the choice belongs in `sweep-controls.spec.md`
-first.
+settings screenshot.** `store/screenshots/03-options.png` shows this, because
+it is what the shipped UI actually does — it is not a capture artifact. Not a
+policy violation, but a listing cannot ship a screenshot of its main setting
+rendered broken, and the underlying bug is worse than the screenshot.
+`store/README.md` — "Known issue blocking shot 3" has the mechanism and the two
+candidate fixes; the choice belongs in `sweep-controls.spec.md` first, and then
+the two scripts have to be re-run.
 
 **L1 — Shipping Ukrainian strings does not give you a Ukrainian listing.**
 `_locales/uk` localizes the *extension*: the install prompt, the manifest
@@ -290,8 +287,9 @@ source archive of this repository (excluding `node_modules/`, `dist/` and
 4. Fix the cutoff-chip clipping and re-run `store/capture.mjs` +
    `store/compose.mjs`, so shot 3 is usable. *(C5)*
 5. Produce the 440×280 small promo tile, the detailed description, category and
-   support contact. Screenshots themselves are done — `store/screenshots/`,
-   specs and upload steps in `store/README.md`. *(Chrome listing)*
+   support contact. Four of the five screenshots are ready in
+   `store/screenshots/`; shot 3 stays blocked until item 4 is done. Specs and
+   upload steps are in `store/README.md`. *(Chrome listing)*
 6. Decide whether the store listings get a Ukrainian translation, now that the
    extension has one. *(L1)*
 7. Decide on `gecko_android`: verify on Firefox for Android, or drop it. *(F3)*

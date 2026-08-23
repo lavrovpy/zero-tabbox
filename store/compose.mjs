@@ -2,9 +2,8 @@
  * Composites store/.raw/*.png onto the 1280x800 canvases both stores want
  * (store/README.md). Run `capture.mjs` first.
  *
- * The UI inside every frame is the untouched 3x capture from capture.mjs. This
- * step only adds a backdrop in the extension's own palette and a caption — no
- * browser chrome is imitated and no UI is redrawn.
+ * This step only frames what capture.mjs produced. store/README.md — "What is
+ * real in these images" is the claim it must not break.
  */
 import { chromium } from 'playwright';
 import { mkdirSync, rmSync, writeFileSync, unlinkSync } from 'node:fs';
@@ -19,14 +18,18 @@ const FONTS = join(HERE, '..', 'src', 'ui', 'fonts');
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 
-const T = {
-  bg: '#f4f2ee', surface: '#ffffff', border: '#e0ddd4',
-  fg: '#171613', fg2: '#3b3934', fg3: '#79756a',
+/**
+ * Copied out of src/ui/theme.css by hand — nothing here reads that file, so a
+ * colour changed there leaves the committed screenshots on the old palette with
+ * no build or test that notices. Re-copy the values and re-run both scripts.
+ */
+const PALETTE = {
+  bg: '#f4f2ee', border: '#e0ddd4',
+  fg: '#171613', fg3: '#79756a',
   accent: '#c2410c', emberSoft: '#ffe3d0',
-  bgDark: '#0e0d0b', fgDark: '#faf9f7', fg2Dark: '#c9c4b8', borderDark: '#2b2926',
 };
 
-/** @type {{name:string, dark?:boolean, headline:string, sub:string, body:string}[]} */
+/** @type {{name:string, headline:string, sub:string, body:string}[]} */
 const FRAMES = [
   {
     name: '01-popup-live',
@@ -73,8 +76,8 @@ const css = `
 html, body { width: 1280px; height: 800px; overflow: hidden; }
 body {
   font-family: 'Geist', system-ui, sans-serif;
-  background: ${T.bg};
-  color: ${T.fg};
+  background: ${PALETTE.bg};
+  color: ${PALETTE.fg};
   display: flex; align-items: center; gap: 72px;
   padding: 0 76px;
 }
@@ -82,27 +85,22 @@ body {
 body::before {
   content: ''; position: fixed; inset: -30% -10% auto auto;
   width: 900px; height: 900px; border-radius: 50%;
-  background: radial-gradient(circle, ${T.emberSoft} 0%, rgba(255,227,208,0) 62%);
-  opacity: 1; z-index: 0;
+  background: radial-gradient(circle, ${PALETTE.emberSoft} 0%, rgba(255,227,208,0) 62%);
+  z-index: 0;
 }
 .copy, .art { position: relative; z-index: 1; }
 .copy { flex: 0 0 408px; }
 h1 { font-size: 46px; line-height: 1.06; letter-spacing: -.028em; font-weight: 500; }
-p { margin-top: 20px; font-size: 18px; line-height: 1.5; color: ${T.fg3}; max-width: 27ch; }
-.rule { width: 52px; height: 3px; background: ${T.accent}; border-radius: 2px; margin-bottom: 28px; }
+p { margin-top: 20px; font-size: 18px; line-height: 1.5; color: ${PALETTE.fg3}; max-width: 27ch; }
+.rule { width: 52px; height: 3px; background: ${PALETTE.accent}; border-radius: 2px; margin-bottom: 28px; }
 .art { flex: 1; display: flex; justify-content: center; align-items: center; }
-.shot { display: block; border-radius: 10px; border: 1px solid ${T.border};
+.shot { display: block; border-radius: 10px; border: 1px solid ${PALETTE.border};
   box-shadow: 0 24px 60px -18px rgba(23,22,19,.30), 0 6px 14px rgba(23,22,19,.06); }
 .popup { width: 470px; }
 .popup.sm { width: 288px; }
 .pair { display: flex; gap: 22px; align-items: flex-start; }
 .wide { width: 604px; }
 .tall { width: 596px; }
-
-body.dark { background: ${T.bgDark}; color: ${T.fgDark}; }
-body.dark p { color: ${T.fg2Dark}; }
-body.dark .shot { border-color: ${T.borderDark}; box-shadow: 0 24px 60px -18px rgba(0,0,0,.7); }
-body.dark::before { opacity: .16; }
 `;
 
 const browser = await chromium.launch({
@@ -111,9 +109,8 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
 
 for (const f of FRAMES) {
-  const cls = f.dark ? 'dark' : '';
   const html = `<!doctype html><meta charset="utf-8"><style>${css}</style>
-<body class="${cls}">
+<body>
   <div class="copy"><div class="rule"></div><h1>${f.headline}</h1><p>${f.sub}</p></div>
   <div class="art">${f.body}</div>
 </body>`;
