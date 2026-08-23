@@ -191,22 +191,16 @@
 }
 
 /*
- * The anti-flicker rule for the translation layer (design.md D14).
+ * Anti-flicker for the translation layer (design.md D14): the locale is read
+ * from storage, so without this the English markup paints and then flips.
  *
- * All three pages ship the English copy in their markup and carry
- * `data-i18n-pending` on <html>. The chosen language lives in storage, so it is
- * only known asynchronously: without this, a Ukrainian user would watch the
- * English text paint and then flip. Hiding the BODY rather than <html> keeps
- * the page's own background painted, so the wait reads as an empty window and
- * not as a white flash.
+ * Hiding BODY rather than <html> keeps the page's own background painted, so
+ * the wait reads as an empty window and not a white flash; `visibility` rather
+ * than `display` so the resolved layout does not reflow when the body appears.
  *
- * `localize()` in src/i18n.ts removes the attribute in a `finally`, so the page
- * fails open — a catalog or storage failure reveals the untranslated English
- * markup, never a permanently blank window. That `finally` is the only reason
- * this rule is safe; do not move the clear into the success path.
- *
- * `visibility`, not `display`: the layout is already resolved when the body
- * appears, so nothing reflows and the scrollbar does not jump.
+ * This rule can leave a page permanently blank, and only the `finally` in
+ * `localize()` (src/i18n.ts) stops it: never move that clear into the success
+ * path.
  */
 [data-i18n-pending] body {
   visibility: hidden;
@@ -785,26 +779,14 @@ button {
 /* --------------------------------------------------------------- select */
 
 /*
- * The language picker (design.md D14) — the only <select> in the extension,
- * sitting in the last .field row of the options page.
+ * The language picker (design.md D14).
  *
  * Deliberately NOT `appearance: none`, which is where this parts company with
  * .switch: dropping the native appearance also drops the disclosure chevron,
  * and drawing our own means an inline SVG data URI carrying a hard-coded
  * stroke colour — precisely the colour literal outside the token block that
  * tasks.md 7.2a forbids, and one that could not follow the dark-mode overrides
- * anyway. Keeping the UA's chevron costs a few pixels of platform variation
- * and buys a control that is themed, accessible and keyboard-native for free.
- * The box around it matches .chip and .seg — same 36px height, same border,
- * same radius, same surface — so the row does not read as imported.
- *
- * No focus rule of its own: focus is the shared `:focus-visible` ring above
- * (`--focus-ring-width` / `--focus-ring-color`), exactly as for .switch, .seg
- * and the chips. Re-declaring a ring per component is how the set of them
- * drifts apart.
- *
- * No explicit width: the control sizes to «Українська», its longest option, in
- * whichever font the platform ends up using for the dropdown.
+ * anyway.
  */
 .select {
   flex: none;
@@ -826,9 +808,9 @@ button {
 }
 
 /*
- * The popup list is drawn by the OS, not by us, and in several browsers it
- * inherits the <select>'s own colours rather than the page's. Naming them on
- * the options keeps a dark-mode dropdown from rendering dark text on dark.
+ * The popup list is drawn by the OS and in several browsers inherits the
+ * <select>'s own colours rather than the page's, so without naming them here a
+ * dark-mode dropdown renders dark text on dark.
  */
 .select option {
   background: var(--color-surface);

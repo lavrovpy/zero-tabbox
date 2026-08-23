@@ -11,7 +11,7 @@
  */
 
 /**
- * `en` and `uk` are the two shipped catalogs (`_locales/<lang>/messages.json`).
+ * The two shipped catalogs (`_locales/<lang>/messages.json`).
  *
  * Defined here, not in `i18n.ts`, so the dependency arrow points one way:
  * `i18n.ts` → `storage.ts` → `types.ts`.
@@ -23,8 +23,8 @@ export type LocaleSetting = 'auto' | Locale;
 
 /**
  * User-editable settings: the five sweep controls sweep-controls.spec allows,
- * plus `locale`. The sixth is not a sixth sweep control — it changes nothing
- * about what closes or when, only which language says so (design.md D14).
+ * plus `locale`, which is not a sixth one — it changes nothing about what
+ * closes or when (design.md D14).
  */
 export interface Settings {
   /**
@@ -45,14 +45,7 @@ export interface Settings {
   autoBookmark: boolean;
   /** Whether pinned tabs survive a sweep. The only exemption that exists. */
   keepPinned: boolean;
-  /**
-   * Which language the extension's own UI renders in. `'auto'` follows the
-   * browser's UI language (anything starting `uk` gets Ukrainian, everything
-   * else English); `'en'` and `'uk'` pin it regardless of the browser.
-   *
-   * Governs the UI only — the manifest's description and command label always
-   * follow the browser (design.md D14).
-   */
+  /** Which language the UI renders in. Never the manifest — the browser owns that. */
   locale: LocaleSetting;
 }
 

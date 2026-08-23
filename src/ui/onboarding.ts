@@ -66,25 +66,22 @@ decline.addEventListener('click', () => {
 
 /**
  * The first cutoff — the time both the headline and the accept label name.
- *
- * Always answers a real HH:MM: a page that cannot read storage must still
- * state the contract rather than a blank.
+ * Always answers a real HH:MM: a page that cannot read storage must still state
+ * the contract rather than a blank.
  */
 async function firstCutoff(): Promise<string> {
   try {
     return (await getSettings()).cutoffs[0] ?? DEFAULT_CUTOFF;
   } catch {
-    // The static 18:00 in the markup is this same default, so the sentence is
-    // still true — it is only the language that may be wrong for a moment.
     return DEFAULT_CUTOFF;
   }
 }
 
 async function init(): Promise<void> {
-  // The read is started BEFORE `localize()` is awaited so the two storage round
-  // trips overlap. `localize()` is what un-hides the body, and neither string
-  // written below is part of its DOM walk (both interpolate the time), so
-  // reading serially would paint the English defaults for a frame first.
+  // The read starts BEFORE `localize()` is awaited, so the two storage round
+  // trips overlap. `localize()` un-hides the body, and neither string written
+  // below is part of its DOM walk, so reading serially would paint the English
+  // defaults for a frame first.
   const cutoff = firstCutoff();
   await localize();
   // The headline states the real first cutoff, which on a fresh install is the

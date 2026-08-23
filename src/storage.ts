@@ -170,8 +170,8 @@ function mergeSettings(stored: unknown): Settings {
       typeof raw.autoBookmark === 'boolean' ? raw.autoBookmark : DEFAULT_SETTINGS.autoBookmark,
     keepPinned:
       typeof raw.keepPinned === 'boolean' ? raw.keepPinned : DEFAULT_SETTINGS.keepPinned,
-    // Absent for anyone who installed before the picker existed; the field-wise
-    // merge hands them `'auto'`. That is the whole migration — no version bump.
+    // Absent for anyone who installed before the picker existed — the
+    // field-wise merge is the whole migration, so no version bump.
     locale: isLocaleSetting(raw.locale) ? raw.locale : DEFAULT_SETTINGS.locale,
   };
 }
@@ -222,10 +222,9 @@ export async function setSettings(settings: Settings): Promise<void> {
         `${LIMITS.maxNoticeMinutes}; got ${String(settings.noticeMinutes)}.`,
     );
   }
-  // An explicit whitelist, not a spread: it is the second half of the "nothing
-  // is archived" guarantee (a caller cannot smuggle an extra field into
-  // storage), which also makes it the place a new setting is easiest to forget.
-  // Omitting one here fails silently — the control appears to work, then the
+  // An explicit whitelist, not a spread, so a caller cannot smuggle an extra
+  // field into storage — which also makes it the easiest place to forget a new
+  // setting. Omitting one fails silently: the control appears to work, then the
   // next unrelated save writes the object without it and it reverts.
   const next: Settings = {
     cutoffs,

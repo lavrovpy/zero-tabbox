@@ -84,16 +84,13 @@ export async function clearBadge(): Promise<void> {
  *
  * The copy (`noticeTitle`, and the `noticeMessage` plural group) states the
  * cutoff time and restates the contract, because this is the last moment at
- * which bookmarking anything is still possible. The whole body is ONE message
- * with `$COUNT$` inline rather than a "N minutes" lead concatenated onto a
- * fixed tail: Ukrainian inflects the verb before the numeral as well as the
- * noun after it («Залишилася 1 хвилина» / «Залишилися 3 хвилини»), so the two
- * halves cannot be translated independently (design.md D14).
+ * which bookmarking anything is still possible. The body stays ONE message with
+ * `$COUNT$` inline; never re-split it into a count and a fixed tail, which
+ * Ukrainian cannot translate as independent halves (design.md D14).
  *
- * There is no DOM here, so this resolves the locale with {@link initI18n}, not
- * `localize()`. It has to happen per notice: the background is torn down
- * between the alarm being set and it firing, and a woken worker starts on the
- * module-default `'en'` until the setting is re-read.
+ * No DOM here, so the locale comes from {@link initI18n}, not `localize()`, and
+ * per notice rather than once: the background is torn down between the alarm
+ * being set and it firing, and a woken worker starts on `'en'`.
  *
  * @param cutoffHhMm the cutoff the notice is for, `HH:MM`, named in the message
  * @param minutesAhead how far ahead of the cutoff the notice is firing

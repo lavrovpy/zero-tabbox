@@ -1,19 +1,7 @@
 <!doctype html>
-<!--
-  `data-i18n-pending` hides the body until `localize()` has run (see
-  `[data-i18n-pending] body` in theme.css and design.md D14). Without it the
-  popup paints the English markup below and then swaps it to Ukrainian a tick
-  later, because resolving the locale means reading storage, which is async.
-  `localize()` clears the attribute in a `finally`, so any failure reveals the
-  English markup rather than leaving the popup blank.
-
-  `lang` is the untranslated default; `localize()` restamps it with the
-  effective locale so the browser hyphenates and speaks the page correctly.
--->
 <html lang="en" data-i18n-pending>
   <head>
     <meta charset="utf-8" />
-    <!-- Brand, not copy: `zero-tabbox` is never translated (design.md D14). -->
     <title>zero-tabbox</title>
     <link rel="stylesheet" href="theme.css" />
   </head>
@@ -27,14 +15,6 @@
       after a sweep the popup shows the "Day ended" state instead. Nothing
       resembling pause, snooze or restore may be added (sweep-controls.spec
       "No softening controls").
-
-      The English text below stays in the markup: it is both the visible
-      default the user sees before `localize()` resolves and the failure-open
-      copy if it never does. `data-i18n` replaces an element's text content and
-      `data-i18n-attr` sets named attributes; both are applied by the single
-      DOM walk in `src/i18n.ts`. Only static strings are annotated — anything
-      popup.ts recomputes (counts, times, the swept note) it writes with `t()`,
-      because the walk runs once.
     -->
     <main id="view-live" class="stack" hidden>
       <header class="row-between">
@@ -45,8 +25,6 @@
             <span id="next-cutoff-eta" class="numeral eta"></span>
           </p>
         </div>
-        <!-- One key drives both attributes: the icon has no visible text, so the
-             screen-reader name and the hover tooltip are the same string. -->
         <a id="open-options" class="icon-link" href="#" aria-label="Settings" title="Settings"
            data-i18n-attr="aria-label:popupSettings;title:popupSettings">
           <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
@@ -74,7 +52,6 @@
             <path d="M20 6 9 17l-5-5" />
           </svg>
           <span data-i18n="popupSavedTo">Saved to</span>
-          <!-- The folder path is data, not copy: written from TS, never translated. -->
           <span id="bookmark-folder" class="mono-label"></span>
         </p>
         <button id="end-day-now" class="btn btn-accent" type="button"
@@ -87,14 +64,9 @@
         <p class="swept-label" data-i18n="popupDayEnded">Day ended</p>
         <p class="row-baseline">
           <span id="swept-count" class="numeral headline">0</span>
-          <!--
-            Deliberately NOT annotated. `popupSweptUnit_other` is one form of a
-            plural group, and `data-i18n` does a countless lookup: Ukrainian has
-            no `_other` sibling (Intl gives it one/few/many over integers), so
-            the DOM walk would fall back to the English form. showSwept() always
-            writes this span with t(key, {count}) before the view is unhidden,
-            so the English below is only the failure-open text.
-          -->
+          <!-- Never annotate this one: `data-i18n` looks up without a count, and
+               Ukrainian has no `_other` form to find, so the walk would quietly
+               leave it English. showSwept() writes it with t(key, {count}). -->
           <span id="swept-unit" class="swept-unit">tabs closed</span>
         </p>
         <p id="swept-note" class="swept-note" data-i18n="popupSweptNoteUnsaved">Nothing was saved. One clean window is left.</p>

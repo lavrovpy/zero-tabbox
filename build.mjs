@@ -112,19 +112,12 @@ const STATIC_ASSETS = [
   // (tab-sweep.spec) would forbid it anyway.
   [join(SRC, 'ui', 'fonts'), 'ui/fonts'],
   [join(ROOT, 'icons'), 'icons'],
-  // The message catalogs ship as files because the MANIFEST needs them: the
-  // browser resolves the `__MSG_extDescription__` / `__MSG_commandEndDayNow__`
-  // placeholders out of dist/<browser>/_locales/<lang>/messages.json against
-  // `default_locale`, and addons-linter fails an AMO submission whose manifest
-  // references messages it cannot find on disk.
-  //
-  // This looks redundant next to the UI, which never reads these copies — the
-  // UI modules `import` the very same _locales/*/messages.json and Bun inlines
-  // them into the bundles at build time (design.md D14; a runtime fetch would
-  // paint the wrong language first). It is not redundant: one source of truth,
-  // two delivery paths, because the two consumers resolve messages differently
-  // — the manifest follows the BROWSER UI language, the UI follows the user's
-  // own locale setting. Deleting either path breaks one of them silently.
+  // One catalog, two delivery paths, and neither can be dropped. The manifest's
+  // `__MSG_*` placeholders are resolved by the browser out of these files on
+  // disk, against the BROWSER UI language — addons-linter fails an AMO
+  // submission whose manifest references messages missing from _locales. The UI
+  // never reads these copies: it imports the same catalogs, which Bun inlines
+  // into the bundles (design.md D14), and follows the user's own locale setting.
   [join(ROOT, '_locales'), '_locales'],
 ];
 
@@ -234,8 +227,7 @@ function watch(browsers) {
     timer = setTimeout(rebuild, 50);
   };
 
-  // _locales is watched alongside src/: editing a message must rebuild both the
-  // copied catalogs and the bundles that inlined them.
+  // Editing a message must rebuild the bundles that inlined it, not just the copies.
   for (const dir of [SRC, join(ROOT, 'icons'), join(ROOT, '_locales')]) {
     fsWatch(dir, { recursive: true }, schedule);
   }

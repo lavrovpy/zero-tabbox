@@ -1,17 +1,8 @@
 <!doctype html>
-<!--
-  `data-i18n-pending` hides the body until `localize()` clears it (see
-  `[data-i18n-pending] body` in theme.css). The English below is the visible
-  default, and `lang="en"` matches it; `localize()` overwrites both once the
-  locale setting has been read. It clears the attribute in a `finally`, so the
-  worst a failure can do is show this English markup — never a blank page.
--->
 <html lang="en" data-i18n-pending>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Not localized, and so no `data-i18n-title` on <html>: the brand name is
-         the literal string "zero-tabbox" in every locale (design.md D14). -->
     <title>zero-tabbox</title>
     <link rel="stylesheet" href="theme.css" />
   </head>
@@ -29,15 +20,11 @@
       <div class="onboarding-top">
         <div class="brand">
           <img src="../icons/icon48.png" width="28" height="28" alt="" />
-          <!-- The wordmark is the brand, verbatim in every locale. -->
           <span>zero-tabbox</span>
         </div>
-        <!--
-          No `data-i18n` on the headline: it interpolates the first cutoff, so
-          onboarding.ts writes it with `t('onboardingHeadline', {time})`. The
-          DOM walk's textContent write would also delete #cutoff-time, which is
-          what keeps the static English sentence below readable as one phrase.
-        -->
+        <!-- Neither this headline nor #accept-label below is annotated:
+             onboarding.ts writes both with the cutoff interpolated, so a
+             `data-i18n` here would render a literal `$TIME$`. -->
         <h1 id="headline" class="onboarding-headline">
           Every tab closes at <span id="cutoff-time">18:00</span>.
         </h1>
@@ -45,8 +32,8 @@
           Bookmarks are the only way to keep a page. Read the terms before you
           keep the extension.
         </p>
-        <!-- Each term is keyed on its own: they are three separate promises,
-             and a translator must be able to weigh each one by itself. -->
+        <!-- One key per term, not one for the list: three separate promises a
+             translator has to be able to weigh one at a time. -->
         <ol class="terms">
           <li data-i18n="onboardingTerm1">Every tab in every normal window is included — no undo, no snooze, no per-tab exceptions.</li>
           <li data-i18n="onboardingTerm2">Quitting the browser doesn't dodge it. A missed cutoff runs at the next start.</li>
@@ -56,8 +43,6 @@
       <div class="onboarding-actions">
         <div class="onboarding-primary">
           <button id="accept" class="btn btn-accent" type="button">
-            <!-- Interpolates the cutoff, so onboarding.ts writes it; the span
-                 exists for exactly that write. -->
             <span id="accept-label">I understand. Start at 18:00.</span>
           </button>
           <button id="pick-time" class="btn btn-secondary" type="button">
@@ -67,8 +52,6 @@
               <circle cx="12" cy="12" r="10" />
               <path d="M12 6v6l4 2" />
             </svg>
-            <!-- The label is keyed on the span, not the button: a textContent
-                 write on the button would delete the clock icon above it. -->
             <span data-i18n="onboardingPickTime">Pick a different time</span>
           </button>
         </div>

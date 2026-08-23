@@ -16,11 +16,9 @@
  * a terminated service worker just to render a clock would be a worse trade
  * than recomputing two Date fields from the same storage the background reads.
  *
- * Every string the popup shows comes from `i18n.ts` (design.md D14): the static
- * markup through the `data-i18n` walk that `localize()` performs, everything
- * assembled at runtime through `t()`. Nothing here concatenates a translated
- * fragment onto a number — word order differs between the two locales, so each
- * sentence is one message with placeholders.
+ * Every user-visible string comes from `i18n.ts` (design.md D14). Nothing here
+ * concatenates a translated fragment onto a number: word order differs between
+ * locales, so each sentence is one message with placeholders.
  */
 import { atRiskTabs, bookmarkAtRiskTabs, bookmarkableTabs } from '../bookmarks';
 import { nextOccurrence } from '../cutoff';
@@ -140,9 +138,8 @@ export function soonestCutoff(now: Date, cutoffs: readonly string[]): NextCutoff
  * so it agrees with the badge countdown (sweep-controls.spec "Badge countdown"
  * counts minutes).
  *
- * Each of the four shapes is its own message, not a preposition glued to a
- * formatted duration: English leads with "in", Ukrainian with «за». Not a
- * plural group — the branch is on the shape of the duration, not on number.
+ * Not a plural group: the branch is on the shape of the duration, not on a
+ * number.
  *
  * @param minutes minutes until the cutoff; negatives are clamped to 0
  */
@@ -161,12 +158,9 @@ export function formatEta(minutes: number): string {
  * The per-second countdown shown once the notice window has started, when the
  * remaining time deserves urgency rather than an estimate.
  *
- * The framing word is never appended: "04:37 left" but «залишилося 04:37», so
- * the clock goes in as `$TIME$` and the message owns the word order.
- *
- * MM:SS itself stays zero-padded ASCII digits in every locale: it re-renders
- * once a second, so a locale-formatted number that changed width as it ticked
- * down would make the row jitter.
+ * MM:SS stays zero-padded ASCII digits in every locale: it re-renders once a
+ * second, so a locale-formatted number that changed width as it ticked down
+ * would make the row jitter.
  *
  * @param seconds seconds until the cutoff; negatives are clamped to 0
  */
@@ -257,8 +251,8 @@ function showSwept(closed: number, bookmarked: boolean, nextHhmm: string | null)
  * The two reads that decide which view opens, as one total call.
  *
  * Total on purpose: this promise is created BEFORE `localize()` is awaited, so
- * a rejection would sit unhandled for a storage round trip and be reported as
- * an unhandled rejection. Absorbing it here also keeps `render()` linear.
+ * a rejection would sit unhandled for a storage round trip and surface as an
+ * unhandled rejection.
  *
  * @returns both values, or `null` when either read failed — the live view then
  *   renders its own degraded state and needs neither

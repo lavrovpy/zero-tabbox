@@ -16,10 +16,8 @@
  *
  * The one control here that is not a sweep control is the language picker: it
  * writes `settings.locale`, which changes what the UI says and never what the
- * sweep does (design.md D14). It rides the same autosave path as the toggles,
- * and re-localizes the page in place instead of reloading it — see
- * {@link relocalize}, which exists because everything this file builds from
- * script is invisible to the DOM walk in `i18n.ts`.
+ * sweep does (design.md D14). The page re-localizes in place rather than
+ * reloading — see {@link relocalize}.
  */
 import { activeLocale, localeTag, localize, resolveLocale, t } from '../i18n';
 import { api } from '../platform';
@@ -90,10 +88,9 @@ function clearError(): void {
 /**
  * Maps a validation failure from storage.ts onto copy the user can act on.
  *
- * The limits are passed as placeholders rather than baked into the sentence:
- * `LIMITS` is the single source of truth (src/types.ts), and a translator who
- * sees the digit in the string will sooner or later translate around it. The
- * counts double as the plural selector, which is why they go in as `count`.
+ * The limits go in as placeholders rather than baked into the sentence: a
+ * translator who sees the digit in the string will sooner or later translate
+ * around it. The name `count` is load-bearing — it selects the plural form.
  */
 function cutoffErrorMessage(error: InvalidCutoffsError): string {
   switch (error.code) {
@@ -121,7 +118,7 @@ function cutoffValues(): string[] {
 }
 
 /**
- * The language picked in the `<select>`, narrowed to {@link LocaleSetting}.
+ * The language picked in the `<select>`.
  *
  * The fallback is the stored value rather than `'auto'`, so an unreadable
  * `<select>` cannot silently retune the user's language.
@@ -164,12 +161,9 @@ function readForm(cutoffs: string[], noticeMinutes: number): Settings | null {
 /**
  * Re-applies the active locale to a page that is already on screen.
  *
- * `localize()` re-runs the DOM walk, which only reaches the static markup —
- * the elements annotated with `data-i18n` in ui/options.html. Everything this
- * file creates or rewrites from script (the cutoff chips and their aria-labels,
- * the segmented picker's labels and summary, the accept button's sentence, and
- * the grouped digits in the stat cards) is invisible to that walk, so each one
- * is rebuilt here. Miss one and the page ends up half in each language.
+ * `localize()`'s DOM walk only reaches the static `data-i18n` markup in
+ * ui/options.html, so everything this file writes from script has to be
+ * rebuilt by hand. Miss one and the page ends up half in each language.
  */
 async function relocalize(): Promise<void> {
   await localize();
@@ -183,10 +177,8 @@ async function relocalize(): Promise<void> {
 /**
  * Persists settings and refreshes {@link saved} from storage.
  *
- * A change of language is noticed here rather than in the picker's own
- * handler, so every path that can write a locale re-localizes, and only when
- * the language actually moved: `'auto'` → `'en'` in an English browser writes
- * a new setting but changes not one word on screen.
+ * The language check lives here rather than in the picker's own handler, so
+ * every path that can write a locale re-localizes.
  *
  * @returns `true` when the write succeeded; on failure the reason is shown and
  *   nothing has changed on disk
@@ -216,10 +208,8 @@ async function persist(next: Settings): Promise<boolean> {
   }
   clearError();
   if (resolveLocale(saved.locale) !== activeLocale()) {
-    // The page is on screen in the wrong language. relocalize() re-renders
-    // everything the two calls below do, so it stands in for them.
-    // Comparing the RESOLVED locale, not the setting, is also what keeps this
-    // from firing twice when the storage listener below beats us to it.
+    // relocalize() re-renders everything the two calls below do, so it stands
+    // in for them. On the RESOLVED comparison, see adoptForeignLocale().
     await relocalize();
     return true;
   }
@@ -288,8 +278,7 @@ function renderCutoffs(cutoffs: readonly string[], focusIndex = -1): void {
     input.type = 'time';
     input.required = true;
     input.value = value;
-    // Positional, not a quantity: it is what tells four identical time fields
-    // apart for assistive tech, so the catalog does not pluralize it.
+    // Positional, not a quantity — the catalog has no plural group for it.
     input.setAttribute('aria-label', t('optionsCutoffAriaLabel', { index: index + 1 }));
     input.addEventListener('change', () => {
       void saveFromForm();
@@ -344,9 +333,8 @@ async function addCutoff(): Promise<void> {
 async function removeCutoff(index: number): Promise<void> {
   const values = cutoffValues();
   if (values.length <= LIMITS.minCutoffs) {
-    // Its own key, not the plain too-few message: this refusal is pre-emptive
-    // (nothing was written), so it has room for the second sentence saying the
-    // schedule cannot be empty — which the storage-side error does not.
+    // Its own key, not `optionsErrorTooFew`: this refusal is pre-emptive, so it
+    // carries a second sentence the storage-side error has no room for.
     showError(t('optionsErrorTooFewRemove', { count: LIMITS.minCutoffs }));
     return;
   }
@@ -363,11 +351,9 @@ async function removeCutoff(index: number): Promise<void> {
 /**
  * Reflects `saved.noticeMinutes` in the segmented picker and its summary.
  *
- * Also (re)writes each button's aria-label, which {@link buildNoticePicker}
- * would be the obvious home for — except that the picker is built once and the
- * language can change under it. Everything about these buttons that is words
- * rather than structure therefore lives here, on the path that already runs
- * after every save.
+ * The aria-labels are (re)written here rather than in the obvious home,
+ * {@link buildNoticePicker}, because the picker is built once and the language
+ * can change under it.
  */
 function renderNotice(): void {
   noticeSummary.textContent =
@@ -444,9 +430,9 @@ async function initAccept(): Promise<void> {
 
 async function renderStats(): Promise<void> {
   const [stats, lastSweep] = await Promise.all([getStats(), getLastSweep()]);
-  // Grouped for the chosen interface language, not the browser's: each counter
-  // sits against its localized caption, and `12,345 вкладок` mixes two
-  // conventions in one card — Ukrainian groups with U+00A0, `12 345`.
+  // Grouped for the chosen interface language, not the browser's: a counter
+  // sits against a localized caption, and `12,345 вкладок` mixes two
+  // conventions in one card.
   const tag = localeTag(activeLocale());
   statLifetime.textContent = stats.lifetimeClosed.toLocaleString(tag);
   statLast.textContent = lastSweep ? lastSweep.closed.toLocaleString(tag) : '—';
@@ -473,8 +459,6 @@ async function init(): Promise<void> {
   addCutoffButton.addEventListener('click', () => {
     void addCutoff();
   });
-  // The language picker autosaves exactly like the toggles; the page then
-  // re-localizes itself inside persist(), with no reload.
   for (const control of [notifyInput, autoBookmarkInput, keepPinnedInput, localeSelect]) {
     control.addEventListener('change', () => {
       void saveFromForm();
@@ -508,9 +492,8 @@ async function adoptForeignLocale(): Promise<void> {
   } catch {
     return;
   }
-  // The picker follows the setting even when the rendered language does not
-  // move (`'auto'` and `'en'` look identical in an English browser, but they
-  // are not the same choice, and the control must show the one that is stored).
+  // Ahead of the early return: `'auto'` and `'en'` render identically in an
+  // English browser, but the control must still show the choice that is stored.
   saved = { ...saved, locale };
   localeSelect.value = locale;
   if (resolveLocale(locale) === activeLocale()) return;
