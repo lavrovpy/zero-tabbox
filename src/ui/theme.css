@@ -353,7 +353,8 @@ button {
 
 .accept-note {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--color-fg-2);
 }
 
@@ -954,9 +955,6 @@ button {
 }
 
 .terms li {
-  display: flex;
-  gap: 14px;
-  align-items: baseline;
   font-size: 14px;
   line-height: 1.55;
   color: var(--color-fg-2);
@@ -964,13 +962,10 @@ button {
 
 .terms li::before {
   counter-increment: term;
-  content: '0' counter(term);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-accent-text);
-  flex: none;
-  width: 20px;
+  content: counter(term) '.';
+  margin-right: 0.5em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .onboarding-actions {
