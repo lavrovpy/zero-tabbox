@@ -28,9 +28,12 @@
         <h1 id="headline" class="onboarding-headline">
           Every tab closes at <span id="cutoff-time">18:00</span>.
         </h1>
-        <p class="onboarding-lede" data-i18n="onboardingLede">
-          Bookmarks are the only way to keep a page. Read the terms before you
-          keep the extension.
+        <!-- Two spans, not one data-i18n on the <p>: localize() sets
+             textContent, which would strip a <strong> wrapping only part of
+             the sentence. -->
+        <p class="onboarding-lede">
+          <span data-i18n="onboardingLede">Bookmarks are the only way to keep a page.</span>
+          <strong data-i18n="onboardingLedeTerms">Read the terms before you keep the extension.</strong>
         </p>
         <!-- One key per term, not one for the list: three separate promises a
              translator has to be able to weigh one at a time. -->

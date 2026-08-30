@@ -338,7 +338,10 @@
     }
   },
   "onboardingLede": {
-    "message": "Bookmarks are the only way to keep a page. Read the terms before you keep the extension."
+    "message": "Bookmarks are the only way to keep a page."
+  },
+  "onboardingLedeTerms": {
+    "message": "Read the terms before you keep the extension."
   },
   "onboardingTerm1": {
     "message": "Every tab in every normal window is included — no undo, no snooze, no per-tab exceptions."
