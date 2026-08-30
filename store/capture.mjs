@@ -86,8 +86,15 @@ const SETTINGS = {
   locale: 'en',
 };
 
+/*
+ * `channel: 'chromium'` selects Playwright's full Chromium; the default under
+ * `headless: true` is the headless shell, which cannot load extensions and
+ * leaves the service-worker wait below to time out. Branded Google Chrome is
+ * no use as CHROMIUM_PATH either — 137+ ignores `--load-extension`.
+ */
 const ctx = await chromium.launchPersistentContext(PROFILE, {
   headless: true,
+  channel: executablePath ? undefined : 'chromium',
   executablePath,
   colorScheme: 'light',
   locale: LANG,
