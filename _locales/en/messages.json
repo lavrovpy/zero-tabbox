@@ -124,7 +124,7 @@
     "message": "At each cutoff every tab closes. Nothing is saved. Bookmark what matters before the cutoff."
   },
   "optionsAcceptNote": {
-    "message": "Nothing closes yet — the schedule stays off until you accept."
+    "message": "Your tabs won't close until you accept the terms."
   },
   "optionsCutoffsTitle": {
     "message": "Cutoff times"
@@ -338,7 +338,10 @@
     }
   },
   "onboardingLede": {
-    "message": "Bookmarks are the only way to keep a page. Read the terms before you keep the extension."
+    "message": "Bookmarks are the only way to keep a page."
+  },
+  "onboardingLedeTerms": {
+    "message": "Read the terms before you keep the extension."
   },
   "onboardingTerm1": {
     "message": "Every tab in every normal window is included — no undo, no snooze, no per-tab exceptions."

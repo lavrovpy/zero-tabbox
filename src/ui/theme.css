@@ -353,7 +353,8 @@ button {
 
 .accept-note {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--color-fg-2);
 }
 
@@ -776,7 +777,7 @@ button {
 }
 
 .switch:checked::after {
-  left: 21px;
+  left: 19px; /* 36px inner width − 14px knob − the off-state's 3px inset */
   background: var(--color-accent);
 }
 
@@ -785,18 +786,40 @@ button {
 /*
  * The language picker (design.md D14).
  *
- * Deliberately NOT `appearance: none`, which is where this parts company with
- * .switch: dropping the native appearance also drops the disclosure chevron,
- * and drawing our own means an inline SVG data URI carrying a hard-coded
- * stroke colour — precisely the colour literal outside the token block that
- * the spec forbids, and one that could not follow the dark-mode overrides
- * anyway.
+ * `appearance: none` with a chevron of our own, because Blink paints the
+ * native arrow at a fixed ~4px from the border and ignores `padding-right`
+ * entirely — the box only grows around it. The chevron is two `currentColor`
+ * borders rotated 45°, not an SVG data URI: a data URI needs a literal stroke
+ * colour, which the token block forbids and dark mode could not override.
+ *
+ * The wrapper exists only to host that chevron — `<select>` renders no
+ * pseudo-elements in Chrome — and must stay `position: relative`.
  */
-.select {
+.select-wrap {
+  position: relative;
   flex: none;
-  height: 36px;
   max-width: 100%;
-  padding: 0 8px;
+}
+
+.select-wrap::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  translate: 0 calc(-50% - 2px);
+  rotate: 45deg;
+  color: var(--color-fg-2);
+  pointer-events: none;
+}
+
+.select {
+  width: 100%;
+  height: 36px;
+  padding: 0 32px 0 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
@@ -804,6 +827,8 @@ button {
   font-family: var(--font-ui);
   font-size: 13px;
   font-weight: 500;
+  appearance: none;
+  -webkit-appearance: none;
   cursor: pointer;
 }
 
@@ -930,9 +955,6 @@ button {
 }
 
 .terms li {
-  display: flex;
-  gap: 14px;
-  align-items: baseline;
   font-size: 14px;
   line-height: 1.55;
   color: var(--color-fg-2);
@@ -940,13 +962,10 @@ button {
 
 .terms li::before {
   counter-increment: term;
-  content: '0' counter(term);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-accent-text);
-  flex: none;
-  width: 20px;
+  content: counter(term) '.';
+  margin-right: 0.5em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .onboarding-actions {
