@@ -6,7 +6,7 @@ The screenshots both listings need, and the scripts that regenerate them.
 bun add --dev playwright && bunx playwright install chromium   # once, ad hoc
 bun run build                 # store/capture.mjs loads dist/chrome
 bun store/capture.mjs         # store/.raw/*.png — the extension, rendering itself
-bun store/compose.mjs         # store/screenshots/*.png — the 1280x800 canvases
+bun store/compose.mjs         # store/screenshots/*.png and store/promo/*.png
 ```
 
 Playwright is deliberately **not** a devDependency. It is heavy, it is needed
@@ -58,8 +58,11 @@ Both stores are satisfied by one set at **1280×800**.
 The committed files are 1280×800 24-bit RGB PNGs with no alpha channel, so they
 satisfy the stricter of the two.
 
-Chrome additionally wants a **440×280 small promo tile** (and an optional
-1400×560 marquee). Neither is generated here yet.
+Chrome additionally wants a **440×280 small promo tile**, which `compose.mjs`
+also renders, to `store/promo/small-tile-440x280.png`. It holds no capture —
+a popup is illegible at that size — only the icon, the name and the tagline.
+The optional 1400×560 marquee is not generated. The listing copy to paste
+alongside these is in [`listing.md`](listing.md).
 
 ## The set
 

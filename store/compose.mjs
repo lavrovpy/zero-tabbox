@@ -1,6 +1,7 @@
 /**
- * Composites store/.raw/*.png onto the 1280x800 canvases both stores want
- * (store/README.md). Run `capture.mjs` first.
+ * Composites store/.raw/*.png onto the 1280x800 canvases both stores want,
+ * and renders the Chrome-only 440x280 small promo tile (store/README.md).
+ * Run `capture.mjs` first.
  *
  * This step only frames what capture.mjs produced. store/README.md — "What is
  * real in these images" is the claim it must not break.
@@ -12,8 +13,10 @@ import { HERE, executablePath, removeDir, resetDir } from './shared.mjs';
 
 const RAW = join(HERE, '.raw');
 const OUT = join(HERE, 'screenshots');
+const PROMO = join(HERE, 'promo');
 const STAGE = join(HERE, '.stage');
 const FONTS = join(HERE, '..', 'src', 'ui', 'fonts');
+const ICON = join(HERE, '..', 'icons', 'icon128.png');
 
 /**
  * Every capture a frame below embeds. Checked before OUT is touched, because
@@ -133,6 +136,35 @@ p { margin-top: 20px; font-size: 18px; line-height: 1.5; color: ${PALETTE.fg3}; 
 .tall { width: 596px; }
 `;
 
+
+/**
+ * The Chrome small promo tile. No capture in it: at 440x280 a popup would be
+ * illegible, and the tile is shown next to the listing's own screenshots.
+ * Chrome cannot localize this asset, so it carries no more copy than the
+ * manifest description already does in every locale.
+ */
+const TILE = {
+  name: 'small-tile-440x280',
+  width: 440,
+  height: 280,
+  html: `<div class="tile">
+  <img class="icon" src="${ICON}">
+  <div class="wordmark">zero-tabbox</div>
+  <div class="tagline">Every tab closes<br>at your cutoff.</div>
+</div>`,
+};
+
+const tileCss = `
+html, body { width: ${TILE.width}px; height: ${TILE.height}px; padding: 0; display: block; }
+body::before { width: 420px; height: 420px; inset: -40% -18% auto auto; }
+.tile { position: relative; z-index: 1; height: 100%; padding: 36px 40px;
+  display: flex; flex-direction: column; justify-content: flex-end; }
+.icon { width: 56px; height: 56px; position: absolute; top: 36px; left: 40px; }
+.wordmark { font-family: 'JetBrains Mono', monospace; font-size: 15px; letter-spacing: .02em;
+  color: ${PALETTE.fg3}; margin-bottom: 8px; }
+.tagline { font-size: 34px; line-height: 1.06; letter-spacing: -.028em; font-weight: 500; }
+`;
+
 const browser = await chromium.launch({
   executablePath,
 });
@@ -163,11 +195,32 @@ for (const f of FRAMES) {
   await page.screenshot({ path: join(STAGE, `${f.name}.png`) });
   console.log('composed', f.name);
 }
+{
+  const html = `<!doctype html><meta charset="utf-8"><style>${css}${tileCss}</style>
+<body>${TILE.html}</body>`;
+  const file = join(HERE, '.frame.html');
+  writeFileSync(file, html);
+  await page.setViewportSize({ width: TILE.width, height: TILE.height });
+  await page.goto(`file://${file}`);
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(400);
+  const undecoded = await page.evaluate(() =>
+    [...document.images].filter((i) => !i.complete || i.naturalWidth === 0).map((i) => i.src),
+  );
+  if (undecoded.length > 0) throw new Error(`${TILE.name}: icon did not decode — ${undecoded.join(', ')}`);
+  await page.screenshot({ path: join(STAGE, `${TILE.name}.png`) });
+  console.log('composed', TILE.name);
+}
+
 await browser.close();
 unlinkSync(join(HERE, '.frame.html'));
 
-// Every frame rendered: now, and only now, replace the committed set.
+// Every frame rendered: now, and only now, replace the committed sets.
 resetDir(OUT);
-for (const name of readdirSync(STAGE)) renameSync(join(STAGE, name), join(OUT, name));
+resetDir(PROMO);
+for (const name of readdirSync(STAGE)) {
+  const dest = name === `${TILE.name}.png` ? PROMO : OUT;
+  renameSync(join(STAGE, name), join(dest, name));
+}
 removeDir(STAGE);
-console.log('composed to store/screenshots');
+console.log('composed to store/screenshots and store/promo');

@@ -43,7 +43,8 @@ Chrome privacy-practices answers (which must give the same answer the Firefox
 manifest already gives: no data collected — see [README § Data
 collection](README.md#data-collection)), the AMO source-code build
 instructions, and the listing copy. The paperwork is drafted there ready to
-paste; the 440×280 promo tile is the one asset still to produce.
+paste, and [`store/listing.md`](store/listing.md) has the Chrome listing copy
+field by field.
 [`PRIVACY.md`](PRIVACY.md) is the privacy policy a listing can link to. The
 listing screenshots live in `store/`, regenerated from the real extension by
 two scripts — see [`store/README.md`](store/README.md).
