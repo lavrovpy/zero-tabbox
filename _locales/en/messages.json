@@ -108,9 +108,6 @@
   "popupSweptNoteBookmarked": {
     "message": "All of them were bookmarked first. One clean window is left."
   },
-  "popupSweptNoteUnsaved": {
-    "message": "Nothing was saved. One clean window is left."
-  },
   "popupNextCutoff": {
     "message": "Next cutoff"
   },
@@ -336,6 +333,9 @@
         "example": "18:00"
       }
     }
+  },
+  "onboardingWhy": {
+    "message": "Every tab kept for later keeps a piece of your attention."
   },
   "onboardingLede": {
     "message": "Bookmarks are the only way to keep a page."

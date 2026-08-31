@@ -10,3 +10,6 @@ store/.raw/
 store/.stage/
 store/.profile/
 store/.frame.html
+
+# screenshot-variant review renders (session-local, composed from store/.raw)
+store/.variants/

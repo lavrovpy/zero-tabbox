@@ -12,7 +12,11 @@ The Privacy practices tab answers live in [`store-compliance.md`](../store-compl
 **Detailed description**
 
 ```
-zero-tabbox closes every open tab at times of day you choose. That is all it does.
+Every tab closes at your cutoff. Your attention is finite, and every open tab keeps a claim on it.
+
+An open tab is an unfinished decision: something you meant to read or deal with, and didn't. Research on task switching shows that unfinished business keeps claiming attention until a deadline ends it — and studies of tab overload find that most people hang on to tabs they know they will never read, and feel worse for it. If you have twenty minutes to read one article, you should spend them reading it, not choosing among twenty.
+
+zero-tabbox is that deadline. It closes every open tab at times of day you choose. That is all it does.
 
 Pick up to four cutoffs a day. Before each one the toolbar badge counts down, and one system notification tells you the time is coming. At the cutoff every tab in every window closes, and you are left with a single clean new tab.
 
