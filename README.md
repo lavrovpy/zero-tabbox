@@ -9,6 +9,31 @@ knowing that in advance is what changes how you use tabs.
 
 ---
 
+## Why close everything
+
+An open tab is an unfinished decision. You meant to read it, answer it, or
+sort it — and didn't. Deferred decisions don't rest: research on [attention
+residue](https://www.sciencedirect.com/science/article/abs/pii/S0749597809000399)
+(Leroy, 2009) finds that unfinished tasks keep claiming attention long after
+you switch away, and that what lets the mind actually release a task is
+finishing it under time pressure — a deadline. That finding is the
+extension's mechanism: the cutoff is the deadline that closes the loops.
+
+Tabs are where those loops pile up. In a [CMU study of tab
+use](https://dl.acm.org/doi/10.1145/3411764.3445585) (CHI 2021), more than
+half of participants felt unable to close tabs they knew were stale, a third
+described themselves as tab hoarders, and tabs were kept as reminders, as
+to-do lists, and out of fear of not finding a page again — while leaving
+people stressed, distracted, and embarrassed. The cost of keeping every
+option open is paid in the currency the tabs were opened for: attention.
+
+zero-tabbox moves the deciding away from the moment you are weakest — "maybe
+later" — to the moment the badge starts counting down. If a page still
+matters then, bookmarking it is a real decision, made once. Everything else
+was never going to be read, and after the cutoff it no longer has to be
+carried. That is the digital-minimalism bet this extension makes: a few
+things chosen deliberately beat an archive of everything.
+
 ## The contract
 
 This is the whole product. Read it before you install it.

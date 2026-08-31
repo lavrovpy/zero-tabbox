@@ -241,9 +241,8 @@ function showSwept(closed: number, bookmarked: boolean, nextHhmm: string | null)
   // `count` looks unused — the numeral is a separate span — but it selects the
   // plural form.
   sweptUnit.textContent = t('popupSweptUnit', { count: closed });
-  sweptNote.textContent = bookmarked
-    ? t('popupSweptNoteBookmarked')
-    : t('popupSweptNoteUnsaved');
+  sweptNote.hidden = !bookmarked;
+  if (bookmarked) sweptNote.textContent = t('popupSweptNoteBookmarked');
   sweptNextCutoff.textContent = nextHhmm ?? '--:--';
 }
 

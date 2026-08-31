@@ -69,7 +69,8 @@
                leave it English. showSwept() writes it with t(key, {count}). -->
           <span id="swept-unit" class="swept-unit">tabs closed</span>
         </p>
-        <p id="swept-note" class="swept-note" data-i18n="popupSweptNoteUnsaved">Nothing was saved. One clean window is left.</p>
+        <!-- Only shown when the sweep bookmarked the tabs; showSwept() fills it. -->
+        <p id="swept-note" class="swept-note" hidden></p>
       </div>
 
       <hr class="divider" />
