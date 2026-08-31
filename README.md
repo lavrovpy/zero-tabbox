@@ -7,6 +7,8 @@ day. There is no archive, no undo, no restore, no whitelist, and no snooze. The
 loss is the feature — a tab you did not bookmark was not worth keeping, and
 knowing that in advance is what changes how you use tabs.
 
+<img src="store/screenshots/01-popup-live.png" alt="The zero-tabbox popup while the countdown is live, with Bookmark all and End day now." width="480">
+
 ---
 
 ## Why close everything
@@ -185,16 +187,6 @@ storage validation, the idempotency rules, and the badge. Anything that needs a
 real browser — the sweep across several windows, pinned-tab consolidation,
 private windows, the startup catch-up with session restore, theming — has to
 be walked through by a person against the scenarios in the spec files.
-
-### Specs
-
-The behaviour is specified before it is implemented. `design.md` holds the
-architecture decisions; `tab-sweep.spec.md`, `sweep-schedule.spec.md` and
-`sweep-controls.spec.md` hold the requirements the code is answerable to. If a
-change contradicts a spec, the spec is what gets changed first.
-`store-compliance.md` is the standing audit against both stores' policies, and
-should be re-run whenever a permission, a manifest key or the build pipeline
-changes.
 
 ## License
 
