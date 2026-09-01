@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Closes every tab at your daily cutoff. No archive, no undo.",
+  "description": "Closes every tab at your daily cutoff. Yesterday's clutter stops taxing your attention and your RAM.",
   "license": "MIT",
   "engines": {
     "bun": ">=1.3"

@@ -7,7 +7,7 @@ The Privacy practices tab answers live in [`store-compliance.md`](../store-compl
 
 **Title** (from the manifest): zero-tabbox
 
-**Summary** (from the manifest, 132 max): Closes every tab at your daily cutoff. No archive, no undo.
+**Summary** (from the manifest, 132 max): Closes every tab at your daily cutoff. Yesterday's clutter stops taxing your attention and your RAM.
 
 **Detailed description**
 
