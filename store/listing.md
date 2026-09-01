@@ -43,7 +43,8 @@ Open source, MIT: https://github.com/lavrovpy/zero-tabbox
 | --- | --- |
 | Store icon 128×128 | `icons/icon128.png` |
 | Screenshots 1280×800 (5) | `store/screenshots/01…05` in order |
-| Small promo tile 440×280 | `store/promo/small-tile-440x280.png` |
+| Screenshots, Ukrainian tab (5) | `store/screenshots-uk/01…05` in order |
+| Small promo tile 440×280 | `store/promo/small-tile-440x280.png` — not localizable, English only |
 | Marquee 1400×560 | not provided (optional) |
 | YouTube video | none |
 

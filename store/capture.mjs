@@ -82,8 +82,9 @@ const SETTINGS = {
   autoBookmark: false,
   // Pinned so the capture is deterministic whatever language the browser is
   // in. This is the UI's own locale setting (design.md D14), not the
-  // manifest's `default_locale`.
-  locale: 'en',
+  // manifest's `default_locale`. SHOT_LOCALE=uk renders the Ukrainian UI for
+  // the localized listing set (store/README.md).
+  locale: process.env.SHOT_LOCALE ?? 'en',
 };
 
 /*

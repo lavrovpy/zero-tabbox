@@ -12,7 +12,15 @@ import { join } from 'node:path';
 import { HERE, executablePath, removeDir, resetDir } from './shared.mjs';
 
 const RAW = join(HERE, '.raw');
-const OUT = join(HERE, 'screenshots');
+/**
+ * Listing language. `en` writes the committed default set (screenshots/ and
+ * the promo tile); any other locale writes screenshots-<locale>/ and leaves
+ * promo/ alone — the tile cannot be localized on the dashboard, so there is
+ * exactly one, in the default language. Run capture.mjs with the same
+ * SHOT_LOCALE first, or the captions will not match the UI inside the frames.
+ */
+const LOCALE = process.env.SHOT_LOCALE ?? 'en';
+const OUT = join(HERE, LOCALE === 'en' ? 'screenshots' : `screenshots-${LOCALE}`);
 const PROMO = join(HERE, 'promo');
 const STAGE = join(HERE, '.stage');
 const FONTS = join(HERE, '..', 'src', 'ui', 'fonts');
@@ -64,6 +72,68 @@ const PALETTE = {
 };
 
 /**
+ * On-image copy per listing language. Keys mirror FRAMES names; every locale
+ * must caption every frame. The Ukrainian lines reuse the shipped UI's own
+ * vocabulary (`закриття`, `закладки`, `День завершено` — _locales/uk) and the
+ * manifest summary's voice ("коли ви скажете") rather than translating the
+ * English captions word for word.
+ */
+const CAPTIONS = {
+  en: {
+    '01-popup-live': {
+      headline: 'Every tab closes<br>at your cutoff.',
+      sub: 'An open tab is an unfinished decision — something you meant to read, and didn\'t. The popup shows what\'s at stake and how long you have.',
+    },
+    '02-onboarding': {
+      headline: 'Nothing closes until<br>you accept.',
+      sub: 'The terms are the product. Nothing is scheduled until you accept them.',
+    },
+    '03-options': {
+      headline: 'Flexible setup.',
+      sub: 'A deadline is what lets the mind let go — and it works because it cannot be negotiated. These settings choose when, never whether.',
+    },
+    '04-popup-swept': {
+      headline: 'Day ended.',
+      sub: 'What mattered is in your bookmarks. Everything else was never going to be read — and no longer has to be carried.',
+    },
+    '05-theme': {
+      headline: 'Follows your<br>system theme.',
+      sub: 'Light and dark are the same UI. There is deliberately no theme setting to manage.',
+    },
+  },
+  uk: {
+    '01-popup-live': {
+      headline: 'Всі вкладки закриються,<br>коли ви скажете.',
+      sub: 'Відкрита вкладка — незавершене рішення: щось, що ви збиралися прочитати, та так і не прочитали. Розширення показує, що на кону та скільки часу лишилося.',
+    },
+    '02-onboarding': {
+      headline: 'Активується тільки<br>після вашої згоди.',
+      sub: 'Умови — це і є продукт. Розклад не запуститься, доки ви їх не приймете.',
+      // The uk onboarding card is taller than the en one (its terms run
+      // longer), so at the default 525px it climbs into the caption.
+      width: 460,
+    },
+    '03-options': {
+      headline: 'Гнучкі налаштування.',
+      sub: 'Дедлайн дає голові відпустити зайве — і працює саме тому, що з ним не домовишся. Тут ви обираєте, коли це станеться, а не чи станеться взагалі.',
+    },
+    '04-popup-swept': {
+      headline: 'День завершено.',
+      sub: 'Важливе — у ваших закладках. Решту ви однаково не прочитали б — і її більше не треба носити з собою.',
+    },
+    '05-theme': {
+      headline: 'Підлаштовується під<br>тему системи.',
+      sub: 'Світла й темна — той самий інтерфейс. Окремого налаштування теми немає — і це навмисно.',
+    },
+  },
+};
+
+if (!CAPTIONS[LOCALE]) {
+  throw new Error(`no captions for SHOT_LOCALE=${LOCALE} — add a set to CAPTIONS in compose.mjs`);
+}
+const C = CAPTIONS[LOCALE];
+
+/**
  * @type {{name:string, headline:string, sub:string, body:string, artStyle?:string}[]}
  *
  * Poster layout: brand lockup, centered headline and caption, capture anchored
@@ -74,33 +144,28 @@ const PALETTE = {
 const FRAMES = [
   {
     name: '01-popup-live',
-    headline: 'Every tab closes<br>at your cutoff.',
-    sub: 'An open tab is an unfinished decision — something you meant to read, and didn\'t. The popup shows what\'s at stake and how long you have.',
+    ...C['01-popup-live'],
     body: `<img class="shot" style="width:710px" src="${RAW}/popup-live.png">`,
   },
   {
     name: '02-onboarding',
-    headline: 'Nothing closes until<br>you accept.',
-    sub: 'The terms are the product. Nothing is scheduled until you accept them.',
-    body: `<img class="shot" style="width:525px" src="${RAW}/onboarding.png">`,
+    ...C['02-onboarding'],
+    body: `<img class="shot" style="width:${C['02-onboarding'].width ?? 525}px" src="${RAW}/onboarding.png">`,
   },
   {
     name: '03-options',
-    headline: 'Flexible setup.',
-    sub: 'A deadline is what lets the mind let go — and it works because it cannot be negotiated. These settings choose when, never whether.',
+    ...C['03-options'],
     body: `<img class="shot" style="width:620px" src="${RAW}/options.png">`,
     artStyle: 'top:340px;bottom:auto;align-items:flex-start',
   },
   {
     name: '04-popup-swept',
-    headline: 'Day ended.',
-    sub: 'What mattered is in your bookmarks. Everything else was never going to be read — and no longer has to be carried.',
+    ...C['04-popup-swept'],
     body: `<img class="shot" style="width:650px" src="${RAW}/popup-swept.png">`,
   },
   {
     name: '05-theme',
-    headline: 'Follows your<br>system theme.',
-    sub: 'Light and dark are the same UI. There is deliberately no theme setting to manage.',
+    ...C['05-theme'],
     body:
       `<div class="pair">` +
       `<img class="shot" style="width:600px" src="${RAW}/popup-live.png">` +
@@ -207,7 +272,8 @@ for (const f of FRAMES) {
   await page.screenshot({ path: join(STAGE, `${f.name}.png`) });
   console.log('composed', f.name);
 }
-{
+// The tile exists once, in the default language — see the LOCALE comment.
+if (LOCALE === 'en') {
   const html = `<!doctype html><meta charset="utf-8"><style>${css}${tileCss}</style>
 <body>${TILE.html}</body>`;
   const file = join(HERE, '.frame.html');
@@ -229,10 +295,10 @@ unlinkSync(join(HERE, '.frame.html'));
 
 // Every frame rendered: now, and only now, replace the committed sets.
 resetDir(OUT);
-resetDir(PROMO);
+if (LOCALE === 'en') resetDir(PROMO);
 for (const name of readdirSync(STAGE)) {
   const dest = name === `${TILE.name}.png` ? PROMO : OUT;
   renameSync(join(STAGE, name), join(dest, name));
 }
 removeDir(STAGE);
-console.log('composed to store/screenshots and store/promo');
+console.log(`composed to ${OUT}${LOCALE === 'en' ? ' and store/promo' : ''}`);
