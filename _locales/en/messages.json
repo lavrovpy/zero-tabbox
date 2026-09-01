@@ -395,7 +395,7 @@
     }
   },
   "extDescription": {
-    "message": "Closes every tab at your daily cutoff. No archive, no undo."
+    "message": "Closes every tab at your daily cutoff. Yesterday's clutter stops taxing your attention and your RAM."
   },
   "commandEndDayNow": {
     "message": "End day now: close all tabs"
