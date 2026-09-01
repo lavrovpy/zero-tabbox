@@ -94,7 +94,7 @@ const CAPTIONS = {
     },
     '04-popup-swept': {
       headline: 'Day ended.',
-      sub: 'What mattered is in your bookmarks. Everything else was never going to be read — and no longer has to be carried.',
+      sub: 'What mattered is in your bookmarks. Everything else was never going to be read.',
     },
     '05-theme': {
       headline: 'Follows your<br>system theme.',
@@ -119,7 +119,7 @@ const CAPTIONS = {
     },
     '04-popup-swept': {
       headline: 'День завершено.',
-      sub: 'Важливе — у ваших закладках. Решту ви однаково не прочитали б — і її більше не треба носити з собою.',
+      sub: 'Важливе — у ваших закладках. Решту ви однаково не прочитали б.',
     },
     '05-theme': {
       headline: 'Підлаштовується під<br>тему системи.',

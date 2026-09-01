@@ -88,7 +88,7 @@ and at the top of the listing.
 | 1 | `01-popup-live.png` | The popup: how many tabs are at risk, the next cutoff, the countdown, both actions | An open tab is an unfinished decision. This is what is at stake, and how long you have. |
 | 2 | `02-onboarding.png` | The install-time contract | Nothing is scheduled until you accept these terms. |
 | 3 | `03-options.png` | Every setting there is, including the interface language | A deadline is what lets the mind let go — it works because it cannot be negotiated. |
-| 4 | `04-popup-swept.png` | The "Day ended" state | The day ends at zero. What mattered is in your bookmarks; the rest no longer has to be carried. |
+| 4 | `04-popup-swept.png` | The "Day ended" state | The day ends at zero. What mattered is in your bookmarks. |
 | 5 | `05-theme.png` | The popup in light and dark | Follows the system theme. |
 
 Shot 2 does double duty: it is the most distinctive thing the extension has,
@@ -103,7 +103,7 @@ the listing's Ukrainian language tab on Chrome. Its AMO captions:
 | 1 | Відкрита вкладка — незавершене рішення. Ось що на кону і скільки часу лишилося. |
 | 2 | Розклад не запуститься, доки ви не приймете ці умови. |
 | 3 | Дедлайн дає голові відпустити зайве — він працює, бо з ним не домовишся. |
-| 4 | День закінчується на нулі. Важливе — у закладках; решту більше не треба носити з собою. |
+| 4 | День закінчується на нулі. Важливе — у закладках. |
 | 5 | Підлаштовується під тему системи. |
 
 **Not covered:** the pre-cutoff badge countdown and the system notification.
