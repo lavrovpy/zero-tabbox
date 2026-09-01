@@ -86,7 +86,7 @@ const CAPTIONS = {
     },
     '02-onboarding': {
       headline: 'Nothing closes until<br>you accept.',
-      sub: 'The terms are the product. Nothing is scheduled until you accept them.',
+      sub: 'Nothing is scheduled until you accept the terms.',
     },
     '03-options': {
       headline: 'Flexible setup.',
@@ -108,7 +108,7 @@ const CAPTIONS = {
     },
     '02-onboarding': {
       headline: 'Активується тільки<br>після вашої згоди.',
-      sub: 'Умови — це і є продукт. Розклад не запуститься, доки ви їх не приймете.',
+      sub: 'Розклад не запуститься, доки ви не приймете умови.',
       // The uk onboarding card is taller than the en one (its terms run
       // longer), so at the default 525px it climbs into the caption.
       width: 460,
