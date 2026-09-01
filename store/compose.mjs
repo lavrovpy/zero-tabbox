@@ -108,7 +108,7 @@ const CAPTIONS = {
     },
     '02-onboarding': {
       headline: 'Активується тільки<br>після вашої згоди.',
-      sub: 'Розклад не запуститься, доки ви не приймете умови.',
+      sub: 'Вкладки не почнуть закриватися, доки ви не приймете умови.',
       // The uk onboarding card is taller than the en one (its terms run
       // longer), so at the default 525px it climbs into the caption.
       width: 460,
