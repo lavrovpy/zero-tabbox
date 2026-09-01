@@ -221,24 +221,22 @@ const TILE = {
   name: 'small-tile-440x280',
   width: 440,
   height: 280,
-  html: `<div class="tile">
-  <img class="icon" src="${ICON}">
-  <div class="wordmark">zero-tabbox</div>
-  <div class="tagline">Every tab closes<br>at your cutoff.</div>
-</div>`,
+  html: `<div class="brand"><img src="${ICON48}"><span>zero-tabbox</span></div>
+<h1>Every tab closes<br>at your cutoff.</h1>`,
 };
 
+/**
+ * The screenshots' poster layout at tile scale: same lockup, headline and
+ * bottom ember bloom, just centered vertically since there is no art below.
+ */
 const tileCss = `
-html, body { width: ${TILE.width}px; height: ${TILE.height}px; padding: 0; display: block; }
-body { display: block; padding: 0; text-align: left; }
-body::before { width: 420px; height: 420px; inset: -40% -18% auto auto;
-  background: radial-gradient(circle, ${PALETTE.emberSoft} 0%, rgba(255,227,208,0) 62%); }
-.tile { position: relative; z-index: 1; height: 100%; padding: 36px 40px;
-  display: flex; flex-direction: column; justify-content: flex-end; }
-.icon { width: 56px; height: 56px; position: absolute; top: 36px; left: 40px; }
-.wordmark { font-family: 'JetBrains Mono', monospace; font-size: 15px; letter-spacing: .02em;
-  color: ${PALETTE.fg3}; margin-bottom: 8px; }
-.tagline { font-size: 34px; line-height: 1.06; letter-spacing: -.028em; font-weight: 500; }
+html, body { width: ${TILE.width}px; height: ${TILE.height}px; }
+body { padding-top: 0; justify-content: center; }
+body::before { height: 260px; inset: auto -30% -55% -30%; }
+.brand { margin-bottom: 18px; }
+.brand img { width: 24px; height: 24px; }
+.brand span { font-size: 15px; }
+h1 { font-size: 36px; }
 `;
 
 const browser = await chromium.launch({
