@@ -86,7 +86,7 @@ const CAPTIONS = {
     },
     '02-onboarding': {
       headline: 'Nothing closes until<br>you accept.',
-      sub: 'Nothing is scheduled until you accept the terms.',
+      sub: 'Until then the extension does nothing at all.',
     },
     '03-options': {
       headline: 'Flexible setup.',
