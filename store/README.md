@@ -12,7 +12,8 @@ bun store/compose.mjs         # store/screenshots/*.png and store/promo/*.png
 Playwright is deliberately **not** a devDependency. It is heavy, it is needed
 once per listing refresh, and `package.json` staying at five devDependencies is
 worth something during AMO source review. `store/.raw/` and `store/.profile/`
-are intermediates and are gitignored; only `store/screenshots/` is committed.
+are intermediates and are gitignored; only the listing sets —
+`store/screenshots/` and `store/screenshots-uk/` — are committed.
 
 `CHROMIUM_PATH` — see the header of `store/capture.mjs`.
 
@@ -37,11 +38,24 @@ under a headline and a caption. The frame rounds, borders and shadows the
 capture; inside it nothing is retouched, redrawn or enhanced, and no browser
 chrome is imitated.
 
-The captures pin `settings.locale` to `en` so a rerun is deterministic whatever
-language the capturing machine is in. For a Ukrainian listing, flip that to
-`'uk'` in `capture.mjs`, translate the captions below, and regenerate — the
-extension is localized, but store listing copy lives in each dashboard and is
-not covered by `_locales` (see `store-compliance.md`, finding L1).
+The captures pin `settings.locale` so a rerun is deterministic whatever
+language the capturing machine is in; `SHOT_LOCALE` (default `en`) chooses it.
+The Ukrainian set is regenerated with:
+
+```bash
+SHOT_LOCALE=uk bun store/capture.mjs
+SHOT_LOCALE=uk bun store/compose.mjs   # store/screenshots-uk/*.png
+bun store/capture.mjs                  # put .raw back in the default language
+```
+
+A non-`en` locale writes `store/screenshots-<locale>/` from the caption copy
+in `compose.mjs`'s `CAPTIONS`, and leaves `store/promo/` alone — the tile
+cannot be localized on the dashboard, so it exists once, in the default
+language. Run both scripts with the same `SHOT_LOCALE`: `.raw` carries no
+locale marker, so composing one language's captions over the other's captures
+fails nothing visibly — hence the third command above. Listing copy itself
+lives in each dashboard and is not covered by `_locales` (see
+`store-compliance.md`, finding L1).
 
 ## Specs
 
@@ -74,12 +88,23 @@ and at the top of the listing.
 | 1 | `01-popup-live.png` | The popup: how many tabs are at risk, the next cutoff, the countdown, both actions | An open tab is an unfinished decision. This is what is at stake, and how long you have. |
 | 2 | `02-onboarding.png` | The install-time contract | Nothing is scheduled until you accept these terms. |
 | 3 | `03-options.png` | Every setting there is, including the interface language | A deadline is what lets the mind let go — it works because it cannot be negotiated. |
-| 4 | `04-popup-swept.png` | The "Day ended" state | The day ends at zero. What mattered is in your bookmarks; the rest no longer has to be carried. |
+| 4 | `04-popup-swept.png` | The "Day ended" state | The day ends at zero. What mattered is in your bookmarks. |
 | 5 | `05-theme.png` | The popup in light and dark | Follows the system theme. |
 
 Shot 2 does double duty: it is the most distinctive thing the extension has,
 and it is the answer to the question a reviewer asks first about an extension
 that requests `tabs` and then closes everything — *did the user agree to this?*
+
+The Ukrainian set (`store/screenshots-uk/`, same files and order) goes under
+the listing's Ukrainian language tab on Chrome. Its AMO captions:
+
+| # | Caption (uk) |
+| --- | --- |
+| 1 | Відкрита вкладка — незавершене рішення. Ось що на кону і скільки часу лишилося. |
+| 2 | Вкладки не почнуть закриватися, доки ви не приймете ці умови. |
+| 3 | Час закриття не обговорюється — саме тому він працює. |
+| 4 | День закінчується на нулі. Важливе — у закладках. |
+| 5 | Підлаштовується під тему системи. |
 
 **Not covered:** the pre-cutoff badge countdown and the system notification.
 Both are browser and OS chrome, which a page screenshot cannot capture — a
