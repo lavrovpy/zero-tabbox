@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=https://www.coderabbit.ai/integrations/schema.v2.json
+language: en-US
+
+reviews:
+  profile: chill
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  request_changes_workflow: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+
+  path_filters:
+    # Generated or binary; reviewing them costs quota and yields nothing.
+    - "!bun.lock"
+    - "!store/screenshots/**"
+    - "!icons/**"
+
+  # A diff hunk rarely arrives with the module header that states these rules,
+  # so the load-bearing ones are restated here. Sources: design.md and the
+  # *.spec.md files.
+  path_instructions:
+    - path: "src/cutoff.ts"
+      instructions: >-
+        Cutoff arithmetic is local wall-clock time. Reject any toISOString(),
+        getUTC*(), or Date.UTC(): a cutoffId is a local calendar day, and a UTC
+        round-trip shifts the day part for most timezones. Reject "+24h" or
+        "+86400000" to reach tomorrow; instants must be rebuilt from local
+        calendar fields (new Date(y, m, d + n, h, min)) so the wall-clock time
+        survives a DST transition. This module must stay pure: no extension
+        APIs, no I/O, no reads of the real clock.
+    - path: "src/reconcile.ts"
+      instructions: >-
+        Alarms are hints, not the schedule. Correctness comes from reconcile()
+        re-deriving state from the clock and storage on every wake, so flag any
+        change that lets a dropped, delayed or duplicated alarm cause a missed
+        or doubled sweep. Entry points must stay serialised through the queue;
+        two concurrent wakes both reading the pre-sweep marker would sweep
+        twice. Dependencies stay injectable so idempotency remains testable
+        against a fake clock.
+    - path: "src/sweep.ts"
+      instructions: >-
+        A sweep closes tabs irreversibly and there is no undo, so weigh any
+        change to what gets closed against the no-archive contract. Nothing
+        about a closed tab may be persisted beyond counts in storage.ts: flag
+        any new retention of URLs, titles or tab ids. SweepOptions is
+        display-only and must never change which tabs a sweep closes.
+    - path: "src/bookmarks.ts"
+      instructions: >-
+        The only escape hatch, and the only code permitted to write bookmarks.
+        Writes go to the browser's bookmarks tree (zero-tabbox / YYYY-MM-DD),
+        never to extension storage, and the extension keeps no copy or
+        reference. Bookmarking runs only on an explicit user action. Flag any
+        silent bookmark write, and any path where a bookmark failure could be
+        swallowed before a destructive sweep proceeds.
+    - path: "tests/**/*.ts"
+      instructions: >-
+        Schedule and sweep behaviour is tested against a fake clock and fake
+        storage, never the host clock or a real browser API. Flag tests that
+        would pass regardless of a DST, midnight-wrap or double-sweep
+        regression.
+
+  tools:
+    actionlint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    markdownlint:
+      enabled: true
+    # No config in-repo for these; enabling them only produces default-rule noise.
+    biome:
+      enabled: false
+    eslint:
+      enabled: false
+    ruff:
+      enabled: false
+    shellcheck:
+      enabled: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: local
