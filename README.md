@@ -9,6 +9,10 @@ knowing that in advance is what changes how you use tabs.
 
 <img src="store/screenshots/01-popup-live.png" alt="The zero-tabbox popup while the countdown is live, with Bookmark all and End day now." width="480">
 
+Install from the
+[Chrome Web Store](https://chromewebstore.google.com/detail/zero-tabbox/aopeaifkddpieehhjfhipgiegpbjminc).
+Firefox is not listed yet.
+
 ---
 
 ## Why close everything
@@ -106,7 +110,17 @@ want it yourself.
 
 ## Install
 
-Neither store listing exists yet; both flows below install a local build.
+**Chrome:** [Chrome Web Store](https://chromewebstore.google.com/detail/zero-tabbox/aopeaifkddpieehhjfhipgiegpbjminc).
+Requires Chrome 120 or newer.
+
+To let it sweep private windows, open the extension's details and enable
+**Allow in Incognito**. Leave it off if you want private windows untouched.
+
+If `Alt+Shift+E` does nothing, another extension has claimed it — extension
+shortcut collisions are silent, and the loser simply gets no shortcut. Remap at
+`chrome://extensions/shortcuts`.
+
+Firefox is not listed yet. The flows below install a local build.
 
 ```bash
 bun install
@@ -120,14 +134,7 @@ bun run package    # writes artifacts/zero-tabbox-<browser>-<version>.zip
 2. Turn on **Developer mode** (top right).
 3. Click **Load unpacked** and select the `dist/chrome` directory.
 
-The unpacked install survives restarts. Requires Chrome 120 or newer.
-
-To let it sweep private windows, open the extension's details and enable
-**Allow in Incognito**. Leave it off if you want private windows untouched.
-
-If `Alt+Shift+E` does nothing, another extension has claimed it — extension
-shortcut collisions are silent, and the loser simply gets no shortcut. Remap at
-`chrome://extensions/shortcuts`.
+The unpacked install survives restarts.
 
 ### Firefox (temporary install, for development)
 
@@ -138,7 +145,7 @@ Requires Firefox 140 or newer. A temporary add-on is removed when Firefox
 closes, which makes it useful for trying the extension out and useless for
 actually living with it — for that you need a signed build.
 
-For a permanent Firefox install, or to publish either store listing, see
+For a signed, permanent Firefox install, see
 [`publishing.md`](publishing.md).
 
 ## Data collection
