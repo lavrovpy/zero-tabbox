@@ -57,8 +57,8 @@ protection; the only exemption is a global "keep pinned tabs" setting, off by
 default.
 
 A cutoff missed while the browser was shut, asleep, or crashed still sweeps at
-the next start, plus a follow-up pass about 60 seconds later for tabs session
-restore materialises late — and nothing above is armed until you accept the
+the next start, plus a follow-up pass about 60 seconds later for windows session
+restore materialises late (the window you're working in is left alone) — and nothing above is armed until you accept the
 contract, on the page that opens at install or on the settings page. "End day
 now" works even before you accept, because clicking it is its own consent.
 

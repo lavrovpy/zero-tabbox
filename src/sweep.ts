@@ -20,6 +20,22 @@ export interface SweepOptions {
   alreadyBookmarked?: boolean;
 }
 
+/**
+ * Narrows what a sweep closes. Only the startup settle pass (design.md D8)
+ * passes one; every other sweep closes every tab in every normal window.
+ */
+export interface SweepScope {
+  /**
+   * The clean regular window the catch-up sweep left behind. It survives
+   * whole — every tab in it is the user's, opened after the catch-up — and
+   * only the *other* regular windows are swept: the ones session restore
+   * materialised late. Private windows are left alone too, because session
+   * restore never brings one back. If this window no longer exists the sweep
+   * does nothing: closing everything would close the user's work instead.
+   */
+  cleanWindowId: number;
+}
+
 /** Outcome of a single sweep, for stats and the post-sweep badge. */
 export interface SweepResult {
   /**
@@ -31,6 +47,12 @@ export interface SweepResult {
    * perspective").
    */
   closed: number;
+  /**
+   * The regular window left clean — the one a {@link SweepScope} names on the
+   * settle pass that follows a startup catch-up. Absent when the profile had
+   * no regular window to keep.
+   */
+  cleanWindowId?: number | undefined;
 }
 
 /**
@@ -70,13 +92,29 @@ interface NormalWindow {
  * `reason` never changes which tabs are closed. It only decides bookkeeping:
  * `auto` advances `lastAutoCutoffId` (done by the caller), `manual` and
  * `settle` do not (design.md D3/D8). A `settle` pass folds its count into the
- * sweep it belongs to rather than recording a second sweep.
+ * sweep it belongs to rather than recording a second sweep. What a sweep
+ * closes is narrowed only by `scope`, which the settle pass passes to spare
+ * the clean window the catch-up left (see {@link SweepScope}).
  *
  * Never rejects for a per-tab failure; rejects only if the tab enumeration
  * itself fails.
  */
-export async function sweep(reason: SweepReason, options: SweepOptions = {}): Promise<SweepResult> {
+export async function sweep(
+  reason: SweepReason,
+  options: SweepOptions = {},
+  scope?: SweepScope,
+): Promise<SweepResult> {
   const settings = await getSettings();
+  const cleanWindowId = scope?.cleanWindowId;
+
+  // A scoped sweep whose clean window is gone has nothing it may safely do:
+  // without that window there is no telling restored tabs from the user's.
+  if (cleanWindowId !== undefined) {
+    const current = await enumerateNormalWindows();
+    if (!current.some((window) => window.id === cleanWindowId && !window.incognito)) {
+      return { closed: 0 };
+    }
+  }
 
   // The opt-in "Bookmark everything first" (design.md D12) runs before any tab
   // is touched, so the saved set is exactly the set about to be closed. A
@@ -84,7 +122,7 @@ export async function sweep(reason: SweepReason, options: SweepOptions = {}): Pr
   let bookmarked = options.alreadyBookmarked === true;
   if (settings.autoBookmark) {
     try {
-      await bookmarkAtRiskTabs(settings.keepPinned);
+      await bookmarkAtRiskTabs(settings.keepPinned, new Date(), { exceptWindowId: cleanWindowId });
       bookmarked = true;
     } catch (error) {
       console.warn('[zero-tabbox] auto-bookmark before the sweep failed', error);
@@ -96,17 +134,21 @@ export async function sweep(reason: SweepReason, options: SweepOptions = {}): Pr
   // Private and regular windows are two independent contexts: `tabs.move`
   // cannot cross the boundary, and the clean window is always a regular one.
   const regular = windows.filter((window) => !window.incognito);
-  const priv = windows.filter((window) => window.incognito);
+  // A scoped sweep leaves private windows alone: none of them is restored.
+  const priv = scope ? [] : windows.filter((window) => window.incognito);
 
-  const toClose = [
-    ...(await planContext(regular, settings.keepPinned, { allowNewTab: true })),
-    ...(await planContext(priv, settings.keepPinned, { allowNewTab: false })),
-  ];
+  const regularPlan = await planContext(regular, settings.keepPinned, {
+    allowNewTab: true,
+    cleanWindowId,
+  });
+  const privatePlan = await planContext(priv, settings.keepPinned, { allowNewTab: false });
+  const toClose = [...regularPlan.toClose, ...privatePlan.toClose];
+  let leftClean = regularPlan.keepWindowId;
 
   // A private-only profile state would leave zero windows behind; keep the
   // browser alive with one regular window (tab-sweep.spec "one clean window").
   if (regular.length === 0 && toClose.length > 0) {
-    await createCleanWindow();
+    leftClean = await createCleanWindow();
   }
 
   // Read before the removal: it bounds `forgetClosed` to the entries this
@@ -127,7 +169,7 @@ export async function sweep(reason: SweepReason, options: SweepOptions = {}): Pr
 
   await record(reason, toClose.length, bookmarked);
   await forgetClosed(removalStarted);
-  return { closed: toClose.length };
+  return { closed: toClose.length, cleanWindowId: leftClean };
 }
 
 /** Reads the normal windows of this profile, dropping any without an id. */
@@ -151,26 +193,34 @@ async function enumerateNormalWindows(): Promise<NormalWindow[]> {
 /**
  * Plans (and performs the pinned-tab moves for) one context.
  *
- * @returns the ids of the tabs to close in this context
+ * With `cleanWindowId` (the scoped settle pass) that window is the
+ * keep-window and every tab in it survives; otherwise the keep-window is
+ * chosen by {@link chooseKeepWindow} and only its pinned tabs may survive.
+ *
+ * @returns the ids of the tabs to close in this context, and the window kept
  */
 async function planContext(
   windows: NormalWindow[],
   keepPinned: boolean,
-  options: { allowNewTab: boolean },
-): Promise<number[]> {
-  const keepWindow = chooseKeepWindow(windows, keepPinned);
-  if (!keepWindow) return [];
+  options: { allowNewTab: boolean; cleanWindowId?: number | undefined },
+): Promise<{ toClose: number[]; keepWindowId?: number }> {
+  const keepWindow =
+    options.cleanWindowId === undefined
+      ? chooseKeepWindow(windows, keepPinned)
+      : windows.find((window) => window.id === options.cleanWindowId);
+  if (!keepWindow) return { toClose: [] };
 
   const kept = new Set<number>();
+  for (const tab of keepWindow.tabs) {
+    if (tab.id === undefined) continue;
+    if (options.cleanWindowId !== undefined || (keepPinned && tab.pinned)) kept.add(tab.id);
+  }
   if (keepPinned) {
-    for (const tab of keepWindow.tabs) {
-      if (tab.pinned && tab.id !== undefined) kept.add(tab.id);
-    }
     const strays = windows
       .filter((window) => window.id !== keepWindow.id)
       .flatMap((window) => window.tabs)
       .filter((tab) => tab.pinned && tab.id !== undefined);
-    for (const id of await consolidatePinned(keepWindow, strays, kept.size)) {
+    for (const id of await consolidatePinned(keepWindow, strays, countPinned(keepWindow))) {
       kept.add(id);
     }
   }
@@ -188,7 +238,7 @@ async function planContext(
       toClose.push(tab.id);
     }
   }
-  return toClose;
+  return { toClose, keepWindowId: keepWindow.id };
 }
 
 /**
@@ -275,12 +325,18 @@ async function createNewTab(windowId: number): Promise<void> {
   }
 }
 
-/** Last resort when the profile holds private windows and nothing else. */
-async function createCleanWindow(): Promise<void> {
+/**
+ * Last resort when the profile holds private windows and nothing else.
+ *
+ * @returns the new window's id, or `undefined` if it could not be created
+ */
+async function createCleanWindow(): Promise<number | undefined> {
   try {
-    await api.windows.create({ incognito: false });
+    const window = await api.windows.create({ incognito: false });
+    return window?.id;
   } catch (error) {
     console.warn('[zero-tabbox] could not create the clean window', error);
+    return undefined;
   }
 }
 

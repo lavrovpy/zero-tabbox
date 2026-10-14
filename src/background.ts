@@ -59,11 +59,13 @@ api.runtime.onStartup.addListener(() => {
   // pass (design.md D8). Because `bootstrap` above is queued first, it is
   // normally the call that performs the catch-up sweep, so the settle pass has
   // to be armed on its behalf here — this listener is the only evidence that
-  // the cold start was a browser start rather than an alarm wake.
+  // the cold start was a browser start rather than an alarm wake. The pass
+  // spares the window the bootstrap's catch-up left clean, so what the user
+  // opens there in the first minute survives it.
   guard('onStartup', async () => {
-    const bootstrapSwept = await bootstrap.catch(() => false);
-    const swept = await reconcile('startup');
-    if (bootstrapSwept && !swept) await armSettlePass();
+    const bootstrapCatchUp = await bootstrap.catch(() => null);
+    const catchUp = await reconcile('startup');
+    if (bootstrapCatchUp && !catchUp) await armSettlePass(bootstrapCatchUp.cleanWindowId);
   });
 });
 

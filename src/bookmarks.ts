@@ -72,12 +72,13 @@ export async function bookmarkableTabs(keepPinned: boolean): Promise<AtRiskTab[]
 /** Shared enumeration behind {@link atRiskTabs} and {@link bookmarkableTabs}. */
 async function collect(
   keepPinned: boolean,
-  options: { includePrivate: boolean },
+  options: { includePrivate: boolean; exceptWindowId?: number | undefined },
 ): Promise<AtRiskTab[]> {
   const windows = await api.windows.getAll({ populate: true, windowTypes: ['normal'] });
   const tabs: AtRiskTab[] = [];
   for (const window of windows) {
     if (window.incognito && !options.includePrivate) continue;
+    if (options.exceptWindowId !== undefined && window.id === options.exceptWindowId) continue;
     for (const tab of window.tabs ?? []) {
       if (keepPinned && tab.pinned) continue;
       if (!tab.url) continue;
@@ -123,12 +124,18 @@ async function ensureFolder(title: string, parentId?: string): Promise<string> {
  * @param keepPinned current `keepPinned` setting, so the saved set matches the
  *   swept set
  * @param now instant used for the dated folder name
+ * @param options.exceptWindowId a window the coming sweep leaves untouched —
+ *   the settle pass's clean window (design.md D8) — so its tabs are not saved
  */
 export async function bookmarkAtRiskTabs(
   keepPinned: boolean,
   now: Date = new Date(),
+  options: { exceptWindowId?: number | undefined } = {},
 ): Promise<BookmarkAllResult> {
-  const tabs = await bookmarkableTabs(keepPinned);
+  const tabs = await collect(keepPinned, {
+    includePrivate: false,
+    exceptWindowId: options.exceptWindowId,
+  });
   const day = localDateStamp(now);
   const folderPath = `bookmarks / ${ROOT_FOLDER} / ${day}`;
   if (tabs.length === 0) return { count: 0, folderPath };
