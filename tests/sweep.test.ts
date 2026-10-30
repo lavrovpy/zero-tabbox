@@ -27,7 +27,8 @@ const { store, mockApi } = (() => {
       incognito: false,
       tabs: [
         { id: 11, windowId: 1, pinned: false },
-        { id: 12, windowId: 1, pinned: false },
+        // Tab 13 has no `lastAccessed`, as on Chrome < 121.
+        { id: 12, windowId: 1, pinned: false, lastAccessed: 1_000 },
         { id: 13, windowId: 1, pinned: false },
       ],
     },
@@ -82,7 +83,7 @@ mock.module('../src/storage', () => ({
   },
 }));
 
-const { sweep } = await import('../src/sweep');
+const { sweep, tabUsedBetween } = await import('../src/sweep');
 
 beforeEach(() => {
   store.lastSweep = undefined;
@@ -150,5 +151,17 @@ describe('sweep — recently-closed list', () => {
     expect(typeof since).toBe('number');
     expect(since).toBeGreaterThanOrEqual(before);
     expect(since).toBeLessThanOrEqual(Date.now());
+  });
+});
+
+describe('tabUsedBetween', () => {
+  it('finds a tab activated inside the half-open window', async () => {
+    expect(await tabUsedBetween(1_000, 1_001)).toBe(true);
+    expect(await tabUsedBetween(500, 1_000)).toBe(false);
+  });
+
+  it('treats a tab without lastAccessed as unused', async () => {
+    expect(await tabUsedBetween(0, Number.MAX_SAFE_INTEGER)).toBe(true);
+    expect(await tabUsedBetween(2_000, Number.MAX_SAFE_INTEGER)).toBe(false);
   });
 });

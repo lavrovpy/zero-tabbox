@@ -55,6 +55,17 @@ If the browser was running but the device was asleep or the timer was delayed at
 - **WHEN** the device sleeps from 17:50 to 08:30 with cutoff 18:00
 - **THEN** a sweep runs shortly after the device wakes at 08:30
 
+### Requirement: A catch-up never closes the next day's work
+A catch-up sweep (startup, or a late timer) SHALL NOT run when a tab was used more than 60 minutes after the missed cutoff and more than 10 minutes before the catch-up. The extension SHALL then record the cutoff as done without sweeping, and the startup follow-up pass SHALL apply the same check. While the browser runs, the extension SHALL re-check the schedule at least every 15 minutes, so a cutoff whose timer was lost still sweeps within minutes.
+
+#### Scenario: Cutoff missed while the browser kept running
+- **WHEN** the 19:00 sweep never ran although the browser was open, the user worked in tabs from 09:00 the next day, and the browser restarts at 11:30
+- **THEN** no sweep runs, and the next cutoff (19:00 that day) is armed as usual
+
+#### Scenario: Lost timer repaired within the hour
+- **WHEN** the 19:00 timer is lost and the user is using tabs at 19:05
+- **THEN** a sweep runs at the next re-check, by 19:15
+
 ### Requirement: Each cutoff sweeps at most once
 The extension SHALL record the identity of the last cutoff swept (date + cutoff time) and SHALL NOT run a second automatic sweep for the same cutoff, even if the timer fires again, the extension's background process restarts, or the browser restarts multiple times. The startup follow-up pass counts as part of the same catch-up sweep, not a second sweep.
 

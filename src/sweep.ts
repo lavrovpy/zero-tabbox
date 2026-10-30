@@ -130,6 +130,24 @@ export async function sweep(reason: SweepReason, options: SweepOptions = {}): Pr
   return { closed: toClose.length };
 }
 
+/**
+ * Whether any tab in a normal window was last activated in `[fromMs, toMs)` —
+ * the evidence that decides whether a catch-up sweep has gone stale
+ * (design.md D15).
+ *
+ * Tabs without `lastAccessed` (Chrome < 121) count as unused, which falls back
+ * to sweeping.
+ */
+export async function tabUsedBetween(fromMs: number, toMs: number): Promise<boolean> {
+  const windows = await enumerateNormalWindows();
+  return windows.some((window) =>
+    window.tabs.some((tab) => {
+      const at: unknown = tab.lastAccessed;
+      return typeof at === 'number' && at >= fromMs && at < toMs;
+    }),
+  );
+}
+
 /** Reads the normal windows of this profile, dropping any without an id. */
 async function enumerateNormalWindows(): Promise<NormalWindow[]> {
   // Allow-list, not deny-list: the documented default filter is
