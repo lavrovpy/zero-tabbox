@@ -14,7 +14,7 @@ interface MockWindow {
   id: number;
   focused: boolean;
   incognito: boolean;
-  tabs: { id: number; windowId: number; pinned: boolean }[];
+  tabs: { id: number; windowId: number; pinned: boolean; lastAccessed?: number }[];
 }
 
 /** A normal window holding `tabIds`, unpinned unless listed in `pinned`. */
@@ -114,7 +114,7 @@ mock.module('../src/storage', () => ({
   },
 }));
 
-const { sweep } = await import('../src/sweep');
+const { sweep, tabUsedBetween } = await import('../src/sweep');
 
 beforeEach(() => {
   store.lastSweep = undefined;
@@ -268,5 +268,32 @@ describe('sweep — reports the window it left clean', () => {
     store.windows = [];
 
     expect(await sweep('auto')).toEqual({ closed: 0, cleanWindowId: undefined });
+  });
+});
+
+describe('tabUsedBetween', () => {
+  beforeEach(() => {
+    // Tab 13 has no `lastAccessed`, as on Chrome < 121.
+    store.windows = [
+      {
+        id: 1,
+        focused: true,
+        incognito: false,
+        tabs: [
+          { id: 12, windowId: 1, pinned: false, lastAccessed: 1_000 },
+          { id: 13, windowId: 1, pinned: false },
+        ],
+      },
+    ];
+  });
+
+  it('finds a tab activated inside the half-open window', async () => {
+    expect(await tabUsedBetween(1_000, 1_001)).toBe(true);
+    expect(await tabUsedBetween(500, 1_000)).toBe(false);
+  });
+
+  it('treats a tab without lastAccessed as unused', async () => {
+    expect(await tabUsedBetween(0, Number.MAX_SAFE_INTEGER)).toBe(true);
+    expect(await tabUsedBetween(2_000, Number.MAX_SAFE_INTEGER)).toBe(false);
   });
 });

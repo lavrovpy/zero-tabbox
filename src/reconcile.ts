@@ -18,10 +18,16 @@
  * a fake clock and fake storage without a browser (tests/reconcile.test.ts).
  */
 import { clearBadge, setCountdownBadge, showNoticeNotification } from './badge';
-import { latestElapsedCutoff, nextOccurrence } from './cutoff';
+import { cutoffInstant, latestElapsedCutoff, nextOccurrence } from './cutoff';
 import { api, createAlarm, createRepeatingAlarm } from './platform';
 import { getLastAutoCutoffId, getSettings, isAccepted, setLastAutoCutoffId } from './storage';
-import { sweep, type SweepOptions, type SweepResult, type SweepScope } from './sweep';
+import {
+  sweep,
+  tabUsedBetween,
+  type SweepOptions,
+  type SweepResult,
+  type SweepScope,
+} from './sweep';
 import type { Settings, SweepReason } from './types';
 
 /** What caused `reconcile()` to run. Only the reason differs, not the logic. */
@@ -63,6 +69,12 @@ export const ALARM = {
    * the background is torn down long before 60 s are up.
    */
   badgeClear: 'badge-clear',
+  /**
+   * Repeating reconcile, so a cutoff whose own alarm was dropped or whose
+   * handler died still sweeps minutes late instead of leaving the schedule
+   * unarmed until the next browser start (design.md D15).
+   */
+  heartbeat: 'heartbeat',
 } as const;
 
 /** Delay of the post-startup settle pass (design.md D8). */
@@ -81,6 +93,21 @@ export const BADGE_CLEAR_MS = 60_000;
 
 const MINUTE_MS = 60_000;
 
+/** Period of the `heartbeat` alarm. Must stay well under {@link STALE_AFTER_MS}. */
+export const HEARTBEAT_MINUTES = 15;
+
+/**
+ * A catch-up is forgiven once a tab was used this long after the missed cutoff
+ * (design.md D15).
+ */
+export const STALE_AFTER_MS = 60 * MINUTE_MS;
+
+/**
+ * Tab use this recent is not evidence against a catch-up: session restore and
+ * a waking device activate tabs on their own (design.md D15).
+ */
+export const RECENT_USE_MS = 10 * MINUTE_MS;
+
 /**
  * Everything the engine touches that is not pure arithmetic. Injected so the
  * scheduling rules are testable; the defaults are the real browser-backed
@@ -95,6 +122,8 @@ export interface ReconcileDeps {
   getLastAutoCutoffId(): Promise<string>;
   setLastAutoCutoffId(cutoffId: string): Promise<void>;
   sweep(reason: SweepReason, options?: SweepOptions, scope?: SweepScope): Promise<SweepResult>;
+  /** Whether any tab was last activated in `[fromMs, toMs)`. */
+  tabUsedBetween(fromMs: number, toMs: number): Promise<boolean>;
   latestElapsedCutoff(now: Date, cutoffs: readonly string[]): string | null;
   nextOccurrence(now: Date, hhmm: string): Date;
   getAlarms(): Promise<{ name: string }[]>;
@@ -114,6 +143,7 @@ export const defaultDeps: ReconcileDeps = {
   getLastAutoCutoffId,
   setLastAutoCutoffId,
   sweep,
+  tabUsedBetween,
   latestElapsedCutoff,
   nextOccurrence,
   getAlarms: () => api.alarms.getAll(),
@@ -219,7 +249,11 @@ async function reconcileNow(
     // seeds the marker (unset → fast-forward, so acceptance never sweeps
     // retroactively) and arms the schedule.
     for (const alarm of await deps.getAlarms()) {
-      if (isScheduleAlarm(alarm.name) || alarm.name === ALARM.badge) {
+      if (
+        isScheduleAlarm(alarm.name) ||
+        alarm.name === ALARM.badge ||
+        alarm.name === ALARM.heartbeat
+      ) {
         await deps.clearAlarm(alarm.name);
       }
     }
@@ -245,13 +279,32 @@ async function reconcileNow(
     // Lexical comparison is chronological: every id is `YYYY-MM-DDTHH:MM`.
     // Several missed cutoffs collapse into this one sweep — sweeping is not
     // cumulative.
-    const result = await sweepNow('auto', latest, deps);
-    catchUp = { cleanWindowId: result.cleanWindowId };
-    if (trigger === 'startup') await armSettlePass(result.cleanWindowId, deps);
+    if (await catchUpIsStale(latest, deps)) {
+      await deps.setLastAutoCutoffId(latest);
+    } else {
+      const result = await sweepNow('auto', latest, deps);
+      catchUp = { cleanWindowId: result.cleanWindowId };
+      if (trigger === 'startup') await armSettlePass(result.cleanWindowId, deps);
+    }
   }
 
   await rearm(settings, trigger, deps);
   return catchUp;
+}
+
+/**
+ * Whether the user has kept working since `cutoffId` without the sweep having
+ * happened — a tab was used after the cutoff plus {@link STALE_AFTER_MS}, and
+ * not merely in the last {@link RECENT_USE_MS}. Sweeping then would close the
+ * next day's work in front of the user, so the cutoff is forgiven instead
+ * (design.md D15).
+ */
+async function catchUpIsStale(cutoffId: string, deps: ReconcileDeps): Promise<boolean> {
+  const cutoff = cutoffInstant(cutoffId);
+  if (cutoff === null) return false;
+  const from = cutoff.getTime() + STALE_AFTER_MS;
+  const to = deps.now().getTime() - RECENT_USE_MS;
+  return from < to && (await deps.tabUsedBetween(from, to));
 }
 
 /**
@@ -337,12 +390,18 @@ async function rearm(
     }
   }
 
-  for (const alarm of await deps.getAlarms()) {
+  const existing = await deps.getAlarms();
+  for (const alarm of existing) {
     if (!isScheduleAlarm(alarm.name)) continue;
     if (!wanted.has(alarm.name) && !pending.has(alarm.name)) await deps.clearAlarm(alarm.name);
   }
   for (const [name, when] of wanted) {
     await deps.createAlarm(name, when);
+  }
+  // Created only when missing: re-creating it on every wake would restart its
+  // period, and the badge countdown wakes the background every minute.
+  if (!existing.some((alarm) => alarm.name === ALARM.heartbeat)) {
+    await deps.createRepeatingAlarm(ALARM.heartbeat, HEARTBEAT_MINUTES);
   }
 
   await syncCountdown(settings, now, trigger, deps);
@@ -436,8 +495,10 @@ export async function handleBadgeAlarm(deps: ReconcileDeps = defaultDeps): Promi
 
 /**
  * A settle alarm fired: repeat the catch-up for the same cutoff, closing only
- * what session restore brought back after it (design.md D8). It neither reads
- * nor advances the marker, and its count folds into the catch-up's.
+ * what session restore brought back after it (design.md D8). It never advances
+ * the marker, and its count folds into the catch-up's. It re-checks D15
+ * staleness against the marker's cutoff, because the catch-up may have run
+ * before session restore produced the tabs that show the user kept working.
  *
  * With a clean window in the name, that window and everything the user opened
  * in it survive, and only the other windows are swept. Without one — the
@@ -460,11 +521,14 @@ async function handleSettleAlarm(
     if (!/^\d+$/.test(id)) return; // Not a name this module writes.
     scope = { cleanWindowId: Number(id) };
   }
-  await runSweep('settle', { scope, deps });
+  await serialize(async () => {
+    if (await catchUpIsStale(await deps.getLastAutoCutoffId(), deps)) return;
+    await sweepNow('settle', undefined, deps, undefined, scope);
+  });
 }
 
 /**
- * Routes one alarm to its handler. Anything unrecognised — including a
+ * Routes one alarm to its handler. Anything unrecognised — `heartbeat`, or a
  * `sweep:*` alarm for a cutoff that has since been edited — falls through to
  * `reconcile()`, which re-derives the truth from settings and the clock.
  */

@@ -99,6 +99,26 @@ export function cutoffId(date: Date, hhmm: string): string {
   return `${localDateStamp(date)}T${hhmm}`;
 }
 
+/** `YYYY-MM-DDTHH:MM`, the shape {@link cutoffId} produces. */
+const CUTOFF_ID_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})$/;
+
+/**
+ * The local instant a {@link cutoffId} names — its inverse.
+ *
+ * @param id e.g. `'2026-08-19T18:00'`
+ * @returns the instant, or `null` for anything `cutoffId` could not have
+ *   produced (including the unset marker `''`)
+ */
+export function cutoffInstant(id: string): Date | null {
+  const match = CUTOFF_ID_RE.exec(id);
+  if (match === null) return null;
+  const time = parseHhMm(match[4]!);
+  if (time === null) return null;
+  const at = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), time.hours, time.minutes, 0, 0);
+  // `Date` rolls `2026-02-30` over into March; a round-trip catches it.
+  return cutoffId(at, match[4]!) === id ? at : null;
+}
+
 /**
  * The local instant of `time` on the calendar day `dayOffset` days from `now`.
  *

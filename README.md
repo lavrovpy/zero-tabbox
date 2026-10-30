@@ -58,9 +58,13 @@ default.
 
 A cutoff missed while the browser was shut, asleep, or crashed still sweeps at
 the next start, plus a follow-up pass about 60 seconds later for windows session
-restore materialises late (the window you're working in is left alone) — and nothing above is armed until you accept the
-contract, on the page that opens at install or on the settings page. "End day
-now" works even before you accept, because clicking it is its own consent.
+restore materialises late (the window you're working in is left alone). The one
+exception: if you have been using tabs for more than an hour past the missed
+cutoff, it is let go instead, because by then the open tabs are the next day's
+work, not the day the cutoff was meant to end. Nothing above is armed until you
+accept the contract, on the page that opens at install or on the settings page.
+"End day now" works even before you accept, because clicking it is its own
+consent.
 
 Defaults: one cutoff at `18:00` local time, 10 minutes of notice, system
 notification on, keep-pinned off.
@@ -104,9 +108,10 @@ want it yourself.
   per-extension. If you do switch it on, private windows are swept under the
   same rules — with the one difference that a new-tab page is never created in a
   private window, and kept pinned private tabs stay in a private window.
-- **Disabling the extension.** Nothing stops you. But the catch-up sweep runs
-  when it comes back, so the cutoffs you skipped are not forgiven — the most
-  recent missed one still fires. This is a habit tool, not a parental control.
+- **Disabling the extension.** Nothing stops you. Re-enable it within the hour
+  and the missed cutoff still fires; keep browsing longer than that and it is
+  let go, like any cutoff the extension missed. This is a habit tool, not a
+  parental control.
 
 ## Install
 

@@ -96,6 +96,8 @@ interface State {
   sessionOnly: Set<string>;
   badge: (number | null)[];
   notices: string[];
+  /** `lastAccessed` of every open tab, epoch ms. */
+  tabUses: number[];
 }
 
 const REPEATING = -1;
@@ -130,6 +132,7 @@ function harness(
     sessionOnly: new Set(),
     badge: [],
     notices: [],
+    tabUses: [],
   };
 
   const deps: ReconcileDeps = {
@@ -145,6 +148,7 @@ function harness(
       state.scopes.push(scope?.cleanWindowId);
       return { closed: state.closedPerSweep, cleanWindowId: state.cleanWindowId };
     },
+    tabUsedBetween: async (fromMs, toMs) => state.tabUses.some((at) => at >= fromMs && at < toMs),
     latestElapsedCutoff,
     nextOccurrence,
     getAlarms: async () => [...state.alarms.keys()].map((name) => ({ name })),
@@ -447,6 +451,7 @@ describe('reconcile — schedule changes', () => {
     await reconcile('settings-changed', deps);
 
     expect([...state.alarms.keys()].sort()).toEqual([
+      ALARM.heartbeat,
       `${ALARM.noticePrefix}18:00`,
       `${ALARM.sweepPrefix}18:00`,
     ]);
@@ -464,7 +469,7 @@ describe('reconcile — schedule changes', () => {
 
     await reconcile('alarm', deps);
 
-    expect([...state.alarms.keys()]).toEqual([`${ALARM.sweepPrefix}18:00`]);
+    expect([...state.alarms.keys()].sort()).toEqual([ALARM.heartbeat, `${ALARM.sweepPrefix}18:00`]);
     expect(state.badge).toEqual([]);
   });
 });
@@ -526,7 +531,7 @@ describe('reconcile — startup settle pass (design.md D8)', () => {
     expect(state.alarms.get(ALARM.settle)).toBe(state.now.getTime() + SETTLE_DELAY_MS);
   });
 
-  it('sweeps once more without reading or advancing the marker', async () => {
+  it('sweeps once more without advancing the marker', async () => {
     const { state, deps } = harness({
       now: new Date(2026, 7, 19, 9, 0),
       settings: { cutoffs: ['18:00'] },
@@ -645,6 +650,145 @@ describe('reconcile — startup settle pass (design.md D8)', () => {
     await handleAlarm({ name: 'settle:abc' }, deps);
 
     expect(state.sweeps).toEqual([]);
+  });
+});
+
+describe('reconcile — stale catch-up (design.md D15)', () => {
+  // The incident this guards against: the 19:00 cutoff never swept while the
+  // browser kept running, the user worked through the next morning, and a
+  // browser restart at 11:30 closed that morning's tabs as a "catch-up".
+  const THU_CUTOFF = '2026-10-29T19:00';
+
+  it('forgives a missed cutoff when tabs were used the next morning', async () => {
+    const { state, deps } = harness({
+      now: new Date(2026, 9, 30, 11, 30),
+      marker: '2026-10-28T19:00',
+      settings: { cutoffs: ['19:00'] },
+    });
+    state.tabUses = [new Date(2026, 9, 30, 9, 40).getTime(), new Date(2026, 9, 30, 11, 10).getTime()];
+
+    const swept = await reconcile('startup', deps);
+
+    expect(swept).toBeNull();
+    expect(state.sweeps).toEqual([]);
+    expect(state.marker).toBe(THU_CUTOFF);
+    expect(state.alarms.has(ALARM.settle)).toBe(false);
+    expect(state.alarms.get(`${ALARM.sweepPrefix}19:00`)).toBe(new Date(2026, 9, 30, 19, 0).getTime());
+  });
+
+  it('still sweeps a session left before the cutoff and restored the next morning', async () => {
+    // sweep-schedule.spec "Browser closed at cutoff, reopened next morning".
+    const { state, deps } = harness({
+      now: new Date(2026, 9, 30, 9, 0),
+      marker: '2026-10-28T19:00',
+      settings: { cutoffs: ['19:00'] },
+    });
+    state.tabUses = [new Date(2026, 9, 29, 17, 20).getTime()];
+
+    await reconcile('startup', deps);
+
+    expect(state.sweeps).toEqual(['auto']);
+    expect(state.marker).toBe(THU_CUTOFF);
+  });
+
+  it('ignores tabs activated in the last minutes, as restore and wake-up do', async () => {
+    const { state, deps } = harness({
+      now: new Date(2026, 9, 30, 9, 0),
+      marker: '2026-10-28T19:00',
+      settings: { cutoffs: ['19:00'] },
+    });
+    state.tabUses = [new Date(2026, 9, 30, 8, 52).getTime(), state.now.getTime()];
+
+    await reconcile('wake', deps);
+
+    expect(state.sweeps).toEqual(['auto']);
+  });
+
+  it('still sweeps a cutoff that is late by less than the grace period', async () => {
+    // A heartbeat repairing a dropped alarm at 19:15 is late, not stale.
+    const { state, deps } = harness({
+      now: new Date(2026, 9, 29, 19, 15),
+      marker: '2026-10-28T19:00',
+      settings: { cutoffs: ['19:00'] },
+    });
+    state.tabUses = [new Date(2026, 9, 29, 19, 3).getTime()];
+
+    await reconcile('alarm', deps);
+
+    expect(state.sweeps).toEqual(['auto']);
+  });
+
+  it('still sweeps after a device sleeps through the cutoff', async () => {
+    // sweep-schedule.spec "Laptop lid closed at cutoff": the user touches a
+    // tab on waking, moments before the overdue alarm is delivered.
+    const { state, deps } = harness({
+      now: new Date(2026, 9, 30, 8, 32),
+      marker: '2026-10-28T19:00',
+      settings: { cutoffs: ['19:00'] },
+    });
+    state.tabUses = [new Date(2026, 9, 29, 18, 45).getTime(), new Date(2026, 9, 30, 8, 30).getTime()];
+
+    await reconcile('alarm', deps);
+
+    expect(state.sweeps).toEqual(['auto']);
+  });
+
+  it('re-checks in the settle pass, once session restore has produced the tabs', async () => {
+    const { state, deps } = harness({
+      now: new Date(2026, 9, 30, 11, 30),
+      marker: '2026-10-28T19:00',
+      settings: { cutoffs: ['19:00'] },
+    });
+    await reconcile('startup', deps); // no tabs restored yet: nothing says stale
+    expect(state.sweeps).toEqual(['auto']);
+
+    state.now = new Date(2026, 9, 30, 11, 31);
+    state.tabUses = [new Date(2026, 9, 30, 11, 10).getTime()];
+    await handleAlarm({ name: ALARM.settle }, deps);
+
+    expect(state.sweeps).toEqual(['auto']);
+    expect(state.marker).toBe(THU_CUTOFF);
+  });
+});
+
+describe('reconcile — heartbeat (design.md D15)', () => {
+  it('arms a repeating heartbeat with the schedule', async () => {
+    const { state, deps } = harness({ settings: { cutoffs: ['18:00'] } });
+
+    await reconcile('alarm', deps);
+
+    expect(state.alarms.get(ALARM.heartbeat)).toBe(REPEATING);
+  });
+
+  it('leaves an armed heartbeat alone, so frequent wakes do not postpone it', async () => {
+    const { state, deps } = harness({ settings: { cutoffs: ['18:00'] } });
+    state.alarms.set(ALARM.heartbeat, 42);
+
+    await reconcile('wake', deps);
+
+    expect(state.alarms.get(ALARM.heartbeat)).toBe(42);
+  });
+
+  it('sweeps a cutoff whose own alarm was lost', async () => {
+    const { state, deps } = harness({
+      now: new Date(2026, 9, 29, 19, 12),
+      marker: '2026-10-28T19:00',
+      settings: { cutoffs: ['19:00'] },
+    });
+
+    await handleAlarm({ name: ALARM.heartbeat }, deps);
+
+    expect(state.sweeps).toEqual(['auto']);
+    expect(state.marker).toBe('2026-10-29T19:00');
+  });
+
+  it('is cleared with the rest of the schedule while consent is missing', async () => {
+    const { state, deps } = harness({ accepted: false });
+    state.alarms.set(ALARM.heartbeat, REPEATING);
+
+    await reconcile('alarm', deps);
+
+    expect(state.alarms.has(ALARM.heartbeat)).toBe(false);
   });
 });
 

@@ -14,7 +14,7 @@
  */
 import { describe, expect, it } from 'bun:test';
 
-import { cutoffId, isValidHhMm, latestElapsedCutoff, nextOccurrence, parseHhMm } from '../src/cutoff';
+import { cutoffId, cutoffInstant, isValidHhMm, latestElapsedCutoff, nextOccurrence, parseHhMm } from '../src/cutoff';
 
 const HOUR_MS = 3_600_000;
 
@@ -119,6 +119,21 @@ describe('cutoffId', () => {
     // The empty-marker default sorts before every real id, so the very first
     // cutoff after install always sweeps (storage.getLastAutoCutoffId).
     expect([...chronological, ''].sort()[0]).toBe('');
+  });
+});
+
+describe('cutoffInstant', () => {
+  it('inverts cutoffId to the local instant', () => {
+    expect(cutoffInstant('2026-08-19T18:00')).toEqual(new Date(2026, 7, 19, 18, 0));
+    const at = new Date(2026, 0, 5, 9, 5);
+    expect(cutoffInstant(cutoffId(at, '09:05'))).toEqual(at);
+  });
+
+  it('returns null for the unset marker and for ids cutoffId cannot produce', () => {
+    expect(cutoffInstant('')).toBeNull();
+    expect(cutoffInstant('2026-08-19T24:00')).toBeNull();
+    expect(cutoffInstant('2026-02-30T18:00')).toBeNull();
+    expect(cutoffInstant('2026-08-19 18:00')).toBeNull();
   });
 });
 
