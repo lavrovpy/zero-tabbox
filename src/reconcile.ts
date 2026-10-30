@@ -21,7 +21,13 @@ import { clearBadge, setCountdownBadge, showNoticeNotification } from './badge';
 import { cutoffInstant, latestElapsedCutoff, nextOccurrence } from './cutoff';
 import { api, createAlarm, createRepeatingAlarm } from './platform';
 import { getLastAutoCutoffId, getSettings, isAccepted, setLastAutoCutoffId } from './storage';
-import { sweep, tabUsedBetween, type SweepOptions, type SweepResult } from './sweep';
+import {
+  sweep,
+  tabUsedBetween,
+  type SweepOptions,
+  type SweepResult,
+  type SweepScope,
+} from './sweep';
 import type { Settings, SweepReason } from './types';
 
 /** What caused `reconcile()` to run. Only the reason differs, not the logic. */
@@ -51,8 +57,13 @@ export const ALARM = {
   noticePrefix: 'notice:',
   /** Repeating 1-minute badge countdown between the notice and the cutoff. */
   badge: 'badge',
-  /** One-shot 60 s post-startup settle pass (design.md D8). */
+  /**
+   * One-shot 60 s post-startup settle pass (design.md D8). Named
+   * `settle:<windowId>` when the catch-up left a clean window for it to spare,
+   * plain `settle` when it did not.
+   */
   settle: 'settle',
+  settlePrefix: 'settle:',
   /**
    * One-shot clear of the post-sweep count badge. An alarm, not a `setTimeout`:
    * the background is torn down long before 60 s are up.
@@ -68,6 +79,14 @@ export const ALARM = {
 
 /** Delay of the post-startup settle pass (design.md D8). */
 export const SETTLE_DELAY_MS = 60_000;
+
+/**
+ * How overdue a settle alarm may be and still belong to this browser session.
+ * A later delivery is a leftover from an earlier session — older Chrome keeps
+ * alarms across restarts whatever `persistAcrossSessions` says — and its window
+ * id now names some other window, so it must do nothing.
+ */
+export const SETTLE_STALE_MS = 5 * 60_000;
 
 /** How long the post-sweep count stays on the badge (sweep-controls.spec). */
 export const BADGE_CLEAR_MS = 60_000;
@@ -102,13 +121,13 @@ export interface ReconcileDeps {
   getSettings(): Promise<Settings>;
   getLastAutoCutoffId(): Promise<string>;
   setLastAutoCutoffId(cutoffId: string): Promise<void>;
-  sweep(reason: SweepReason, options?: SweepOptions): Promise<SweepResult>;
+  sweep(reason: SweepReason, options?: SweepOptions, scope?: SweepScope): Promise<SweepResult>;
   /** Whether any tab was last activated in `[fromMs, toMs)`. */
   tabUsedBetween(fromMs: number, toMs: number): Promise<boolean>;
   latestElapsedCutoff(now: Date, cutoffs: readonly string[]): string | null;
   nextOccurrence(now: Date, hhmm: string): Date;
   getAlarms(): Promise<{ name: string }[]>;
-  createAlarm(name: string, when: number): Promise<void>;
+  createAlarm(name: string, when: number, options?: { persist?: boolean }): Promise<void>;
   createRepeatingAlarm(name: string, periodInMinutes: number): Promise<void>;
   clearAlarm(name: string): Promise<void>;
   setCountdownBadge(minutesRemaining: number): Promise<void>;
@@ -156,6 +175,12 @@ function serialize<T>(work: () => Promise<T>): Promise<T> {
   return next;
 }
 
+/** What a `reconcile()` that performed a catch-up sweep reports. */
+export interface CatchUp {
+  /** The regular window the sweep left clean, for the settle pass to spare. */
+  cleanWindowId?: number | undefined;
+}
+
 /**
  * The heart of the schedule (design.md D2/D3). Reads settings and
  * `lastAutoCutoffId`, sweeps when the latest elapsed cutoff is newer than the
@@ -174,13 +199,14 @@ function serialize<T>(work: () => Promise<T>): Promise<T> {
  *
  * Safe to call repeatedly and concurrently: every wake event calls it.
  *
- * @returns whether this call performed a catch-up sweep — which is what the
- *   caller needs to decide whether the settle pass is owed (see `background.ts`)
+ * @returns the catch-up this call performed, or `null` if it did not sweep —
+ *   which is what the caller needs to decide whether the settle pass is owed,
+ *   and which window it must spare (see `background.ts`)
  */
 export function reconcile(
   trigger: ReconcileTrigger,
   deps: ReconcileDeps = defaultDeps,
-): Promise<boolean> {
+): Promise<CatchUp | null> {
   return serialize(() => reconcileNow(trigger, deps));
 }
 
@@ -189,12 +215,32 @@ export function reconcile(
  * browser start the bootstrap `reconcile('wake')` is queued before
  * `runtime.onStartup` is dispatched, so the call that performs the catch-up
  * sweep is not the call that knows the browser just started.
+ *
+ * The alarm carries the clean window's id in its name — the background keeps
+ * no state between events — and is asked not to persist: a window id means
+ * nothing after a restart. Any settle alarm already pending is replaced.
+ *
+ * @param cleanWindowId the window the catch-up left clean, if any
  */
-export async function armSettlePass(deps: ReconcileDeps = defaultDeps): Promise<void> {
-  await deps.createAlarm(ALARM.settle, deps.now().getTime() + SETTLE_DELAY_MS);
+export async function armSettlePass(
+  cleanWindowId: number | undefined,
+  deps: ReconcileDeps = defaultDeps,
+): Promise<void> {
+  for (const alarm of await deps.getAlarms()) {
+    if (isSettleAlarm(alarm.name)) await deps.clearAlarm(alarm.name);
+  }
+  const name = cleanWindowId === undefined ? ALARM.settle : ALARM.settlePrefix + cleanWindowId;
+  await deps.createAlarm(name, deps.now().getTime() + SETTLE_DELAY_MS, { persist: false });
 }
 
-async function reconcileNow(trigger: ReconcileTrigger, deps: ReconcileDeps): Promise<boolean> {
+function isSettleAlarm(name: string): boolean {
+  return name === ALARM.settle || name.startsWith(ALARM.settlePrefix);
+}
+
+async function reconcileNow(
+  trigger: ReconcileTrigger,
+  deps: ReconcileDeps,
+): Promise<CatchUp | null> {
   if (!(await deps.isAccepted())) {
     // Consent gate (design.md D7): until the user explicitly accepts the
     // contract, no automatic sweep runs, no marker is seeded and no schedule
@@ -211,14 +257,14 @@ async function reconcileNow(trigger: ReconcileTrigger, deps: ReconcileDeps): Pro
         await deps.clearAlarm(alarm.name);
       }
     }
-    return false;
+    return null;
   }
 
   const settings = await deps.getSettings();
   const now = deps.now();
   const latest = deps.latestElapsedCutoff(now, settings.cutoffs);
   const marker = await deps.getLastAutoCutoffId();
-  let swept = false;
+  let catchUp: CatchUp | null = null;
 
   if (trigger === 'settings-changed' || marker === '') {
     // Two cases, one rule: adopt the latest elapsed cutoff as already-done
@@ -236,14 +282,14 @@ async function reconcileNow(trigger: ReconcileTrigger, deps: ReconcileDeps): Pro
     if (await catchUpIsStale(latest, deps)) {
       await deps.setLastAutoCutoffId(latest);
     } else {
-      await sweepNow('auto', latest, deps);
-      swept = true;
-      if (trigger === 'startup') await armSettlePass(deps);
+      const result = await sweepNow('auto', latest, deps);
+      catchUp = { cleanWindowId: result.cleanWindowId };
+      if (trigger === 'startup') await armSettlePass(result.cleanWindowId, deps);
     }
   }
 
   await rearm(settings, trigger, deps);
-  return swept;
+  return catchUp;
 }
 
 /**
@@ -262,17 +308,6 @@ async function catchUpIsStale(cutoffId: string, deps: ReconcileDeps): Promise<bo
 }
 
 /**
- * The D8 settle pass. It re-checks staleness because the first pass may have
- * run before session restore produced the tabs that show the user kept working.
- */
-function settlePass(deps: ReconcileDeps): Promise<number> {
-  return serialize(async () => {
-    if (await catchUpIsStale(await deps.getLastAutoCutoffId(), deps)) return 0;
-    return sweepNow('settle', undefined, deps);
-  });
-}
-
-/**
  * Everything `runSweep` takes beyond the reason, as one bag. These were three
  * trailing optionals, which forced callers to pad with `undefined` to reach
  * the one they actually meant (`runSweep('manual', undefined, undefined, x)`).
@@ -280,6 +315,8 @@ function settlePass(deps: ReconcileDeps): Promise<number> {
 export interface RunSweepOptions extends SweepOptions {
   /** The id to record for an `auto` sweep; omitted otherwise. */
   cutoffId?: string;
+  /** Narrows what the sweep closes; only the settle pass passes one. */
+  scope?: SweepScope | undefined;
   /** Injected dependency seam for tests; defaults to the real dependencies. */
   deps?: ReconcileDeps;
 }
@@ -293,8 +330,8 @@ export interface RunSweepOptions extends SweepOptions {
  * @returns the number of tabs closed, for the badge and the popup's reply
  */
 export function runSweep(reason: SweepReason, opts: RunSweepOptions = {}): Promise<number> {
-  const { cutoffId, deps = defaultDeps, ...options } = opts;
-  return serialize(() => sweepNow(reason, cutoffId, deps, options));
+  const { cutoffId, scope, deps = defaultDeps, ...options } = opts;
+  return serialize(async () => (await sweepNow(reason, cutoffId, deps, options, scope)).closed);
 }
 
 async function sweepNow(
@@ -302,14 +339,15 @@ async function sweepNow(
   cutoffId: string | undefined,
   deps: ReconcileDeps,
   options?: SweepOptions,
-): Promise<number> {
-  const result = await deps.sweep(reason, options);
+  scope?: SweepScope,
+): Promise<SweepResult> {
+  const result = await deps.sweep(reason, options, scope);
   if (reason === 'auto' && cutoffId) await deps.setLastAutoCutoffId(cutoffId);
 
   // The countdown is over and the badge now shows the closed count instead.
   await deps.clearAlarm(ALARM.badge);
   await deps.createAlarm(ALARM.badgeClear, deps.now().getTime() + BADGE_CLEAR_MS);
-  return result.closed;
+  return result;
 }
 
 /**
@@ -456,19 +494,51 @@ export async function handleBadgeAlarm(deps: ReconcileDeps = defaultDeps): Promi
 }
 
 /**
+ * A settle alarm fired: repeat the catch-up for the same cutoff, closing only
+ * what session restore brought back after it (design.md D8). It never advances
+ * the marker, and its count folds into the catch-up's. It re-checks D15
+ * staleness against the marker's cutoff, because the catch-up may have run
+ * before session restore produced the tabs that show the user kept working.
+ *
+ * With a clean window in the name, that window and everything the user opened
+ * in it survive, and only the other windows are swept. Without one — the
+ * catch-up found no window at all, so restore had not begun — the pass is a
+ * full sweep, because everything on screen is then the restored session.
+ */
+async function handleSettleAlarm(
+  alarm: { name: string; scheduledTime?: number },
+  deps: ReconcileDeps,
+): Promise<void> {
+  if (
+    alarm.scheduledTime !== undefined &&
+    deps.now().getTime() - alarm.scheduledTime > SETTLE_STALE_MS
+  ) {
+    return; // A leftover from an earlier browser session (SETTLE_STALE_MS).
+  }
+  let scope: SweepScope | undefined;
+  if (alarm.name !== ALARM.settle) {
+    const id = alarm.name.slice(ALARM.settlePrefix.length);
+    if (!/^\d+$/.test(id)) return; // Not a name this module writes.
+    scope = { cleanWindowId: Number(id) };
+  }
+  await serialize(async () => {
+    if (await catchUpIsStale(await deps.getLastAutoCutoffId(), deps)) return;
+    await sweepNow('settle', undefined, deps, undefined, scope);
+  });
+}
+
+/**
  * Routes one alarm to its handler. Anything unrecognised — `heartbeat`, or a
  * `sweep:*` alarm for a cutoff that has since been edited — falls through to
  * `reconcile()`, which re-derives the truth from settings and the clock.
  */
 export async function handleAlarm(
-  alarm: { name: string },
+  alarm: { name: string; scheduledTime?: number },
   deps: ReconcileDeps = defaultDeps,
 ): Promise<void> {
   const name = alarm.name;
-  if (name === ALARM.settle) {
-    // Repeats the catch-up sweep for the same cutoff: it does not advance the
-    // marker, and its count folds into that sweep (design.md D8).
-    await settlePass(deps);
+  if (isSettleAlarm(name)) {
+    await handleSettleAlarm(alarm, deps);
     return;
   }
   if (name === ALARM.badge) {

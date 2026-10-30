@@ -30,7 +30,7 @@ Cutoff times SHALL be interpreted in the device's current local timezone at the 
 - **THEN** the next sweep runs at 18:00 new local time
 
 ### Requirement: Missed cutoffs are caught up on startup
-When the browser starts (including after being closed at cutoff, after a crash, or after the extension is enabled/updated), the extension SHALL determine whether any cutoff has elapsed since the last recorded automatic sweep; if so, it SHALL run a sweep immediately, before the user's restored session can be used, and SHALL run one follow-up pass shortly afterwards to catch tabs that session restore materialises late.
+When the browser starts (including after being closed at cutoff, after a crash, or after the extension is enabled/updated), the extension SHALL determine whether any cutoff has elapsed since the last recorded automatic sweep; if so, it SHALL run a sweep immediately, before the user's restored session can be used, and SHALL run one follow-up pass shortly afterwards to catch tabs that session restore materialises late. The follow-up pass SHALL leave alone the window the startup sweep left clean, so tabs the user opens there are not closed, and SHALL NOT run in a later browser session than the one that armed it.
 
 #### Scenario: Browser closed at cutoff, reopened next morning with session restore
 - **WHEN** the browser was quit at 17:30 with 60 tabs, the cutoff is 18:00, and the browser is reopened at 09:00 the next day with "Continue where you left off" restoring those 60 tabs
@@ -47,6 +47,14 @@ When the browser starts (including after being closed at cutoff, after a crash, 
 #### Scenario: Session restore finishes after the startup sweep
 - **WHEN** a catch-up sweep runs at startup while "Continue where you left off" is still restoring tabs, and more restored tabs appear within the next minute
 - **THEN** a follow-up pass within about 60 seconds closes those tabs as part of the same catch-up
+
+#### Scenario: Working in the clean window during the first minute
+- **WHEN** a catch-up sweep runs at startup and the user opens 3 tabs in the clean window it left within the next minute
+- **THEN** the follow-up pass closes only windows other than that one, and the 3 tabs survive
+
+#### Scenario: Browser quit before the follow-up pass ran
+- **WHEN** the browser is quit 20 seconds after a startup catch-up sweep and reopened later with no cutoff elapsed in between
+- **THEN** no follow-up pass runs in the new session
 
 ### Requirement: Late-firing timers still sweep
 If the browser was running but the device was asleep or the timer was delayed at cutoff, the sweep SHALL run as soon as the timer fires or the extension next wakes, whichever is first.

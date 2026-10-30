@@ -263,6 +263,24 @@ describe('bookmarkAtRiskTabs — the folder contract', () => {
   });
 });
 
+// --- exceptWindowId --------------------------------------------------------
+
+describe('bookmarkAtRiskTabs — exceptWindowId', () => {
+  it('leaves out the window the settle pass spares (design.md D8)', async () => {
+    state.windows = [
+      fakeWindow(1, [fakeTab(11, 'https://mine.example')]),
+      fakeWindow(2, [fakeTab(21, 'https://restored.example')]),
+    ];
+
+    const result = await bookmarkAtRiskTabs(false, new Date(2026, 7, 21, 9, 1), {
+      exceptWindowId: 1,
+    });
+
+    expect(result.count).toBe(1);
+    expect(allBookmarkedUrls()).toEqual(['https://restored.example']);
+  });
+});
+
 // --- keepPinned -------------------------------------------------------------
 
 describe('bookmarkAtRiskTabs — keepPinned', () => {

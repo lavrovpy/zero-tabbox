@@ -72,13 +72,26 @@ let persistAcrossSessionsSupported: boolean | undefined;
  * Firefox and older Chrome reject unknown `alarmInfo` properties, so it is
  * probed once by attempt and then remembered.
  *
+ * `persist: false` is for alarms that only mean something in the session that
+ * armed it — the settle pass names a window id, and window ids are reissued on
+ * every browser start. It asks Chrome 150+ to drop the alarm at restart; older
+ * Chrome persists alarms regardless of the flag (Firefox never does), so the
+ * handler of such an alarm must still treat an overdue delivery as stale.
+ *
  * @param name alarm name, e.g. `sweep:18:00`, `notice:18:00`, `badge`, `settle`
  * @param when epoch milliseconds at which the alarm should fire
+ * @param options.persist whether to ask the browser to keep the alarm across
+ *   restarts; defaults to `true`
  */
-export async function createAlarm(name: string, when: number): Promise<void> {
+export async function createAlarm(
+  name: string,
+  when: number,
+  options: { persist?: boolean } = {},
+): Promise<void> {
+  const persistAcrossSessions = options.persist ?? true;
   if (persistAcrossSessionsSupported !== false) {
     try {
-      await api.alarms.create(name, { when, persistAcrossSessions: true });
+      await api.alarms.create(name, { when, persistAcrossSessions });
       persistAcrossSessionsSupported = true;
       return;
     } catch {

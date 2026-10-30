@@ -57,13 +57,14 @@ protection; the only exemption is a global "keep pinned tabs" setting, off by
 default.
 
 A cutoff missed while the browser was shut, asleep, or crashed still sweeps at
-the next start, plus a follow-up pass about 60 seconds later for tabs session
-restore materialises late. The one exception: if you have been using tabs for
-more than an hour past the missed cutoff, it is let go instead, because by then
-the open tabs are the next day's work, not the day the cutoff was meant to end.
-Nothing above is armed until you accept the contract, on the page that opens at
-install or on the settings page. "End day now" works even before you accept,
-because clicking it is its own consent.
+the next start, plus a follow-up pass about 60 seconds later for windows session
+restore materialises late (the window you're working in is left alone). The one
+exception: if you have been using tabs for more than an hour past the missed
+cutoff, it is let go instead, because by then the open tabs are the next day's
+work, not the day the cutoff was meant to end. Nothing above is armed until you
+accept the contract, on the page that opens at install or on the settings page.
+"End day now" works even before you accept, because clicking it is its own
+consent.
 
 Defaults: one cutoff at `18:00` local time, 10 minutes of notice, system
 notification on, keep-pinned off.

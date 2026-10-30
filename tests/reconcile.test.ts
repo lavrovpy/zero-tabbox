@@ -26,8 +26,16 @@ import { DEFAULT_SETTINGS, type Settings, type SweepReason } from '../src/types'
   runtime: { onStartup: { addListener: () => undefined } },
 };
 
-const { ALARM, armSettlePass, handleAlarm, handleNoticeAlarm, reconcile, runSweep, SETTLE_DELAY_MS } =
-  await import('../src/reconcile');
+const {
+  ALARM,
+  armSettlePass,
+  handleAlarm,
+  handleNoticeAlarm,
+  reconcile,
+  runSweep,
+  SETTLE_DELAY_MS,
+  SETTLE_STALE_MS,
+} = await import('../src/reconcile');
 
 // --- Local, deliberately independent cutoff arithmetic -----------------------
 // `cutoff.ts` has its own tests; reimplementing the three functions here keeps
@@ -78,8 +86,14 @@ interface State {
   settings: Settings;
   marker: string;
   closedPerSweep: number;
+  /** The window every sweep reports leaving clean; `undefined` = none. */
+  cleanWindowId: number | undefined;
   sweeps: SweepReason[];
+  /** The scope's clean window per sweep, in order (`undefined` = unscoped). */
+  scopes: (number | undefined)[];
   alarms: Map<string, number>;
+  /** Alarms created with `persist: false`. */
+  sessionOnly: Set<string>;
   badge: (number | null)[];
   notices: string[];
   /** `lastAccessed` of every open tab, epoch ms. */
@@ -96,9 +110,13 @@ const REPEATING = -1;
  */
 const LONG_AGO = '2020-01-01T00:00';
 
-function harness(overrides: Partial<Pick<State, 'now' | 'accepted' | 'marker' | 'closedPerSweep'>> & {
-  settings?: Partial<Settings>;
-} = {}): { state: State; deps: ReconcileDeps } {
+function harness(
+  overrides: Partial<
+    Pick<State, 'now' | 'accepted' | 'marker' | 'closedPerSweep' | 'cleanWindowId'>
+  > & {
+    settings?: Partial<Settings>;
+  } = {},
+): { state: State; deps: ReconcileDeps } {
   const state: State = {
     now: overrides.now ?? new Date(2026, 7, 19, 18, 5),
     // Accepted by default: every test below this describes the post-consent
@@ -107,8 +125,11 @@ function harness(overrides: Partial<Pick<State, 'now' | 'accepted' | 'marker' | 
     settings: { ...DEFAULT_SETTINGS, ...overrides.settings },
     marker: overrides.marker ?? LONG_AGO,
     closedPerSweep: overrides.closedPerSweep ?? 7,
+    cleanWindowId: overrides.cleanWindowId,
     sweeps: [],
+    scopes: [],
     alarms: new Map(),
+    sessionOnly: new Set(),
     badge: [],
     notices: [],
     tabUses: [],
@@ -122,16 +143,19 @@ function harness(overrides: Partial<Pick<State, 'now' | 'accepted' | 'marker' | 
     setLastAutoCutoffId: async (cutoffId) => {
       state.marker = cutoffId;
     },
-    sweep: async (reason) => {
+    sweep: async (reason, _options, scope) => {
       state.sweeps.push(reason);
-      return { closed: state.closedPerSweep };
+      state.scopes.push(scope?.cleanWindowId);
+      return { closed: state.closedPerSweep, cleanWindowId: state.cleanWindowId };
     },
     tabUsedBetween: async (fromMs, toMs) => state.tabUses.some((at) => at >= fromMs && at < toMs),
     latestElapsedCutoff,
     nextOccurrence,
     getAlarms: async () => [...state.alarms.keys()].map((name) => ({ name })),
-    createAlarm: async (name, when) => {
+    createAlarm: async (name, when, options) => {
       state.alarms.set(name, when);
+      if (options?.persist === false) state.sessionOnly.add(name);
+      else state.sessionOnly.delete(name);
     },
     createRepeatingAlarm: async (name) => {
       state.alarms.set(name, REPEATING);
@@ -483,9 +507,9 @@ describe('reconcile — startup settle pass (design.md D8)', () => {
       settings: { cutoffs: ['18:00'] },
     });
 
-    const swept = await reconcile('wake', deps);
+    const catchUp = await reconcile('wake', deps);
 
-    expect(swept).toBe(true);
+    expect(catchUp).not.toBeNull();
     expect(state.sweeps).toEqual(['auto']);
     expect(state.alarms.has(ALARM.settle)).toBe(false);
   });
@@ -499,11 +523,11 @@ describe('reconcile — startup settle pass (design.md D8)', () => {
       settings: { cutoffs: ['18:00'] },
     });
 
-    expect(await reconcile('wake', deps)).toBe(true);
-    expect(await reconcile('startup', deps)).toBe(false);
+    expect(await reconcile('wake', deps)).not.toBeNull();
+    expect(await reconcile('startup', deps)).toBeNull();
     expect(state.sweeps).toEqual(['auto']);
 
-    await armSettlePass(deps);
+    await armSettlePass(undefined, deps);
     expect(state.alarms.get(ALARM.settle)).toBe(state.now.getTime() + SETTLE_DELAY_MS);
   });
 
@@ -541,6 +565,92 @@ describe('reconcile — startup settle pass (design.md D8)', () => {
     expect(state.sweeps).toEqual(['auto', 'settle']);
     expect(state.alarms.has(ALARM.settle)).toBe(false);
   });
+
+  it('names the window the catch-up left clean, and does not persist it', async () => {
+    const { state, deps } = harness({
+      now: new Date(2026, 7, 19, 9, 0),
+      settings: { cutoffs: ['18:00'] },
+      cleanWindowId: 4,
+    });
+
+    await reconcile('startup', deps);
+
+    expect(state.alarms.get('settle:4')).toBe(state.now.getTime() + SETTLE_DELAY_MS);
+    expect(state.alarms.has(ALARM.settle)).toBe(false);
+    // A window id means nothing after a restart (design.md D8).
+    expect(state.sessionOnly.has('settle:4')).toBe(true);
+  });
+
+  it('hands the bootstrap catch-up\'s clean window to the onStartup arming', async () => {
+    const { state, deps } = harness({
+      now: new Date(2026, 7, 19, 9, 0),
+      // Quit before the 18:00 cutoff yesterday, so it was never swept.
+      marker: '2026-08-17T18:00',
+      settings: { cutoffs: ['18:00'] },
+      cleanWindowId: 4,
+    });
+
+    const catchUp = await reconcile('wake', deps);
+    expect(catchUp).toEqual({ cleanWindowId: 4 });
+
+    await armSettlePass(catchUp?.cleanWindowId, deps);
+    expect([...state.alarms.keys()].filter((name) => name.startsWith('settle'))).toEqual([
+      'settle:4',
+    ]);
+  });
+
+  it('replaces a pending settle alarm rather than arming a second one', async () => {
+    const { state, deps } = harness({ now: new Date(2026, 7, 19, 9, 0) });
+    state.alarms.set('settle:2', state.now.getTime());
+    state.alarms.set(ALARM.settle, state.now.getTime());
+
+    await armSettlePass(4, deps);
+
+    expect([...state.alarms.keys()].filter((name) => name.startsWith('settle'))).toEqual([
+      'settle:4',
+    ]);
+  });
+
+  it('spares the clean window: the pass is scoped to the window in its name', async () => {
+    const { state, deps } = harness({ now: new Date(2026, 7, 19, 9, 1) });
+
+    await handleAlarm({ name: 'settle:4' }, deps);
+
+    expect(state.sweeps).toEqual(['settle']);
+    expect(state.scopes).toEqual([4]);
+  });
+
+  it('is a full pass when the catch-up found no window to leave clean', async () => {
+    const { state, deps } = harness({ now: new Date(2026, 7, 19, 9, 1) });
+
+    await handleAlarm({ name: ALARM.settle }, deps);
+
+    expect(state.sweeps).toEqual(['settle']);
+    expect(state.scopes).toEqual([undefined]);
+  });
+
+  it('ignores a settle alarm left over from an earlier browser session', async () => {
+    // Chrome before 150 keeps alarms across restarts whatever the flag says.
+    const { state, deps } = harness({ now: new Date(2026, 7, 20, 9, 0) });
+    const now = state.now.getTime();
+
+    await handleAlarm({ name: 'settle:4', scheduledTime: now - SETTLE_STALE_MS - 1 }, deps);
+    await handleAlarm({ name: ALARM.settle, scheduledTime: now - SETTLE_STALE_MS - 1 }, deps);
+    expect(state.sweeps).toEqual([]);
+
+    // A delivery that is merely late still belongs to this session.
+    await handleAlarm({ name: 'settle:4', scheduledTime: now - 30_000 }, deps);
+    expect(state.sweeps).toEqual(['settle']);
+  });
+
+  it('ignores a settle-prefixed name it never writes', async () => {
+    const { state, deps } = harness({ now: new Date(2026, 7, 19, 9, 1) });
+
+    await handleAlarm({ name: 'settle:' }, deps);
+    await handleAlarm({ name: 'settle:abc' }, deps);
+
+    expect(state.sweeps).toEqual([]);
+  });
 });
 
 describe('reconcile — stale catch-up (design.md D15)', () => {
@@ -559,7 +669,7 @@ describe('reconcile — stale catch-up (design.md D15)', () => {
 
     const swept = await reconcile('startup', deps);
 
-    expect(swept).toBe(false);
+    expect(swept).toBeNull();
     expect(state.sweeps).toEqual([]);
     expect(state.marker).toBe(THU_CUTOFF);
     expect(state.alarms.has(ALARM.settle)).toBe(false);
